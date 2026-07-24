@@ -173,16 +173,32 @@ jobs:
       # PRs for them. Only historical-cursor.json is staged here — widget/
       # index.html's new entries are left uncommitted for the PR step next.
       - name: Commit cursor advancement
+        # `git diff --quiet` (as opposed to `git diff --cached --quiet` after
+        # staging) never detects a brand-new untracked file — it only
+        # compares tracked files against the index. The very first real run
+        # of this pipeline hit exactly that: historical-cursor.json didn't
+        # exist on main yet, so this step silently logged "no change" and
+        # skipped committing it entirely, even though the file existed
+        # (uncommitted) in the runner's working directory. Left unfixed,
+        # every subsequent run would have rediscovered the same 10 films and
+        # opened a duplicate PR for them — the exact failure mode this
+        # direct-to-main commit exists to prevent. Staging first with `git
+        # add`, then checking `--cached`, correctly covers new AND modified
+        # files alike.
         if: always()
         run: |
           git config user.name "kernel-bot"
           git config user.email "actions@github.com"
-          if git diff --quiet -- kernel-data-service/historical-cursor.json; then
-            echo "No cursor change to commit."
-          else
+          if [ -f kernel-data-service/historical-cursor.json ]; then
             git add kernel-data-service/historical-cursor.json
-            git commit -m "Historical backfill: advance cursor [skip ci]"
-            git push
+            if git diff --cached --quiet -- kernel-data-service/historical-cursor.json; then
+              echo "No cursor change to commit."
+            else
+              git commit -m "Historical backfill: advance cursor [skip ci]"
+              git push
+            fi
+          else
+            echo "No cursor file to commit (historical-backfill.js found no candidates today)."
           fi
 
       - name: Open PR for historical backfill
