@@ -1,4 +1,4 @@
-name: Refresh Now Playing
+name: Daily Catalog Review
 
 on:
   schedule:
@@ -24,7 +24,12 @@ jobs:
         working-directory: kernel-data-service
         run: npm ci
 
-      - name: Run refresh
+      # Covers both theatrical now_playing and recent (last 90-day)
+      # non-theatrical releases, tagging each candidate with which category
+      # it is — see refresh-now-playing.js for the title-based dedup safety
+      # net that catches re-releases TMDb tags with a different year than
+      # the original (this is a real case it caught during testing).
+      - name: Run refresh (now-playing + recent releases)
         id: refresh
         working-directory: kernel-data-service
         env:
@@ -46,12 +51,37 @@ jobs:
           git commit -m "Auto-update: remove $REMOVED from Now Playing [skip ci]"
           git push
 
+      # Refreshes Tier-1 (TMDb) budget/box-office numbers for films still
+      # playing whose Tier 2 research hasn't happened yet — never touches a
+      # film a human has already researched and cited (see
+      # refresh-tier1-econ.js for exactly how it tells the difference).
+      # Also purely mechanical, straight to main, same reasoning as removals.
+      - name: Refresh Tier-1 econ numbers
+        id: econ-refresh
+        working-directory: kernel-data-service
+        env:
+          TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+        run: node refresh-tier1-econ.js
+
+      - name: Commit econ refresh
+        if: steps.econ-refresh.outputs.econ-updated != ''
+        env:
+          ECON_UPDATED: ${{ steps.econ-refresh.outputs.econ-updated }}
+        run: |
+          git config user.name "kernel-bot"
+          git config user.email "actions@github.com"
+          git add widget/index.html
+          git commit -m "Auto-update: refresh Tier-1 box office numbers [skip ci]
+
+          $ECON_UPDATED"
+          git push
+
       # Auto-drafts a small number of new releases (capped in
-      # refresh-now-playing.js) using the same Tier 1 fetch as manual
-      # onboarding, plus AI-drafted insight text from real, already-fetched
-      # numbers. Never merged automatically — see the PR step below. Needs
-      # TMDB_ACCESS_TOKEN/OMDB_API_KEY (Tier 1 fetch) and ANTHROPIC_API_KEY
-      # (insight text) as repo secrets.
+      # refresh-now-playing.js, separately for theatrical vs. recent) using
+      # the same Tier 1 fetch as manual onboarding, plus AI-drafted insight
+      # text from real, already-fetched numbers. Never merged automatically
+      # — see the PR step below. Needs TMDB_ACCESS_TOKEN/OMDB_API_KEY (Tier 1
+      # fetch) and ANTHROPIC_API_KEY (insight text) as repo secrets.
       - name: Draft new films (AI-assisted, PR only — never auto-merged)
         id: draft
         if: steps.refresh.outputs.new-films-json != '' && steps.refresh.outputs.new-films-json != '[]'
@@ -83,7 +113,7 @@ jobs:
           git commit -m "Draft new films: auto Tier 1 + AI-drafted insight text"
           git push origin "$BRANCH"
           cat > /tmp/pr-body.md <<'EOF'
-          Auto-drafted from today's Now Playing check: Tier 1 data (TMDb/OMDb) fetched automatically; insight/directorInsight/actorInsight text drafted from the real numbers already fetched (never fabricated numbers — averages/deltas are computed in code and handed to the model, not left for it to calculate).
+          Auto-drafted from today's catalog check: Tier 1 data (TMDb/OMDb) fetched automatically; insight/directorInsight/actorInsight text drafted from the real numbers already fetched (never fabricated numbers — averages/deltas are computed in code and handed to the model, not left for it to calculate).
 
           **Do not merge as-is.** Each entry still has 3 TODOs that genuinely can't be automated — Metacritic and Box Office Mojo both prohibit automated/scraped access in their terms of use, the same restriction already found for Rotten Tomatoes:
           - `spread` / `n` — Metacritic's own critic-spread page
@@ -95,6 +125,7 @@ jobs:
           echo "$PR_BODY_LIST" >> /tmp/pr-body.md
           PR_URL=$(gh pr create --title "$PR_TITLE" --body-file /tmp/pr-body.md --base main --head "$BRANCH")
           echo "pr-number=${PR_URL##*/}" >> "$GITHUB_OUTPUT"
+          git checkout main
 
       # Fact-checks the same films draft-onboard.js just drafted (no
       # re-parsing the diff — reuses its exact output) and posts findings
@@ -117,6 +148,79 @@ jobs:
           PR_NUMBER: ${{ steps.open-pr.outputs.pr-number }}
         run: node review-draft-pr.js
 
+      # Builds out the back-catalog 10 well-known films at a time, working
+      # backward from the newest eligible release date to the oldest (see
+      # historical-backfill.js). Runs on whatever's currently in the working
+      # tree, so it sees today's removals/econ-refresh/theatrical-draft
+      # changes already committed to main above, but NOT the still-unmerged
+      # auto-onboard PR branch (already checked back out to main above).
+      - name: Historical backfill (10 films/day, newest to oldest)
+        id: historical
+        working-directory: kernel-data-service
+        env:
+          TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node --experimental-sqlite historical-backfill.js
+
+      # The cursor advances every run regardless of whether the drafted
+      # FILMS entries below ever get merged — it's purely mechanical
+      # bookkeeping ("which films has the backfill already looked at"), not
+      # an editorial decision, so it goes straight to main immediately.
+      # Critically, this must NOT wait for the PR below to merge: if it did,
+      # an unreviewed PR sitting open for a few days would cause every
+      # subsequent run to rediscover the exact same films and open duplicate
+      # PRs for them. Only historical-cursor.json is staged here — widget/
+      # index.html's new entries are left uncommitted for the PR step next.
+      - name: Commit cursor advancement
+        if: always()
+        run: |
+          git config user.name "kernel-bot"
+          git config user.email "actions@github.com"
+          if git diff --quiet -- kernel-data-service/historical-cursor.json; then
+            echo "No cursor change to commit."
+          else
+            git add kernel-data-service/historical-cursor.json
+            git commit -m "Historical backfill: advance cursor [skip ci]"
+            git push
+          fi
+
+      - name: Open PR for historical backfill
+        id: open-historical-pr
+        if: steps.historical.outputs.historical-drafted != '' && steps.historical.outputs.historical-drafted != '[]'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_TITLE: ${{ steps.historical.outputs.historical-pr-title }}
+          PR_BODY_LIST: ${{ steps.historical.outputs.historical-pr-body-list }}
+        run: |
+          BRANCH="historical-backfill/${{ github.run_id }}"
+          git config user.name "kernel-bot"
+          git config user.email "actions@github.com"
+          git checkout -b "$BRANCH"
+          git add widget/index.html
+          git commit -m "Historical backfill: auto Tier 1 + AI-drafted insight text"
+          git push origin "$BRANCH"
+          cat > /tmp/historical-pr-body.md <<'EOF'
+          Daily historical backfill — 10 well-known films (by TMDb vote count) working backward from the newest eligible release date. Same Tier 1 + AI-drafted-insight treatment as new releases, same 3 TODOs still needed before merging (Metacritic spread, marketing spend, weekly gross don't apply here in the same way — weekly gross for an older catalog title is optional; use judgment on whether it's worth digging up).
+
+          Films drafted this run:
+          EOF
+          echo "$PR_BODY_LIST" >> /tmp/historical-pr-body.md
+          PR_URL=$(gh pr create --title "$PR_TITLE" --body-file /tmp/historical-pr-body.md --base main --head "$BRANCH")
+          echo "pr-number=${PR_URL##*/}" >> "$GITHUB_OUTPUT"
+          git checkout main
+
+      - name: Fact-check historical backfill
+        if: steps.open-historical-pr.outputs.pr-number != ''
+        working-directory: kernel-data-service
+        env:
+          TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          DRAFTED_JSON: ${{ steps.historical.outputs.historical-drafted }}
+          PR_NUMBER: ${{ steps.open-historical-pr.outputs.pr-number }}
+        run: node review-draft-pr.js
+
       # Whatever's left over (beyond the auto-draft cap, or films
       # draft-onboard.js skipped) still needs a human for Tier 2 research —
       # this just surfaces what's worth looking at. Reuses one open issue
@@ -126,7 +230,7 @@ jobs:
       # an inlined ${{ }} put a backtick-wrapped command into the script
       # text, and bash ran it as command substitution).
       - name: Open or update new-films issue
-        # always() so a failure in the PR step above (independent concern)
+        # always() so a failure in an earlier step (independent concern)
         # doesn't silently suppress this one too — GitHub Actions skips all
         # later steps by default after any earlier failure.
         if: always() && steps.refresh.outputs.new-films != ''
@@ -134,8 +238,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           NEW_FILMS: ${{ steps.refresh.outputs.new-films }}
         run: |
+          git checkout main
           cat > /tmp/issue-body.md <<'EOF'
-          New films TMDb lists as now playing that aren't onboarded yet (beyond today's auto-draft cap, or skipped — see the workflow run log for why). Run the listed command, then complete Tier 2 research and `ingest-film.js` as usual.
+          New films TMDb lists (theatrical or recent non-theatrical) that aren't onboarded yet — beyond today's auto-draft cap, a possible re-release/year-mismatch duplicate flagged for manual verification, or skipped (see the workflow run log for why). Run the listed command, then complete Tier 2 research and `ingest-film.js` as usual.
 
           EOF
           echo "$NEW_FILMS" >> /tmp/issue-body.md

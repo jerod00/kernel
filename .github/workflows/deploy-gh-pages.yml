@@ -1,0 +1,46 @@
+name: Deploy widget to gh-pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "widget/index.html"
+  workflow_dispatch: {} # allows a manual re-deploy from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main (for widget/index.html)
+        uses: actions/checkout@v4
+        with:
+          path: main-checkout
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v4
+        with:
+          ref: gh-pages
+          path: gh-pages-checkout
+
+      - name: Copy widget and push if changed
+        # COMMIT_MSG comes through env, never spliced directly into the
+        # script text — a commit message containing backticks or $(...)
+        # would otherwise be re-parsed as shell command substitution (the
+        # exact bug already found and fixed in refresh-now-playing.yml).
+        env:
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          cp main-checkout/widget/index.html gh-pages-checkout/index.html
+          cd gh-pages-checkout
+          if git diff --quiet; then
+            echo "No changes to deploy."
+            exit 0
+          fi
+          git config user.name "kernel-bot"
+          git config user.email "actions@github.com"
+          git add index.html
+          git commit -m "Deploy: ${COMMIT_MSG:-manual re-deploy}"
+          git push origin gh-pages
