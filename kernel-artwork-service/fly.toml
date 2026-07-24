@@ -1,0 +1,32 @@
+# Fly.io app config for kernel-artwork-service.
+# Deploy steps (run from this directory, after `fly auth login`):
+#   fly launch --no-deploy   (first time only — creates the app; if the
+#                              name below is taken, it'll prompt for another)
+#   fly secrets set TMDB_ACCESS_TOKEN=... OMDB_API_KEY=...
+#   fly deploy
+
+app = "kernel-artwork-service-themoviekernel"
+primary_region = "iad"
+
+[build]
+
+[env]
+  PORT = "3001"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[http_service.checks]]
+    grace_period = "10s"
+    interval = "30s"
+    method = "GET"
+    timeout = "5s"
+    path = "/healthz"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
