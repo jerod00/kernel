@@ -4,6 +4,7 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const { ingest, getLatest, getHistory, listEntities, verifyChain } = require("./db");
 const { getSynopsis } = require("./synopsis");
+const { requireAdminToken, listOpenPRs, mergePR, closePR, adminPageHtml } = require("./admin");
 
 const app = express();
 // Fly.io (and most hosts) put this behind a single reverse-proxy hop, so
@@ -33,6 +34,16 @@ const ingestLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: "Too many review submissions from this address — try again later." },
+});
+
+// Defense in depth alongside the admin token itself — the token's own
+// entropy is the real protection, this just blunts a brute-force scan.
+const adminLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many admin requests — try again later." },
 });
 
 const PORT = process.env.PORT || 3002;
@@ -110,6 +121,39 @@ app.get("/api/synopsis/:dataId", async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(502).json({ status: "error", message: "Synopsis generation failed" });
+  }
+});
+
+// Admin panel — reachable via a link in the daily email, gated by a long
+// random shared secret (ADMIN_TOKEN) rather than a login flow. Merging here
+// is a real merge via GitHub's own API — nothing bypassed, and it pushes to
+// main exactly like clicking "Merge" on github.com, which the existing
+// gh-pages deploy workflow already picks up automatically.
+app.get("/admin", adminLimiter, requireAdminToken, (req, res) => {
+  res.type("html").send(adminPageHtml());
+});
+
+app.get("/admin/api/prs", adminLimiter, requireAdminToken, async (req, res) => {
+  try {
+    res.json(await listOpenPRs());
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
+});
+
+app.post("/admin/api/prs/:number/merge", adminLimiter, requireAdminToken, async (req, res) => {
+  try {
+    res.json(await mergePR(req.params.number));
+  } catch (err) {
+    res.status(err.status || 502).json({ error: err.message });
+  }
+});
+
+app.post("/admin/api/prs/:number/close", adminLimiter, requireAdminToken, async (req, res) => {
+  try {
+    res.json(await closePR(req.params.number));
+  } catch (err) {
+    res.status(err.status || 502).json({ error: err.message });
   }
 });
 
