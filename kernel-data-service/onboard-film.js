@@ -62,6 +62,18 @@ async function tmdb(pathName) {
   return res.json();
 }
 
+// Prefer an official Trailer, then any Trailer, then an official Teaser,
+// then any Teaser. Within the same rank, take the EARLIEST-published video:
+// TMDb occasionally mislabels an awards/reaction clip as type "Trailer"
+// (Oppenheimer has one literally named "Review"), and the genuine theatrical
+// trailer is reliably the first one published.
+function pickBestVideo(results) {
+  const yt = (results || []).filter(v => v.site === "YouTube");
+  const rank = v => (v.type === "Trailer" && v.official ? 0 : v.type === "Trailer" ? 1 : v.type === "Teaser" && v.official ? 2 : v.type === "Teaser" ? 3 : 9);
+  yt.sort((a, b) => rank(a) - rank(b) || new Date(a.published_at) - new Date(b.published_at));
+  return yt.find(v => rank(v) < 9) || null;
+}
+
 let omdbDisabled = false; // set once a 401 proves the key itself is bad — stops hammering it 30x in the filmography loop
 
 async function omdbLookup({ imdbId, title, year }) {
@@ -183,6 +195,7 @@ async function buildPersonFilmography(personId, isDirector) {
     seedScore: null,
     seedScoreUrl: null,
     seedReviews: [],
+    trailer: null,
     sources: {
       genres: tmdbUrl,
       budget: tmdbUrl,
@@ -192,6 +205,7 @@ async function buildPersonFilmography(personId, isDirector) {
       marketing: null,
       weeklyGross: null,
       filmography: null,
+      trailer: null,
     },
     mismatches,
   };
@@ -212,6 +226,17 @@ async function buildPersonFilmography(personId, isDirector) {
     console.warn(`  (TMDb reviews fetch failed: ${err.message} — continuing without seed reviews)`);
   }
 
+  try {
+    const videosRes = await tmdb(`/movie/${match.id}/videos?language=en-US`);
+    const best = pickBestVideo(videosRes.results);
+    if (best) {
+      draft.trailer = { key: best.key, name: best.name, type: best.type, official: !!best.official };
+      draft.sources.trailer = tmdbUrl;
+    }
+  } catch (err) {
+    console.warn(`  (TMDb videos fetch failed: ${err.message} — continuing without a trailer)`);
+  }
+
   console.log("\n--- TIER 1 (auto-fetched, fill nothing here unless flagged) ---");
   console.log(`dataId: ${dataId}`);
   console.log(`genres: ${JSON.stringify(draft.genres)}   [TMDb]`);
@@ -223,6 +248,7 @@ async function buildPersonFilmography(personId, isDirector) {
   console.log(`leadActor: ${leadActor ? leadActor.name : "not found"}`);
   console.log(`seedScore (IMDb rating x10): ${draft.seedScore != null ? draft.seedScore : "not available from OMDb"}`);
   console.log(`seedReviews (TMDb, excerpted, capped at 3): ${draft.seedReviews.length} found`);
+  console.log(`trailer (TMDb videos): ${draft.trailer ? `${draft.trailer.type}${draft.trailer.official ? " (official)" : ""} "${draft.trailer.name}" [${draft.trailer.key}]` : "not found"}`);
 
   if (mismatches.length) {
     console.log("\n--- MISMATCH WARNINGS ---");

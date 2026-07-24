@@ -58,6 +58,11 @@ if (data.actor && data.actor.name) {
   }
 }
 
+if (data.trailer) {
+  logIngest("film", filmId, "trailer_key", data.trailer.key, sources.trailer);
+  logIngest("film", filmId, "trailer_name", data.trailer.name, sources.trailer);
+}
+
 logIngest("seed_content", filmId, "score", data.seedScore, data.seedScoreUrl);
 (data.seedReviews || []).forEach((r, i) => {
   logIngest("seed_content", filmId, `review_${i}`, r, r.url);

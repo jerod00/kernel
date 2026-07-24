@@ -199,6 +199,10 @@
   .widget-head h2{ font-family:Georgia,serif; font-size:1.3rem; margin:0; }
   .widget-head .year{ color:var(--muted); font-weight:normal; font-size:0.95rem; }
   .poster-thumb{ width:52px; height:78px; object-fit:cover; border:1px solid var(--rule); flex-shrink:0; background:var(--rule); }
+  .trailer-link{ display:inline-flex; align-items:center; gap:0.35em; margin-top:0.3rem; font-size:0.85rem; color:var(--teal); text-decoration:none; }
+  .trailer-link:hover{ text-decoration:underline; }
+  .trailer-link .play-glyph{ display:inline-flex; align-items:center; justify-content:center; width:1.1em; height:1.1em; border-radius:50%; background:var(--teal); color:var(--card); flex-shrink:0; }
+  .trailer-link .play-glyph svg{ width:0.5em; height:0.5em; margin-left:0.08em; }
   .tmdb-attribution{
     display:flex; align-items:center; gap:0.6em; font-size:0.78rem; color:var(--muted);
     margin-top:2.6rem; padding-top:1.2rem; border-top:1px solid var(--rule);
@@ -526,6 +530,7 @@
   const FILMS = {
     joker: {
       dataId: "joker-2019",
+      trailer: { key: "t433PEQGErc", name: "Teaser Trailer" },
       genres: ["Crime", "Drama", "Thriller"],
       name: "Joker", year: "2019", score: 59, ci: "± 4", label: "Mixed",
       spread: [55, 27, 18], n: 60,
@@ -583,6 +588,7 @@
     },
     mother: {
       dataId: "mother-2017",
+      trailer: { key: "XpICoc65uh0", name: "official trailer" },
       genres: ["Drama", "Horror", "Mystery"],
       name: "mother!", year: "2017", score: 76, ci: "± 3", label: "Generally Positive",
       spread: [71, 27, 2], n: 51,
@@ -647,6 +653,7 @@
     },
     lastjedi: {
       dataId: "the-last-jedi-2017",
+      trailer: { key: "Q0CbN8sfihY", name: "Official Trailer" },
       genres: ["Action", "Adventure", "Science Fiction"],
       name: "The Last Jedi", year: "2017", score: 84, ci: "± 2", label: "Widely Acclaimed",
       spread: [93, 7, 0], n: 56,
@@ -692,6 +699,7 @@
     },
     eeaao: {
       dataId: "everything-everywhere-all-at-once-2022",
+      trailer: { key: "wxN1T1uxQ2g", name: "Official Trailer" },
       genres: ["Action", "Science Fiction", "Comedy"],
       name: "Everything Everywhere All at Once", year: "2022", score: 81, ci: null, label: "Universal Acclaim",
       spread: [89, 11, 0], n: 55,
@@ -706,6 +714,7 @@
     },
     pig: {
       dataId: "pig-2021",
+      trailer: { key: "1i-_CRKdh4Y", name: "Official Trailer" },
       genres: ["Drama"],
       name: "Pig", year: "2021", score: 82, ci: null, label: "Universal Acclaim",
       spread: [87, 13, 0], n: 39,
@@ -720,6 +729,7 @@
     },
     soundofmetal: {
       dataId: "sound-of-metal-2019",
+      trailer: { key: "VFOrGkAvjAE", name: "Official Trailer" },
       genres: ["Drama", "Music"],
       name: "Sound of Metal", year: "2019", score: 82, ci: null, label: "Universal Acclaim",
       spread: [95, 5, 0], n: 37,
@@ -733,6 +743,7 @@
     },
     thewhale: {
       dataId: "the-whale-2022",
+      trailer: { key: "D30r0CwtIKc", name: "Official Trailer" },
       genres: ["Drama"],
       name: "The Whale", year: "2022", score: 60, ci: null, label: "Mixed or Average",
       spread: [46, 40, 14], n: 57,
@@ -764,6 +775,7 @@
     },
     barbie: {
       dataId: "barbie-2023",
+      trailer: { key: "8zIf0XvoL9Y", name: "Teaser Trailer" },
       genres: ["Comedy", "Adventure", "Fantasy"],
       name: "Barbie", year: "2023", score: 80, ci: null, label: "Generally Favorable",
       spread: [91, 7, 1], n: 67,
@@ -781,6 +793,7 @@
     },
     cats: {
       dataId: "cats-2019",
+      trailer: { key: "FtSd844cI7U", name: "Official Trailer" },
       genres: ["Fantasy", "Musical", "Comedy"],
       name: "Cats", year: "2019", score: 32, ci: null, label: "Generally Unfavorable",
       spread: [12, 45, 43], n: 51,
@@ -798,6 +811,7 @@
     },
     morbius: {
       dataId: "morbius-2022",
+      trailer: { key: "jLMBLuGJTsA", name: "Teaser Trailer" },
       genres: ["Action", "Science Fiction", "Horror"],
       name: "Morbius", year: "2022", score: 35, ci: null, label: "Generally Unfavorable",
       spread: [13, 45, 42], n: 55,
@@ -815,6 +829,7 @@
     },
     jokerfad: {
       dataId: "joker-folie-a-deux-2024",
+      trailer: { key: "xy8aJw1vYHo", name: "Official Teaser Trailer" },
       genres: ["Crime", "Drama", "Musical"],
       name: "Joker: Folie à Deux", year: "2024", score: 46, ci: null, label: "Mixed or Average",
       spread: [33, 42, 25], n: 64,
@@ -846,6 +861,7 @@
 
     odyssey: {
       dataId: "the-odyssey-2026",
+      trailer: { key: "Mzw2ttJD2qQ", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-07-15",
       genres: ["Adventure","Action","Fantasy"],
@@ -917,6 +933,7 @@
 
     moana: {
       dataId: "moana-2026",
+      trailer: { key: "n7f6hlKsxxo", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-07-08",
       genres: ["Family","Fantasy","Comedy","Adventure"],
@@ -935,6 +952,7 @@
 
     backrooms: {
       dataId: "backrooms-2026",
+      trailer: { key: "0HjdiohVOik", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-05-27",
       genres: ["Horror","Mystery","Science Fiction"],
@@ -993,6 +1011,7 @@
 
     supergirl: {
       dataId: "supergirl-2026",
+      trailer: { key: "YqdAEdkHrwo", name: "Official Teaser Trailer" },
       nowPlaying: true,
       releaseDate: "2026-06-24",
       genres: ["Action","Adventure","Science Fiction"],
@@ -1037,6 +1056,7 @@
 
     minionsmonsters: {
       dataId: "minions-monsters-2026",
+      trailer: { key: "ZSdOwt-G49w", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-06-24",
       genres: ["Adventure","Animation","Comedy","Family","Fantasy"],
@@ -1081,6 +1101,7 @@
 
     toystory5: {
       dataId: "toy-story-5-2026",
+      trailer: { key: "c51ND9Hdbw0", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-06-17",
       genres: ["Animation","Family","Comedy","Adventure"],
@@ -1148,6 +1169,7 @@
 
     robinhood: {
       dataId: "the-death-of-robin-hood-2026",
+      trailer: { key: "tlSDDuWxO_0", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-06-18",
       genres: ["Adventure","Drama","Thriller","Action"],
@@ -1207,6 +1229,7 @@
 
     evildeadburn: {
       dataId: "evil-dead-burn-2026",
+      trailer: { key: "nMzhf6qYJ4I", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-07-07",
       genres: ["Horror","Thriller"],
@@ -1248,6 +1271,7 @@
 
     borderline: {
       dataId: "borderline-2026",
+      trailer: { key: "ORHBgSvX_24", name: "Borderline - Official Trailer | Starring Samara Weaving and Ray Nicholson | In theaters March 14" },
       nowPlaying: true,
       releaseDate: "2026-07-17",
       genres: ["Thriller"],
@@ -1280,6 +1304,7 @@
 
     citizenVigilante: {
       dataId: "citizen-vigilante-2026",
+      trailer: { key: "fVxmjwaPEFU", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-06-19",
       genres: ["Thriller","Action"],
@@ -1336,6 +1361,7 @@
 
     avatarAangTheLastAirbender: {
       dataId: "avatar-aang-the-last-airbender-2026",
+      trailer: { key: "7b20GRFZBFE", name: "Official Trailer" },
       nowPlaying: false, // real release is Paramount+ streaming, plus a 2-city awards-qualifying run — not a normal theatrical release
       releaseDate: "2026-07-24",
       genres: ["Animation","Action","Adventure","Fantasy"],
@@ -1370,6 +1396,7 @@
 
     voicemailsForIsabelle: {
       dataId: "voicemails-for-isabelle-2026",
+      trailer: { key: "9mi3YVYm3ZU", name: "Official Trailer" },
       nowPlaying: false, // Netflix-only streaming release; never had a theatrical run to track as "now playing"
       releaseDate: "2026-06-20",
       genres: ["Romance", "Comedy"],
@@ -1426,6 +1453,7 @@
 
     theInvite: {
       dataId: "the-invite-2026",
+      trailer: { key: "OJ19I9q_hOQ", name: "Official Trailer" },
       nowPlaying: true,
       releaseDate: "2026-06-25",
       genres: ["Drama", "Comedy"],
@@ -1483,6 +1511,7 @@
 
     theGetOut: {
       dataId: "the-get-out-2026",
+      trailer: { key: "oB6HNuKxLmo", name: "The Get Out | Official Trailer (HD) | Vertical" },
       nowPlaying: false, // very limited release that already wrapped; box office was never tracked
       releaseDate: "2026-06-18",
       genres: ["Action", "Thriller"],
@@ -1535,6 +1564,7 @@
 
     girlsLikeGirls: {
       dataId: "girls-like-girls-2026",
+      trailer: { key: "ZC1kEknG2ro", name: "Official Trailer" },
       nowPlaying: false, // run ended after two weekends
       releaseDate: "2026-06-18",
       genres: ["Romance", "Drama"],
@@ -1570,6 +1600,7 @@
 
     iKnowWhoYouAre: {
       dataId: "i-know-who-you-are-2026",
+      trailer: { key: "Kpf7-Gqf25Q", name: "I KNOW WHO YOU ARE | ANZ TRAILER | 09 JULY" },
       nowPlaying: true,
       releaseDate: "2026-06-19",
       genres: ["History", "Drama"],
@@ -1609,6 +1640,7 @@
 
     maaIntiBangaram: {
       dataId: "maa-inti-bangaram-2026",
+      trailer: { key: "vdTawCMwiQs", name: "Maa Inti Bangaaram Teaser Trailer | Samantha | Raj Nidimoru | Nandini | Diganth | Santhosh Narayanan" },
       nowPlaying: false, // Telugu theatrical run has wound down
       releaseDate: "2026-06-18",
       genres: ["Action", "Thriller", "Drama"],
@@ -1644,6 +1676,7 @@
 
     neonGenesisEvangelionTheEndOfEvangelion: {
       dataId: "neon-genesis-evangelion-the-end-of-evangelion-1997",
+      trailer: { key: "J8t48KMGCo4", name: "Official Trailer [Subtitled]" },
       nowPlaying: false, // 2-night-only 30th-anniversary theatrical re-release (July 21-22, 2026) has already concluded
       releaseDate: "1997-07-19",
       genres: ["Animation", "Science Fiction", "Drama", "Fantasy", "Action"],
@@ -1683,6 +1716,7 @@
 
     disclosureDay: {
       dataId: "disclosure-day-2026",
+      trailer: { key: "SCYT8vb2siQ", name: "Official Trailer" },
       nowPlaying: false, // wide release has wound down after roughly six weekends
       releaseDate: "2026-06-10",
       genres: ["Science Fiction", "Thriller"],
@@ -1765,6 +1799,7 @@
     },
 obsession2026: {
   dataId: "obsession-2026",
+      trailer: { key: "gMC8kkwbIQQ", name: "Official Trailer" },
   nowPlaying: false, // wide theatrical release from spring 2026; its run has wound down
   releaseDate: "2026-05-13",
   genres: ["Horror", "Thriller"],
@@ -1802,6 +1837,7 @@ obsession2026: {
 
 scaryMovie2026: {
   dataId: "scary-movie-2026",
+      trailer: { key: "0fZ58S-7QP0", name: "Official Trailer" },
   nowPlaying: false, // wide theatrical release from spring 2026; its run has wound down
   releaseDate: "2026-06-03",
   genres: ["Comedy"],
@@ -1860,6 +1896,7 @@ scaryMovie2026: {
 
 mastersOfTheUniverse2026: {
   dataId: "masters-of-the-universe-2026",
+      trailer: { key: "ZmEx7wQI6RY", name: "Official Teaser Trailer" },
   nowPlaying: false, // wide theatrical release from spring 2026; its run has wound down
   releaseDate: "2026-06-05",
   genres: ["Action", "Fantasy", "Science Fiction"],
@@ -1909,6 +1946,7 @@ mastersOfTheUniverse2026: {
 
 mandalorianAndGrogu2026: {
   dataId: "the-mandalorian-and-grogu-2026",
+      trailer: { key: "_pa1KLXuW0Y", name: "Official Trailer" },
   nowPlaying: false, // wide theatrical release from spring 2026; its run has wound down
   releaseDate: "2026-05-20",
   genres: ["Action", "Adventure", "Science Fiction"],
@@ -1966,6 +2004,7 @@ mandalorianAndGrogu2026: {
 
 devilWearsPrada2: {
   dataId: "the-devil-wears-prada-2-2026",
+      trailer: { key: "e9HXmMnUEdE", name: "Official Trailer" },
   nowPlaying: false, // wide theatrical release from spring 2026; its run has wound down
   releaseDate: "2026-04-29",
   genres: ["Comedy", "Drama"],
@@ -2034,6 +2073,7 @@ devilWearsPrada2: {
 
 deepWater2026: {
   dataId: "deep-water-2026",
+      trailer: { key: "f0ptq0Lzdh8", name: "Official Trailer" },
   nowPlaying: false, // wide theatrical release from spring 2026; its run has wound down
   releaseDate: "2026-05-01",
   genres: ["Horror", "Thriller"],
@@ -2112,6 +2152,7 @@ deepWater2026: {
 
 passenger2026: {
   dataId: "passenger-2026",
+      trailer: { key: "eNIn8kW1kyE", name: "Official Trailer" },
   nowPlaying: false, // wide theatrical release from spring 2026; its run has wound down
   releaseDate: "2026-05-20",
   genres: ["Horror", "Thriller"],
@@ -2156,6 +2197,7 @@ passenger2026: {
 
 theFurious: {
   dataId: "the-furious-2026",
+      trailer: { key: "Avky8dVaqAI", name: "Official Trailer" },
   nowPlaying: false, // wide theatrical release from spring 2026; its run has wound down
   releaseDate: "2026-06-10",
   genres: ["Action", "Crime", "Thriller"],
@@ -2194,6 +2236,7 @@ theFurious: {
 },
 nineteenSeventeen: {
   dataId: "1917-2019",
+      trailer: { key: "UcmZN0Mbl04", name: "Official Trailer" },
   genres: ["War", "History", "Drama"],
   name: "1917", year: "2019", score: 78, ci: null, label: "Generally Favorable",
   spread: [86, 12, 2], n: 57,
@@ -2247,6 +2290,7 @@ nineteenSeventeen: {
 },
 anyoneButYou: {
   dataId: "anyone-but-you-2023",
+      trailer: { key: "UtjH6Sk7Gxs", name: "Official Trailer" },
   genres: ["Romance", "Comedy"],
   name: "Anyone but You", year: "2023", score: 52, ci: null, label: "Mixed or Average",
   spread: [38, 58, 4], n: 26,
@@ -2294,6 +2338,7 @@ anyoneButYou: {
 },
 arrival2016: {
   dataId: "arrival-2016",
+      trailer: { key: "tFMo3UJ4B4g", name: "Trailer" },
   genres: ["Drama", "Science Fiction", "Mystery"],
   name: "Arrival", year: "2016", score: 81, ci: null, label: "Universal Acclaim",
   spread: [90, 8, 2], n: 52,
@@ -2359,6 +2404,7 @@ arrival2016: {
 },
 bladeRunner2049: {
   dataId: "blade-runner-2049-2017",
+      trailer: { key: "gCcx85zbxz4", name: "Official Trailer" },
   genres: ["Science Fiction", "Drama"],
   name: "Blade Runner 2049", year: "2017", score: 81, ci: null, label: "Universal Acclaim",
   spread: [87, 13, 0], n: 54,
@@ -2424,6 +2470,7 @@ bladeRunner2049: {
 },
 dune2021: {
   dataId: "dune-2021",
+      trailer: { key: "n9xhJrPXop4", name: "Official Trailer" },
   genres: ["Science Fiction", "Adventure"],
   name: "Dune", year: "2021", score: 74, ci: null, label: "Generally Favorable",
   spread: [79, 19, 1], n: 68,
@@ -2482,6 +2529,7 @@ dune2021: {
 },
 getOut2017: {
   dataId: "get-out-2017",
+      trailer: { key: "sRfnevzM9kQ", name: "Official Trailer" },
   genres: ["Mystery", "Thriller", "Horror"],
   name: "Get Out", year: "2017", score: 85, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 48,
@@ -2527,6 +2575,7 @@ getOut2017: {
 },
 goneGirl2014: {
   dataId: "gone-girl-2014",
+      trailer: { key: "JU9PdgB3rsk", name: "Teaser Trailer" },
   genres: ["Mystery", "Thriller", "Drama"],
   name: "Gone Girl", year: "2014", score: 79, ci: null, label: "Generally Favorable",
   spread: [80, 20, 0], n: 49,
@@ -2594,6 +2643,7 @@ goneGirl2014: {
 },
 hereditary2018: {
   dataId: "hereditary-2018",
+      trailer: { key: "V6wWKNij_1M", name: "Official Trailer" },
   genres: ["Horror", "Mystery", "Thriller"],
   name: "Hereditary", year: "2018", score: 87, ci: null, label: "Universal Acclaim",
   spread: [94, 4, 2], n: 49,
@@ -2651,6 +2701,7 @@ hereditary2018: {
 },
 johnWick2014: {
   dataId: "john-wick-2014",
+      trailer: { key: "2AUmvWm5ZDQ", name: "Official Trailer" },
   genres: ["Action", "Thriller"],
   name: "John Wick", year: "2014", score: 68, ci: null, label: "Generally Favorable",
   spread: [77, 13, 10], n: 39,
@@ -2715,6 +2766,7 @@ johnWick2014: {
 },
 laLaLand2016: {
   dataId: "la-la-land-2016",
+      trailer: { key: "je0aAf2f8XQ", name: "Official Teaser Trailer – 'City Of Stars'" },
   genres: ["Comedy", "Drama", "Romance"],
   name: "La La Land", year: "2016", score: 94, ci: null, label: "Universal Acclaim",
   spread: [96, 4, 0], n: 54,
@@ -2775,6 +2827,7 @@ laLaLand2016: {
 },
 madMaxFuryRoad: {
   dataId: "mad-max-fury-road-2015",
+      trailer: { key: "akX3Is3qBpw", name: "Comic-Con First Look" },
   genres: ["Action", "Adventure", "Science Fiction"],
   name: "Mad Max: Fury Road", year: "2015", score: 90, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 51,
@@ -2831,6 +2884,7 @@ madMaxFuryRoad: {
 },
 noCountryForOldMen: {
   dataId: "no-country-for-old-men-2007",
+      trailer: { key: "A0oNrgumrlE", name: "Official Trailer" },
   genres: ["Crime", "Thriller", "Western"],
   name: "No Country for Old Men", year: "2007", score: 92, ci: null, label: "Universal Acclaim",
   spread: [95, 5, 0], n: 39,
@@ -2894,6 +2948,7 @@ noCountryForOldMen: {
 },
 oppenheimer2023: {
   dataId: "oppenheimer-2023",
+      trailer: { key: "bK6ldnjE3Y0", name: "Official Trailer" },
   genres: ["Drama", "History"],
   name: "Oppenheimer", year: "2023", score: 90, ci: null, label: "Universal Acclaim",
   spread: [97, 3, 0], n: 69,
@@ -2956,6 +3011,7 @@ oppenheimer2023: {
 },
 parasite2019: {
   dataId: "parasite-2019",
+      trailer: { key: "hb1iOVvkykY", name: "Official Int'l Main Trailer [Subtitled]" },
   genres: ["Comedy", "Thriller", "Drama"],
   name: "Parasite", year: "2019", score: 97, ci: null, label: "Universal Acclaim",
   spread: [100, 0, 0], n: 56,
@@ -3008,6 +3064,7 @@ parasite2019: {
 },
 pastLives: {
   dataId: "past-lives-2023",
+      trailer: { key: "kA244xewjcI", name: "Official Trailer" },
   genres: ["Drama", "Romance"],
   name: "Past Lives", year: "2023", score: 94, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 52,
@@ -3058,6 +3115,7 @@ pastLives: {
 },
 poorThings: {
   dataId: "poor-things-2023",
+      trailer: { key: "RlbR5N6veqw", name: "Official Trailer" },
   genres: ["Science Fiction", "Romance", "Comedy"],
   name: "Poor Things", year: "2023", score: 88, ci: null, label: "Universal Acclaim",
   spread: [92, 3, 5], n: 62,
@@ -3126,6 +3184,7 @@ poorThings: {
 },
 spiderVerse2018: {
   dataId: "spider-man-into-the-spider-verse-2018",
+      trailer: { key: "ii3n7hYQOl4", name: "Official Teaser Trailer" },
   genres: ["Animation", "Action", "Adventure", "Science Fiction"],
   name: "Spider-Man: Into the Spider-Verse", year: "2018", score: 87, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 50,
@@ -3167,6 +3226,7 @@ spiderVerse2018: {
 },
 talkToMe2023: {
   dataId: "talk-to-me-2023",
+      trailer: { key: "aLAKJu9aJys", name: "Official US Trailer" },
   genres: ["Horror"],
   name: "Talk to Me", year: "2023", score: 76, ci: null, label: "Generally Favorable",
   spread: [93, 7, 0], n: 44,
@@ -3201,6 +3261,7 @@ talkToMe2023: {
 },
 banshees: {
   dataId: "the-banshees-of-inisherin-2022",
+      trailer: { key: "uRu3zLOJN2c", name: "Official Trailer" },
   genres: ["Drama", "Comedy"],
   name: "The Banshees of Inisherin", year: "2022", score: 87, ci: null, label: "Universal Acclaim",
   spread: [94, 6, 0], n: 62,
@@ -3261,6 +3322,7 @@ banshees: {
 },
 theBoyAndTheHeron: {
   dataId: "the-boy-and-the-heron-2023",
+      trailer: { key: "t5khm-VjEu4", name: "Official English Trailer" },
   genres: ["Animation", "Fantasy", "Drama"],
   name: "The Boy and the Heron", year: "2023", score: 91, ci: null, label: "Universal Acclaim",
   spread: [95, 5, 0], n: 55,
@@ -3303,6 +3365,7 @@ theBoyAndTheHeron: {
 },
 theMenu2022: {
   dataId: "the-menu-2022",
+      trailer: { key: "CAWZMssP3gM", name: "Official Teaser Trailer" },
   genres: ["Comedy", "Horror"],
   name: "The Menu", year: "2022", score: 71, ci: null, label: "Generally Favorable",
   spread: [80, 18, 2], n: 45,
@@ -3355,6 +3418,7 @@ theMenu2022: {
 },
 shapeOfWater: {
   dataId: "the-shape-of-water-2017",
+      trailer: { key: "XFYWazblaUA", name: "Official Trailer" },
   genres: ["Drama", "Fantasy", "Romance"],
   name: "The Shape of Water", year: "2017", score: 87, ci: null, label: "Universal Acclaim",
   spread: [92, 6, 2], n: 53,
@@ -3414,6 +3478,7 @@ shapeOfWater: {
 },
 theSubstance: {
   dataId: "the-substance-2024",
+      trailer: { key: "LNlrGhBpYjc", name: "Official Trailer" },
   genres: ["Horror", "Science Fiction", "Thriller"],
   name: "The Substance", year: "2024", score: 78, ci: null, label: "Generally Favorable",
   spread: [86, 11, 4], n: 57,
@@ -3831,6 +3896,18 @@ theSubstance: {
         <p class="streaming-empty">Not yet ranked in Nielsen's weekly Streaming Top 10 — Nielsen only publishes the top 10 titles per week across all platforms, so a film needs enough viewership to qualify, the same way a film needs enough critic reviews before Metacritic will publish a score. Check back as new weekly charts come out.</p>`}
         ${f.streamingInsight ? `<p class="econ-insight">${f.streamingInsight}</p>` : ""}
       </div>`;
+  }
+
+  function trailerHTML(f) {
+    const t = f.trailer;
+    if (!t || !t.key) return "";
+    const url = `https://www.youtube.com/watch?v=${encodeURIComponent(t.key)}`;
+    const label = t.type === "Teaser" ? "Watch teaser" : "Watch trailer";
+    return `
+      <a class="trailer-link" href="${url}" target="_blank" rel="noopener noreferrer">
+        <span class="play-glyph" aria-hidden="true"><svg viewBox="0 0 10 10"><polygon points="1,0 10,5 1,10" fill="currentColor"/></svg></span>
+        ${label} on YouTube
+      </a>`;
   }
 
   function buildGemsChart() {
@@ -4261,6 +4338,7 @@ theSubstance: {
           ${f.poster ? `<img class="poster-thumb" src="https://image.tmdb.org/t/p/w185${f.poster}" alt="${f.name} poster" loading="lazy" referrerpolicy="no-referrer">` : ""}
           <div>
             <h2>${f.name} <span class="year">(${f.year})</span></h2>
+            ${trailerHTML(f)}
           </div>
         </div>
         <span class="badge">${f.label || "Not yet reviewed"}</span>
