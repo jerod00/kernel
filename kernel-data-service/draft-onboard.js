@@ -4,6 +4,7 @@ const {
   DRAFTS_DIR,
   runTier1,
   readDraftWithRetry,
+  saveAiTextToDraft,
   draftInsightText,
   buildFilmsEntryText,
   pickEntryKey,
@@ -64,6 +65,7 @@ const filmsToProcess = JSON.parse(filmsArg);
       keys.push(key);
 
       const aiText = await draftInsightText(data);
+      saveAiTextToDraft(draftPath, data, aiText);
       entriesText += buildFilmsEntryText(key, data, aiText, category || "theatrical");
       processed.push({ title, year, dataId: data.dataId, key });
       console.log(`  -> FILMS.${key} drafted (score=${data.critic.score ?? "n/a"}, director=${!!data.director}, actor=${!!data.actor})`);

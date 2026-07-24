@@ -5,6 +5,7 @@ const {
   DRAFTS_DIR,
   runTier1,
   readDraftWithRetry,
+  saveAiTextToDraft,
   draftInsightText,
   buildFilmsEntryText,
   pickEntryKey,
@@ -134,6 +135,7 @@ async function findCandidates(beforeDate, onboardedIds, onboardedTitles, limit) 
       keys.push(key);
 
       const aiText = await draftInsightText(data);
+      saveAiTextToDraft(draftPath, data, aiText);
       entriesText += buildFilmsEntryText(key, data, aiText, "historical");
       processed.push({ title: c.title, year: c.year, dataId: data.dataId, key });
       console.log(`  -> FILMS.${key} drafted (score=${data.critic.score ?? "n/a"})`);

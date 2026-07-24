@@ -40,6 +40,19 @@ function readDraftWithRetry(draftPath) {
   }
 }
 
+// draftInsightText()'s output only ever gets embedded into the widget's
+// FILMS entry text — it was never written back into the draft JSON file
+// itself, which meant review-draft-pr.js's prose-consistency check always
+// found insight/directorInsight/actorInsight null (n/a on every single
+// film, confirmed the first time this ran for real). Persisting it back
+// here is what that check actually needs to read.
+function saveAiTextToDraft(draftPath, data, aiText) {
+  data.insight = aiText.insight;
+  data.directorInsight = aiText.directorInsight;
+  data.actorInsight = aiText.actorInsight;
+  fs.writeFileSync(draftPath, JSON.stringify(data, null, 2));
+}
+
 async function callAnthropic(system, userPrompt, maxTokens) {
   if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY not set");
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -246,6 +259,7 @@ module.exports = {
   DRAFTS_DIR,
   runTier1,
   readDraftWithRetry,
+  saveAiTextToDraft,
   draftInsightText,
   buildFilmsEntryText,
   pickEntryKey,
