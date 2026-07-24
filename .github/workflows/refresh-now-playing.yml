@@ -68,6 +68,7 @@ jobs:
       # into the script text — see the earlier commit that fixed exactly
       # that bug for the issue step below.
       - name: Open PR for drafted films
+        id: open-pr
         if: steps.draft.outputs.drafted != '' && steps.draft.outputs.drafted != '[]'
         env:
           GH_TOKEN: ${{ github.token }}
@@ -92,7 +93,29 @@ jobs:
           Films drafted this run:
           EOF
           echo "$PR_BODY_LIST" >> /tmp/pr-body.md
-          gh pr create --title "$PR_TITLE" --body-file /tmp/pr-body.md --base main --head "$BRANCH"
+          PR_URL=$(gh pr create --title "$PR_TITLE" --body-file /tmp/pr-body.md --base main --head "$BRANCH")
+          echo "pr-number=${PR_URL##*/}" >> "$GITHUB_OUTPUT"
+
+      # Fact-checks the same films draft-onboard.js just drafted (no
+      # re-parsing the diff — reuses its exact output) and posts findings
+      # as a comment on the PR just opened above. Two distinct kinds of
+      # check on purpose: structural/numeric checks run in plain code
+      # (independently re-verifies the TMDb match, range-checks scores and
+      # dollar figures), while only the prose-consistency question ("does
+      # the AI-drafted insight text actually match the numbers it was
+      # given") goes to Claude — same "never ask the model to verify
+      # arithmetic" philosophy as draft-onboard.js itself. Never blocks or
+      # auto-merges anything; purely a head start for the human reviewer.
+      - name: Fact-check drafted films
+        if: steps.open-pr.outputs.pr-number != ''
+        working-directory: kernel-data-service
+        env:
+          TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GH_TOKEN: ${{ github.token }}
+          DRAFTED_JSON: ${{ steps.draft.outputs.drafted }}
+          PR_NUMBER: ${{ steps.open-pr.outputs.pr-number }}
+        run: node review-draft-pr.js
 
       # Whatever's left over (beyond the auto-draft cap, or films
       # draft-onboard.js skipped) still needs a human for Tier 2 research —
