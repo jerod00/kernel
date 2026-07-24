@@ -1,0 +1,2034 @@
+<meta charset="utf-8">
+<title>The Kernel</title>
+<style>
+  :root{
+    --ink:#201E1B; --paper:#EFEBE1; --gold:#B8863A; --teal:#2F6B64;
+    --rule:#C9C2B0; --muted:#6E6859; --card:#F7F4EC; --neg:#9C4A3C;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --ink:#17181A; --paper:#EAE6DC; --gold:#D4A64C; --teal:#4FA69C; --rule:#34322D; --muted:#9C9686; --card:#1D1E20; --neg:#C2695A; }
+  }
+  :root[data-theme="dark"]{ --ink:#17181A; --paper:#EAE6DC; --gold:#D4A64C; --teal:#4FA69C; --rule:#34322D; --muted:#9C9686; --card:#1D1E20; --neg:#C2695A; }
+  :root[data-theme="light"]{ --ink:#201E1B; --paper:#EFEBE1; --gold:#B8863A; --teal:#2F6B64; --rule:#C9C2B0; --muted:#6E6859; --card:#F7F4EC; --neg:#9C4A3C; }
+
+  *{ box-sizing:border-box; }
+  body{ margin:0; }
+  .doc{
+    background:var(--ink); color:var(--paper);
+    font-family:-apple-system,"Segoe UI","Helvetica Neue",Arial,sans-serif;
+    line-height:1.55; max-width:760px; margin:0 auto; padding:4rem 1.75rem 5rem;
+  }
+  .mono{ font-family:ui-monospace,"SF Mono","Cascadia Code",Consolas,monospace; font-variant-numeric:tabular-nums; }
+
+  .kicker{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem;
+    letter-spacing:0.16em; text-transform:uppercase; color:var(--gold);
+    display:flex; align-items:center; gap:0.6em; margin-bottom:0.9rem;
+  }
+  .kicker::after{ content:""; flex:1; height:1px; background:var(--rule); }
+  h1{ font-family:Georgia,"Iowan Old Style","Times New Roman",serif; font-size:2.3rem; letter-spacing:-0.01em; margin:0 0 0.4rem; text-wrap:balance; }
+  .tagline{ color:var(--muted); max-width:56ch; margin:0; }
+
+  .masthead-row{ display:flex; justify-content:space-between; align-items:flex-start; gap:1.5rem; margin-bottom:2.4rem; }
+  .masthead-row > div{ min-width:0; }
+  .hero-kernel{ width:92px; height:92px; flex-shrink:0; transform-origin:50% 55%; animation:kernel-pop 0.7s cubic-bezier(.34,1.56,.64,1) 0.1s both; }
+  @keyframes kernel-pop{
+    0%{ transform:scale(0.4) rotate(-10deg); opacity:0; }
+    65%{ transform:scale(1.08) rotate(4deg); opacity:1; }
+    100%{ transform:scale(1) rotate(0deg); opacity:1; }
+  }
+  @media (prefers-reduced-motion: reduce){ .hero-kernel{ animation:none; } }
+  @media (max-width:520px){ .hero-kernel{ width:60px; height:60px; } }
+
+  .mini-kernel{ width:1em; height:1em; display:inline-block; vertical-align:-0.15em; flex-shrink:0; }
+  .sign-off{ display:flex; justify-content:center; margin-top:2.2rem; }
+  .sign-off .mini-kernel{ width:22px; height:22px; opacity:0.7; }
+
+  .film-gallery{ display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin-bottom:2.2rem; }
+  @media (max-width:560px){ .film-gallery{ grid-template-columns:1fr; max-width:280px; margin-left:auto; margin-right:auto; } }
+
+  .gems-section{ margin-bottom:2.6rem; padding-bottom:2rem; border-bottom:1px solid var(--rule); }
+  .gems-section .chart-title{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); }
+  .gems-svg{ display:block; width:100%; height:auto; min-width:460px; }
+  .quad-label{ font-size:7px; letter-spacing:0.04em; fill:var(--muted); opacity:0.75; }
+  .dot-label{ font-size:8px; fill:var(--paper); opacity:0.9; }
+  .gems-caption{ font-size:0.78rem; color:var(--muted); margin:0.7rem 0 0; max-width:64ch; }
+
+  .top100-link{
+    display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    padding:1rem 1.2rem; margin-bottom:2.2rem; text-decoration:none; color:var(--paper);
+    border:1px solid var(--rule); transition:border-color 0.15s ease, background 0.15s ease;
+  }
+  .top100-link:hover{ border-color:var(--gold); background:rgba(184,134,58,0.08); }
+  .top100-link:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+  .top100-link-label{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.82rem;
+    letter-spacing:0.04em; text-transform:uppercase;
+  }
+  .top100-link-label strong{ color:var(--gold); font-weight:normal; }
+  .top100-link-arrow{ color:var(--gold); transition:transform 0.15s ease; }
+  .top100-link:hover .top100-link-arrow{ transform:translateX(4px); }
+  @media (prefers-reduced-motion: reduce){ .top100-link-arrow{ transition:none; } .top100-link:hover .top100-link-arrow{ transform:none; } }
+
+  .vault-section{ margin-bottom:2.6rem; padding-bottom:2rem; border-bottom:1px solid var(--rule); }
+  .vault-section .chart-title{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); }
+  .vault-search-row{ margin:0.9rem 0 0.3rem; }
+  .vault-search{
+    width:100%; font-family:inherit; font-size:0.95rem; color:var(--paper); background:var(--ink);
+    border:1px solid var(--rule); padding:0.65rem 0.8rem;
+  }
+  .vault-search::placeholder{ color:var(--muted); }
+  .vault-search:focus-visible{ outline:2px solid var(--teal); outline-offset:1px; }
+  .vault-results{ display:flex; flex-direction:column; }
+  .vault-row{
+    display:flex; align-items:center; gap:1rem; width:100%; text-align:left;
+    font-family:inherit; color:inherit; background:none; border:none; border-top:1px solid var(--rule);
+    cursor:pointer; padding:0.7rem 0.2rem; transition:background 0.15s ease;
+  }
+  .vault-row:first-child{ border-top:none; }
+  .vault-row:hover{ background:rgba(184,134,58,0.07); }
+  .vault-row:focus-visible{ outline:2px solid var(--teal); outline-offset:-2px; }
+  @media (prefers-reduced-motion: reduce){ .vault-row{ transition:none; } }
+  .vault-poster{ width:36px; height:54px; object-fit:cover; border:1px solid var(--rule); flex-shrink:0; background:var(--rule); }
+  .vault-meta{ flex:1; min-width:0; }
+  .vault-title{ display:block; font-family:Georgia,serif; font-size:0.95rem; text-wrap:balance; }
+  .vault-year{ color:var(--muted); font-size:0.82rem; }
+  .vault-score{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.2rem; color:var(--gold); flex-shrink:0; }
+  .vault-caption{ font-size:0.78rem; color:var(--muted); margin:0.7rem 0 0; max-width:64ch; }
+
+  .top100-title{ font-family:Georgia,"Iowan Old Style",serif; font-size:1.8rem; margin:0 0 0.4rem; text-wrap:balance; }
+  .top100-title strong{ color:var(--gold); font-weight:inherit; }
+  .top100-sub{ color:var(--muted); max-width:56ch; margin:0 0 1.4rem; }
+
+  .genre-filter{ display:flex; flex-wrap:wrap; gap:0.5rem; margin-bottom:2rem; }
+  .genre-pill{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.74rem; letter-spacing:0.03em;
+    text-transform:uppercase; color:var(--muted); background:none; border:1px solid var(--rule);
+    padding:0.4rem 0.85rem; cursor:pointer; transition:border-color 0.15s ease, color 0.15s ease;
+  }
+  .genre-pill:hover{ border-color:var(--gold); color:var(--paper); }
+  .genre-pill[aria-selected="true"]{ border-color:var(--gold); color:var(--gold); }
+  .genre-pill:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+  .top100-empty{ color:var(--muted); font-size:0.9rem; padding:1.2rem 0; }
+
+  .rank-list{ display:flex; flex-direction:column; }
+  .rank-row{
+    display:flex; align-items:center; gap:1rem; width:100%; text-align:left;
+    font-family:inherit; color:inherit; background:none; border:none; border-top:1px solid var(--rule);
+    cursor:pointer; padding:0.85rem 0.2rem; transition:background 0.15s ease;
+  }
+  .rank-row:first-child{ border-top:none; }
+  .rank-row:hover{ background:rgba(184,134,58,0.07); }
+  .rank-row:focus-visible{ outline:2px solid var(--teal); outline-offset:-2px; }
+  @media (prefers-reduced-motion: reduce){ .rank-row{ transition:none; } }
+  .rank-num{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.25rem; color:var(--muted);
+    width:2.1em; flex-shrink:0; text-align:right;
+  }
+  .rank-num.rank-top{ color:var(--gold); }
+  .rank-poster{ width:40px; height:60px; object-fit:cover; border:1px solid var(--rule); flex-shrink:0; background:var(--rule); }
+  .rank-meta{ flex:1; min-width:0; }
+  .rank-title{ display:block; font-family:Georgia,serif; font-size:1rem; text-wrap:balance; }
+  .rank-year{ color:var(--muted); font-size:0.85rem; }
+  .rank-score{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.35rem; color:var(--gold); flex-shrink:0; }
+
+  .tab{
+    display:flex; flex-direction:column; text-align:left; font-family:inherit; color:inherit;
+    background:var(--card); border:1px solid var(--rule); padding:0; cursor:pointer; overflow:hidden;
+    transition:transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  .tab:hover{ transform:translateY(-3px); border-color:var(--gold); }
+  .tab[aria-selected="true"]{ border-color:var(--gold); box-shadow:0 0 0 1px var(--gold); }
+  .tab:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+  @media (prefers-reduced-motion: reduce){ .tab{ transition:none; } .tab:hover{ transform:none; } }
+
+  .tile-poster-wrap{ position:relative; width:100%; aspect-ratio:2/3; background:var(--rule); overflow:hidden; }
+  .tile-poster{ width:100%; height:100%; object-fit:cover; display:block; }
+  .tile-badge{
+    position:absolute; top:0.5rem; right:0.5rem;
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.6rem;
+    letter-spacing:0.05em; text-transform:uppercase; color:var(--ink); background:var(--gold);
+    padding:0.2rem 0.45rem;
+  }
+  .tile-meta{ padding:0.8rem 0.9rem 0.9rem; color:var(--ink); }
+  .tile-title{ display:block; font-family:Georgia,"Iowan Old Style",serif; font-size:1rem; margin-bottom:0.3rem; text-wrap:balance; }
+  .tile-year{ color:var(--muted); font-weight:normal; font-size:0.85rem; }
+  .tile-score{ display:flex; align-items:baseline; gap:0.45rem; font-size:0.78rem; color:var(--muted); }
+  .tile-score-num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.35rem; color:var(--gold); }
+
+  .back-link{
+    display:inline-flex; align-items:center; gap:0.5em;
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.82rem;
+    letter-spacing:0.02em; color:var(--muted); background:none; border:none; cursor:pointer;
+    padding:0; margin-bottom:1.6rem; transition:color 0.15s, gap 0.15s;
+  }
+  .back-link:hover{ color:var(--gold); gap:0.7em; }
+  .back-link:focus-visible{ outline:2px solid var(--teal); outline-offset:3px; }
+  @media (prefers-reduced-motion: reduce){ .back-link{ transition:none; } }
+
+  .widget{
+    background:var(--card); color:var(--ink); border:1px solid var(--rule); padding:1.6rem 1.7rem 1.5rem;
+    position:relative;
+  }
+  .widget-head{ display:flex; justify-content:space-between; align-items:flex-start; gap:1rem; margin-bottom:1.2rem; }
+  .widget-head-main{ display:flex; align-items:center; gap:0.9rem; }
+  .widget-head h2{ font-family:Georgia,serif; font-size:1.3rem; margin:0; }
+  .widget-head .year{ color:var(--muted); font-weight:normal; font-size:0.95rem; }
+  .poster-thumb{ width:52px; height:78px; object-fit:cover; border:1px solid var(--rule); flex-shrink:0; background:var(--rule); }
+  .tmdb-attribution{
+    display:flex; align-items:center; gap:0.6em; font-size:0.78rem; color:var(--muted);
+    margin-top:2.6rem; padding-top:1.2rem; border-top:1px solid var(--rule);
+  }
+  .tmdb-logo{ height:1em; width:auto; flex-shrink:0; }
+  .badge{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.68rem;
+    letter-spacing:0.06em; text-transform:uppercase; color:var(--ink); background:var(--gold);
+    padding:0.25rem 0.55rem;
+  }
+
+  .score-row{ display:flex; align-items:baseline; gap:1rem; margin-bottom:0.3rem; flex-wrap:wrap; }
+  .score-num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:3rem; color:var(--gold); line-height:1; }
+  .score-ci{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.1rem; color:var(--muted); }
+  .score-label{ font-size:0.95rem; color:var(--ink); opacity:0.7; margin-bottom:1rem; display:flex; align-items:center; gap:0.4em; }
+  .score-label .mini-kernel{ width:1.1em; height:1.1em; }
+
+  .spread-bar{ display:flex; height:9px; width:100%; overflow:hidden; margin-bottom:0.5rem; }
+  .spread-bar span{ height:100%; }
+  .spread-bar .pos{ background:var(--teal); }
+  .spread-bar .mix{ background:var(--gold); }
+  .spread-bar .neg{ background:var(--neg); }
+  .spread-legend{ display:flex; gap:1.1rem; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; color:var(--muted); margin-bottom:1.3rem; }
+  .spread-legend .pos-c::before{ content:"● "; color:var(--teal); }
+  .spread-legend .mix-c::before{ content:"● "; color:var(--gold); }
+  .spread-legend .neg-c::before{ content:"● "; color:var(--neg); }
+
+  .divider{ border-top:1px solid var(--rule); margin:1.2rem 0; }
+
+  /* Analytics charts */
+  .charts-section{ margin-top:0.2rem; }
+  .chart-block{ margin-bottom:1.4rem; position:relative; }
+  .chart-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:0.5rem; flex-wrap:wrap; gap:0.5rem; }
+  .chart-title{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
+  .chart-legend{ display:flex; gap:1rem; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; color:var(--muted); flex-wrap:wrap; }
+  .chart-legend .sw{ display:inline-block; width:0.8em; height:0.8em; margin-right:0.35em; vertical-align:-0.1em; border-radius:1px; }
+  .chart-svg-wrap{ overflow-x:auto; position:relative; }
+  .chart-svg-wrap svg{ display:block; width:100%; height:auto; min-width:420px; }
+  .chart-tooltip{
+    position:absolute; pointer-events:none; background:var(--ink); border:1px solid var(--rule);
+    color:var(--paper); font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.74rem;
+    padding:0.5rem 0.65rem; white-space:nowrap; opacity:0; transition:opacity 0.1s; z-index:5;
+  }
+  .chart-tooltip .tt-row{ display:flex; gap:0.5rem; justify-content:space-between; }
+  .chart-tooltip .tt-day{ color:var(--muted); margin-bottom:0.25rem; }
+
+  .data-details{ margin-top:0.6rem; }
+  .data-details summary{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; color:var(--teal);
+    cursor:pointer; letter-spacing:0.04em;
+  }
+  .data-details summary:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  table.data-table{ width:100%; border-collapse:collapse; margin-top:0.7rem; font-size:0.8rem; }
+  table.data-table th, table.data-table td{
+    text-align:left; padding:0.4rem 0.7rem 0.4rem 0; border-bottom:1px solid var(--rule);
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-variant-numeric:tabular-nums;
+  }
+  table.data-table th{ color:var(--muted); font-weight:400; font-size:0.7rem; text-transform:uppercase; letter-spacing:0.06em; }
+
+  /* Economics bars */
+  .econ-row{ display:grid; grid-template-columns:82px 1fr auto; gap:0.7rem; align-items:center; margin-bottom:0.65rem; }
+  .econ-label{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.76rem; color:var(--muted); }
+  .econ-track{ height:10px; background:var(--rule); opacity:0.35; }
+  .econ-fill{ height:100%; }
+  .econ-value{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.82rem; color:var(--ink); text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .econ-value.undisclosed{ color:var(--muted); font-style:italic; font-size:0.76rem; }
+  .econ-multiple{ margin-top:0.3rem; padding-top:0.9rem; border-top:1px solid var(--rule); display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:0.6rem; }
+  .econ-multiple .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.4rem; color:var(--gold); }
+  .econ-multiple .cap{ font-size:0.78rem; color:var(--muted); max-width:40ch; }
+  .econ-insight{ font-size:0.9rem; margin-top:0.8rem; max-width:64ch; }
+  .econ-insight strong{ color:var(--ink); opacity:0.95; }
+
+  /* Box office legs */
+  .legs-chart{ margin:0.9rem 0 0.2rem; }
+  .legs-label-row{ display:flex; align-items:flex-end; gap:0.6rem; }
+  .legs-col-label{ flex:1; display:flex; flex-direction:column; align-items:center; min-width:0; }
+  .legs-track-row{ position:relative; display:flex; align-items:flex-end; gap:0.6rem; height:110px; }
+  .legs-col-track{ flex:1; height:100%; display:flex; align-items:flex-end; min-width:0; }
+  .legs-avg-overlay{ position:absolute; inset:0; width:100%; height:100%; pointer-events:none; overflow:visible; }
+  .legs-bar{ width:100%; background:var(--teal); min-height:2px; }
+  .legs-drop{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.64rem; color:var(--neg); margin-bottom:0.3rem; white-space:nowrap; }
+  .legs-val{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.62rem; color:var(--ink); opacity:0.75; margin-bottom:0.25rem; white-space:nowrap; }
+  .legs-wk-row{ display:flex; gap:0.6rem; margin-top:0.5rem; }
+  .legs-col-wk{ flex:1; text-align:center; min-width:0; }
+  .legs-wk{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.68rem; color:var(--muted); }
+  .legs-caption{ font-size:0.76rem; color:var(--muted); margin-top:0.5rem; }
+  .legs-stats{ display:flex; gap:2rem; margin-top:1rem; padding-top:0.9rem; border-top:1px solid var(--rule); flex-wrap:wrap; }
+  .legs-stat .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.3rem; color:var(--gold); display:block; }
+  .legs-stat .cap{ font-size:0.74rem; color:var(--muted); max-width:24ch; }
+  .legs-insight{ font-size:0.9rem; margin-top:0.9rem; max-width:64ch; }
+
+  /* Creator (director / lead actor) track record */
+  .creator-svg-wrap{ overflow-x:auto; margin-top:0.7rem; }
+  .creator-svg{ display:block; width:100%; height:auto; min-width:420px; }
+  .creator-stats{ display:flex; gap:2rem; margin-top:0.9rem; padding-top:0.9rem; border-top:1px solid var(--rule); flex-wrap:wrap; }
+  .creator-stats .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.3rem; color:var(--gold); display:block; }
+  .creator-stats .cap{ font-size:0.74rem; color:var(--muted); max-width:26ch; }
+  .creator-insight{ font-size:0.9rem; margin-top:0.9rem; max-width:64ch; }
+
+  /* Audience reviews */
+  .review-synopsis{ margin-bottom:1.1rem; }
+  .review-synopsis:empty{ margin-bottom:0; }
+  .review-synopsis-label{
+    display:block; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.68rem;
+    letter-spacing:0.08em; text-transform:uppercase; color:var(--teal); margin-bottom:0.35rem;
+  }
+  .review-synopsis-text{ font-size:0.95rem; margin:0 0 0.35rem; max-width:64ch; }
+  .review-synopsis-meta{ font-size:0.76rem; color:var(--muted); margin:0; max-width:64ch; }
+  .review-summary{ font-size:0.95rem; margin-bottom:1rem; min-height:1.4em; }
+  .review-summary .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.6rem; color:var(--teal); margin-right:0.4rem; }
+  .review-form{ display:flex; flex-direction:column; gap:0.9rem; }
+  .review-rating-row{ display:flex; align-items:center; gap:0.9rem; }
+  .review-rating-row label{ font-size:0.82rem; color:var(--muted); white-space:nowrap; }
+  .review-slider{ flex:1; accent-color:var(--teal); }
+  .review-rating-num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.1rem; color:var(--gold); width:2.4em; text-align:right; }
+  .review-rating-num.unset{ color:var(--muted); }
+  .review-rating-hint{ font-size:0.78rem; color:var(--muted); margin:-0.4rem 0 0; }
+  .review-pledge{ display:flex; align-items:center; gap:0.5em; font-size:0.85rem; color:var(--ink); cursor:pointer; }
+  .review-pledge input{ accent-color:var(--teal); }
+  .review-comment{
+    font-family:inherit; font-size:0.88rem; color:var(--ink); background:var(--paper);
+    border:1px solid var(--rule); padding:0.55rem 0.7rem;
+  }
+  .review-comment:focus-visible{ outline:2px solid var(--teal); outline-offset:1px; }
+  .review-submit{
+    align-self:flex-start; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.8rem;
+    letter-spacing:0.03em; text-transform:uppercase; color:var(--paper); background:var(--teal);
+    border:none; padding:0.55rem 1.1rem; cursor:pointer; transition:opacity 0.15s;
+  }
+  .review-submit:hover{ opacity:0.85; }
+  .review-submit:focus-visible{ outline:2px solid var(--gold); outline-offset:2px; }
+  .review-submit:disabled{ opacity:0.4; cursor:not-allowed; }
+  .review-status{ font-size:0.8rem; color:var(--muted); min-height:1.2em; }
+  .review-list{ display:flex; flex-direction:column; margin-top:0.4rem; }
+  .review-item{ display:flex; gap:0.9rem; padding:0.8rem 0; border-top:1px solid var(--rule); }
+  .review-item:first-child{ border-top:none; }
+  .review-item-score{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.1rem; color:var(--gold);
+    width:2.2em; flex-shrink:0; text-align:right;
+  }
+  .review-item-body{ flex:1; min-width:0; }
+  .review-item-comment{ margin:0 0 0.25rem; font-size:0.9rem; color:var(--ink); }
+  .review-item-comment .no-comment{ color:var(--muted); font-style:italic; }
+  .review-item-date{ font-size:0.74rem; color:var(--muted); }
+  .review-caption{ font-size:0.78rem; color:var(--muted); margin-top:0.9rem; max-width:64ch; }
+
+  .revenue-svg text{ font-family:ui-monospace,"SF Mono",Consolas,monospace; }
+  .axis-label{ font-size:8px; fill:var(--muted); }
+  .gold-label{ fill:var(--gold); }
+  .teal-label{ fill:var(--teal); font-size:9px; }
+  .neg-label{ fill:var(--neg); font-size:8px; }
+
+
+  footer{ margin-top:2.6rem; padding-top:1.2rem; border-top:1px solid var(--rule); font-size:0.78rem; color:var(--muted); max-width:62ch; }
+
+  @media (max-width:480px){
+    h1{ font-size:1.9rem; }
+    .score-num{ font-size:2.4rem; }
+    .widget{ padding:1.3rem; }
+  }
+</style>
+
+<div class="doc">
+<div id="landingPage">
+  <div class="masthead-row">
+    <div>
+      <div class="kicker">Now playing
+        <svg class="mini-kernel" viewBox="0 0 60 60" aria-hidden="true">
+          <circle cx="18" cy="26" r="11" fill="var(--gold)"/>
+          <circle cx="42" cy="24" r="12" fill="var(--gold)"/>
+          <circle cx="30" cy="14" r="9" fill="var(--gold)"/>
+          <circle cx="30" cy="34" r="14" fill="var(--gold)"/>
+          <circle cx="30" cy="48" r="7" fill="var(--gold)"/>
+        </svg>
+      </div>
+      <h1>The Kernel</h1>
+      <p class="tagline">A transparent, weighted critic score with the box-office story and the track record behind it — not just a fresh/rotten binary.</p>
+    </div>
+    <svg class="hero-kernel" viewBox="0 0 124 128" aria-hidden="true">
+      <!-- feet, tucked behind the body -->
+      <ellipse cx="47" cy="98" rx="11" ry="8" fill="var(--gold)"/>
+      <ellipse cx="75" cy="98" rx="11" ry="8" fill="var(--gold)"/>
+      <!-- arms -->
+      <path d="M22,60 Q6,68 4,84" fill="none" stroke="var(--gold)" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="4" cy="84" r="5.5" fill="var(--gold)"/>
+      <path d="M100,60 Q118,66 120,80" fill="none" stroke="var(--gold)" stroke-width="7" stroke-linecap="round"/>
+      <circle cx="120" cy="80" r="5.5" fill="var(--gold)"/>
+      <!-- unified silhouette: outline layer (same color, no strokes, radii +2.4) sits behind
+           an identical cluster at true radius — overlapping same-color shapes fuse into one
+           seamless silhouette instead of each bump showing its own outline. -->
+      <g fill="var(--gold)">
+        <circle cx="34" cy="46" r="23.4"/>
+        <circle cx="88" cy="44" r="25.4"/>
+        <circle cx="58" cy="23" r="19.4"/>
+        <circle cx="25" cy="67" r="18.4"/>
+        <circle cx="95" cy="69" r="19.4"/>
+        <circle cx="61" cy="50" r="30.4"/>
+        <circle cx="61" cy="72" r="21.4"/>
+      </g>
+      <g fill="var(--paper)">
+        <circle cx="34" cy="46" r="21"/>
+        <circle cx="88" cy="44" r="23"/>
+        <circle cx="58" cy="23" r="17"/>
+        <circle cx="25" cy="67" r="16"/>
+        <circle cx="95" cy="69" r="17"/>
+        <circle cx="61" cy="50" r="28"/>
+        <circle cx="61" cy="72" r="19"/>
+      </g>
+      <circle cx="18" cy="26" r="2" fill="var(--gold)" opacity="0.65"/>
+      <circle cx="104" cy="22" r="1.6" fill="var(--gold)" opacity="0.65"/>
+      <circle cx="10" cy="50" r="1.4" fill="var(--gold)" opacity="0.55"/>
+      <!-- face -->
+      <ellipse cx="44" cy="58" rx="5.5" ry="3.4" fill="var(--neg)" opacity="0.38"/>
+      <ellipse cx="78" cy="58" rx="5.5" ry="3.4" fill="var(--neg)" opacity="0.38"/>
+      <circle cx="51" cy="47" r="3.6" fill="var(--ink)"/>
+      <circle cx="71" cy="47" r="3.6" fill="var(--ink)"/>
+      <circle cx="52.4" cy="45.6" r="1.1" fill="#fff"/>
+      <circle cx="72.4" cy="45.6" r="1.1" fill="#fff"/>
+      <path d="M49,58 Q61,68 73,58" fill="none" stroke="var(--ink)" stroke-width="2.8" stroke-linecap="round"/>
+    </svg>
+  </div>
+
+  <div class="film-gallery" role="tablist" aria-label="Select a film" id="gallery"></div>
+
+  <a href="#top100" class="top100-link">
+    <span class="top100-link-label">Kernel <strong>All-Time</strong> ranking</span>
+    <span class="top100-link-arrow" aria-hidden="true">→</span>
+  </a>
+
+  <div class="vault-section">
+    <div class="chart-head">
+      <span class="chart-title">The Film Vault</span>
+    </div>
+    <div class="vault-search-row">
+      <input type="text" class="vault-search" id="vaultSearch" placeholder="Search by title, director, or actor…" autocomplete="off">
+    </div>
+    <div class="vault-results" id="vaultResults"></div>
+    <p class="vault-caption">Searches this site's current catalog — a growing vault, not yet an exhaustive archive.</p>
+  </div>
+
+  <div class="gems-section">
+    <div class="chart-head">
+      <span class="chart-title">Great, but does anyone know it exists? — score vs. worldwide box office</span>
+      <span class="chart-legend">
+        <span><span class="sw" style="background:var(--teal)"></span>Hidden gem</span>
+        <span><span class="sw" style="background:var(--gold)"></span>Everything else</span>
+      </span>
+    </div>
+    <div class="chart-svg-wrap" id="gemsChart"></div>
+    <p class="gems-caption">Quadrants split at a 70 Kernel Score and $100M worldwide — round, illustrative dividing lines, not a claim of statistical significance at n=11. Hover a dot for exact numbers.</p>
+  </div>
+
+  <footer>
+    Scores reuse published Metacritic data as a stand-in for a full weighted, per-critic model. Revenue and box-office curves connect real reported checkpoints with straight-line interpolation, not a daily feed. Breakeven uses an industry rule of thumb (2× budget + marketing). The legs average reflects only the films in this dataset with weekend-by-weekend data — still a small sample, not an industry benchmark. Director and lead-actor averages are simple means of each person's published scores and may not reflect a complete filmography. The audience-review form logs submissions to kernel-data-service as an unmodifiable, timestamped fact, same as the rest of this dataset — but it does not apply the verified-eligibility, velocity-cap, or cold-start-floor methodology described elsewhere; anyone can submit, so the resulting "Demo Audience Score" is exactly what it says: self-reported and unverified, not a real Kernel audience score.
+  </footer>
+  <div class="sign-off">
+    <svg class="mini-kernel" viewBox="0 0 60 60" aria-hidden="true">
+      <circle cx="18" cy="26" r="11" fill="var(--gold)"/>
+      <circle cx="42" cy="24" r="12" fill="var(--gold)"/>
+      <circle cx="30" cy="14" r="9" fill="var(--gold)"/>
+      <circle cx="30" cy="34" r="14" fill="var(--gold)"/>
+      <circle cx="30" cy="48" r="7" fill="var(--gold)"/>
+    </svg>
+  </div>
+</div>
+
+<div id="filmPage" hidden>
+  <button class="back-link" id="backLink" type="button">
+    <span aria-hidden="true">←</span> All films
+  </button>
+  <div class="widget" id="widget"></div>
+</div>
+
+<div id="topPage" hidden>
+  <button class="back-link" id="backLinkTop" type="button">
+    <span aria-hidden="true">←</span> All films
+  </button>
+  <h2 class="top100-title">THE &ldquo;KERNEL&rsquo;S&rdquo; <strong>ALL-TIME</strong> RANKINGS</h2>
+  <p class="top100-sub" id="top100Sub"></p>
+  <div class="genre-filter" id="genreFilter" role="tablist" aria-label="Filter by genre"></div>
+  <div class="rank-list" id="rankList"></div>
+</div>
+
+<div class="tmdb-attribution" id="tmdbAttribution"></div>
+</div>
+
+<script>
+  // TMDb's own logo mark, required verbatim alongside attribution text per
+  // their terms of use (api-terms-of-use section 3) — kept in official
+  // colors, not restyled to the site's own palette.
+  const TMDB_LOGO_SVG = `<svg class="tmdb-logo" role="img" aria-label="TMDB logo" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 273.42 35.52"><defs><linearGradient id="tmdb-logo-gradient" y1="17.76" x2="273.42" y2="17.76" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#90cea1"/><stop offset="0.56" stop-color="#3cbec9"/><stop offset="1" stop-color="#00b3e5"/></linearGradient></defs><path fill="url(#tmdb-logo-gradient)" d="M191.85,35.37h63.9A17.67,17.67,0,0,0,273.42,17.7h0A17.67,17.67,0,0,0,255.75,0h-63.9A17.67,17.67,0,0,0,174.18,17.7h0A17.67,17.67,0,0,0,191.85,35.37ZM10.1,35.42h7.8V6.92H28V0H0v6.9H10.1Zm28.1,0H46V8.25h.1L55.05,35.4h6L70.3,8.25h.1V35.4h7.8V0H66.45l-8.2,23.1h-.1L50,0H38.2ZM89.14.12h11.7a33.56,33.56,0,0,1,8.08,1,18.52,18.52,0,0,1,6.67,3.08,15.09,15.09,0,0,1,4.53,5.52,18.5,18.5,0,0,1,1.67,8.25,16.91,16.91,0,0,1-1.62,7.58,16.3,16.3,0,0,1-4.38,5.5,19.24,19.24,0,0,1-6.35,3.37,24.53,24.53,0,0,1-7.55,1.15H89.14Zm7.8,28.2h4a21.66,21.66,0,0,0,5-.55A10.58,10.58,0,0,0,110,26a8.73,8.73,0,0,0,2.68-3.35,11.9,11.9,0,0,0,1-5.08,9.87,9.87,0,0,0-1-4.52,9.17,9.17,0,0,0-2.63-3.18A11.61,11.61,0,0,0,106.22,8a17.06,17.06,0,0,0-4.68-.63h-4.6ZM133.09.12h13.2a32.87,32.87,0,0,1,4.63.33,12.66,12.66,0,0,1,4.17,1.3,7.94,7.94,0,0,1,3,2.72,8.34,8.34,0,0,1,1.15,4.65,7.48,7.48,0,0,1-1.67,5,9.13,9.13,0,0,1-4.43,2.82V17a10.28,10.28,0,0,1,3.18,1,8.51,8.51,0,0,1,2.45,1.85,7.79,7.79,0,0,1,1.57,2.62,9.16,9.16,0,0,1,.55,3.2,8.52,8.52,0,0,1-1.2,4.68,9.32,9.32,0,0,1-3.1,3,13.38,13.38,0,0,1-4.05,1.75,22.5,22.5,0,0,1-4.73.5h-14.5Zm7.8,14.15h5.65a7.65,7.65,0,0,0,1.78-.2,4.78,4.78,0,0,0,1.57-.65,3.43,3.43,0,0,0,1.13-1.2,3.63,3.63,0,0,0,.42-1.8A3.3,3.3,0,0,0,151,8.6a3.42,3.42,0,0,0-1.23-1.13A6.07,6.07,0,0,0,148,6.9a9.9,9.9,0,0,0-1.85-.18h-5.3Zm0,14.65h7a8.27,8.27,0,0,0,1.83-.2,4.67,4.67,0,0,0,1.67-.7,3.93,3.93,0,0,0,1.23-1.3,3.8,3.8,0,0,0,.47-1.95,3.16,3.16,0,0,0-.62-2,4,4,0,0,0-1.58-1.18,8.23,8.23,0,0,0-2-.55,15.12,15.12,0,0,0-2.05-.15h-5.9Z"/></svg>`;
+
+  const DOMAIN_MAX = 60; // days since release
+  const BREAKEVEN_MULTIPLE = 2; // industry rule of thumb: WW gross needs to be ~2x (budget + marketing) to break even, once the exhibitor's cut and P&A are counted
+
+  const FILMS = {
+    joker: {
+      dataId: "joker-2019",
+      genres: ["Crime", "Drama", "Thriller"],
+      name: "Joker", year: "2019", score: 59, ci: "± 4", label: "Mixed",
+      spread: [55, 27, 18], n: 60,
+      poster: "/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
+      econ: { budget: 55, marketing: 120, boxOffice: 1063.6 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 248.2, label: "Opening weekend (WW)" },
+        { day: 43, value: 1000, label: "Crossed $1B" },
+        { day: 60, value: 1063.6, label: "Eventual total" },
+      ],
+      insight: "A middling 59 Kernel Score (\"Mixed\") didn't stop Joker from returning roughly 6× its combined budget and marketing spend — critical consensus and commercial outcome are different signals.",
+      weeklyGross: [96.202337, 55.861403, 29.251840, 19.248035, 13.500116, 9.221303, 5.338389, 2.746029, 1.950478, 1.011191, 0.472341, 0.141192, 0.132310, 0.128484, 0.059333, 0.348048, 0.113282, 0.129439, 0.122527, 0.075553, 0.039972, 0.024004],
+      domesticTotal: 335.478,
+      legsInsight: "A 3.5× domestic multiplier and just a -41.9% second-weekend drop are unusually strong holds for a wide release — better than most blockbusters, despite critics calling it only \"Mixed.\" Real audiences kept showing up after the reviews were already in.",
+      director: {
+        name: "Todd Phillips",
+        thisFilm: "Joker",
+        films: [
+          { title: "Old School", year: 2003, score: 54 },
+          { title: "Starsky & Hutch", year: 2004, score: 55 },
+          { title: "The Hangover", year: 2009, score: 73 },
+          { title: "War Dogs", year: 2016, score: 57 },
+          { title: "Joker", year: 2019, score: 59 },
+          { title: "Joker: Folie à Deux", year: 2024, score: 46 },
+        ],
+      },
+      directorInsight: "Joker's 59 is right around Todd Phillips' 57-point career average — not a critical outlier for him, just a much bigger, more expensive version of the reception his films usually get.",
+      actor: {
+        name: "Joaquin Phoenix",
+        thisFilm: "Joker",
+        films: [
+          { title: "Parenthood", year: 1989, score: 82 },
+          { title: "To Die For", year: 1995, score: 86 },
+          { title: "Gladiator", year: 2000, score: 67 },
+          { title: "Quills", year: 2000, score: 70 },
+          { title: "The Yards", year: 2000, score: 58 },
+          { title: "Signs", year: 2002, score: 59 },
+          { title: "Hotel Rwanda", year: 2004, score: 79 },
+          { title: "Walk the Line", year: 2005, score: 72 },
+          { title: "We Own the Night", year: 2007, score: 59 },
+          { title: "Two Lovers", year: 2008, score: 74 },
+          { title: "The Master", year: 2012, score: 86 },
+          { title: "Her", year: 2013, score: 91 },
+          { title: "The Immigrant", year: 2013, score: 77 },
+          { title: "Inherent Vice", year: 2014, score: 81 },
+          { title: "You Were Never Really Here", year: 2017, score: 84 },
+          { title: "Don't Worry, He Won't Get Far on Foot", year: 2018, score: 67 },
+          { title: "The Sisters Brothers", year: 2018, score: 78 },
+          { title: "Joker", year: 2019, score: 59 },
+          { title: "C'mon C'mon", year: 2021, score: 82 },
+        ],
+      },
+      actorInsight: "Joker (59) sits well below Joaquin Phoenix's average across these roles (74) — one of his more divisive reviews as an actor, even though it wasn't a low point for Phillips as director. Metacritic's own site states a lower all-time career score (62) reflecting titles outside this sample.",
+    },
+    mother: {
+      dataId: "mother-2017",
+      genres: ["Drama", "Horror", "Mystery"],
+      name: "mother!", year: "2017", score: 76, ci: "± 3", label: "Generally Positive",
+      spread: [71, 27, 2], n: 51,
+      poster: "/fjny9chXPx69ln1LMJxbwi5yHMt.jpg",
+      econ: { budget: 30, marketing: null, boxOffice: 44.5 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 7.5, label: "Opening weekend (domestic; int'l not yet released)" },
+        { day: 60, value: 44.5, label: "Eventual total (worldwide)" },
+      ],
+      insight: "Critics were broadly positive (76, \"Generally Positive\") but mother! grossed under 1.5× its production budget alone — before marketing or the distributor's cut are even counted. A clear box-office bomb despite the reviews.",
+      weeklyGross: [7.534673, 2.651540, 1.247218, 0.763744, 0.286400],
+      domesticTotal: 17.800,
+      legsInsight: "A -64.8% second-weekend drop, on top of a shrinking theater count (2,368 down to 106 by weekend 5), confirms the F CinemaScore wasn't a fluke — audiences who saw it opening weekend did not send others.",
+      director: {
+        name: "Darren Aronofsky",
+        thisFilm: "mother!",
+        films: [
+          { title: "Pi", year: 1998, score: 72 },
+          { title: "Requiem for a Dream", year: 2000, score: 71 },
+          { title: "The Fountain", year: 2006, score: 51 },
+          { title: "The Wrestler", year: 2008, score: 80 },
+          { title: "Black Swan", year: 2010, score: 79 },
+          { title: "Noah", year: 2014, score: 68 },
+          { title: "mother!", year: 2017, score: 76 },
+          { title: "The Whale", year: 2022, score: 60 },
+          { title: "Caught Stealing", year: 2025, score: 65 },
+        ],
+      },
+      directorInsight: "mother! (76) actually lands above Aronofsky's own 69-point career average — one of his better-reviewed films, despite bombing at the box office. Critical and commercial performance moved in opposite directions here.",
+      actor: {
+        name: "Jennifer Lawrence",
+        thisFilm: "mother!",
+        films: [
+          { title: "The Burning Plain", year: 2008, score: 45 },
+          { title: "Winter's Bone", year: 2010, score: 90 },
+          { title: "X-Men: First Class", year: 2011, score: 65 },
+          { title: "Like Crazy", year: 2011, score: 68 },
+          { title: "The Beaver", year: 2011, score: 60 },
+          { title: "The Hunger Games", year: 2012, score: 68 },
+          { title: "Silver Linings Playbook", year: 2012, score: 81 },
+          { title: "House at the End of the Street", year: 2012, score: 31 },
+          { title: "American Hustle", year: 2013, score: 90 },
+          { title: "The Hunger Games: Catching Fire", year: 2013, score: 76 },
+          { title: "X-Men: Days of Future Past", year: 2014, score: 75 },
+          { title: "The Hunger Games: Mockingjay - Part 1", year: 2014, score: 64 },
+          { title: "Serena", year: 2014, score: 36 },
+          { title: "The Hunger Games: Mockingjay - Part 2", year: 2015, score: 65 },
+          { title: "Joy", year: 2015, score: 56 },
+          { title: "X-Men: Apocalypse", year: 2016, score: 52 },
+          { title: "Passengers", year: 2016, score: 41 },
+          { title: "mother!", year: 2017, score: 76 },
+          { title: "Red Sparrow", year: 2018, score: 53 },
+          { title: "X-Men: Dark Phoenix", year: 2019, score: 43 },
+          { title: "Don't Look Up", year: 2021, score: 49 },
+          { title: "Causeway", year: 2022, score: 66 },
+          { title: "No Hard Feelings", year: 2023, score: 59 },
+          { title: "Die My Love", year: 2025, score: 72 },
+        ],
+      },
+      actorInsight: "mother! (76) is one of Jennifer Lawrence's best-reviewed films — comfortably above her 61.7-point average across 24 films, even though it barely made back its production budget at the box office.",
+    },
+    lastjedi: {
+      dataId: "the-last-jedi-2017",
+      genres: ["Action", "Adventure", "Science Fiction"],
+      name: "The Last Jedi", year: "2017", score: 84, ci: "± 2", label: "Widely Acclaimed",
+      spread: [93, 7, 0], n: 56,
+      poster: "/kOVEVeg59E0wsnXmF9nrh6OmWII.jpg",
+      econ: { budget: 262, marketing: 190, boxOffice: 1322.6, budgetNote: "Reported production budget; total costs after post-production overruns are reported as high as $339.7M (Forbes)." },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 450.8, label: "Opening weekend (WW)" },
+        { day: 17, value: 1067, label: "~New Year's" },
+        { day: 60, value: 1322.6, label: "Eventual total" },
+      ],
+      insight: "The best-reviewed film here (84) also returned the smallest multiple of combined spend (~2.9×) — critical acclaim, commercial success, and audience sentiment all moved independently of each other.",
+      weeklyGross: [220.009584, 71.565498, 52.520140, 23.728944, 11.854481, 6.555435, 4.254001, 2.338242, 1.397413, 0.617698, 0.352838, 0.252689, 0.265513, 0.174756, 0.102020, 0.066989, 0.033544, 0.005845],
+      domesticTotal: 620.181,
+      legsInsight: "A -67.5% second-weekend drop is among the steepest of any Star Wars release — ticket sales showed something was off before RT's audience-score controversy ever went public.",
+      director: {
+        name: "Rian Johnson",
+        thisFilm: "The Last Jedi",
+        films: [
+          { title: "Brick", year: 2005, score: 72 },
+          { title: "The Brothers Bloom", year: 2009, score: 55 },
+          { title: "Looper", year: 2012, score: 84 },
+          { title: "The Last Jedi", year: 2017, score: 84 },
+          { title: "Knives Out", year: 2019, score: 82 },
+          { title: "Glass Onion", year: 2022, score: 81 },
+        ],
+      },
+      directorInsight: "The Last Jedi (84) ties Looper as Johnson's best-reviewed film to date — this wasn't a director having an off year critically, whatever happened with the audience score.",
+      actor: {
+        name: "Daisy Ridley",
+        thisFilm: "The Last Jedi",
+        films: [
+          { title: "Star Wars: The Force Awakens", year: 2015, score: 80 },
+          { title: "Murder on the Orient Express", year: 2017, score: 52 },
+          { title: "The Last Jedi", year: 2017, score: 84 },
+          { title: "Ophelia", year: 2018, score: 60 },
+          { title: "Star Wars: The Rise of Skywalker", year: 2019, score: 53 },
+          { title: "Chaos Walking", year: 2021, score: 38 },
+          { title: "Young Woman and the Sea", year: 2024, score: 62 },
+        ],
+      },
+      actorInsight: "The Last Jedi (84) is by far Daisy Ridley's best-reviewed film — more than 22 points above her career average, and nothing else in her filmography comes close.",
+    },
+    eeaao: {
+      dataId: "everything-everywhere-all-at-once-2022",
+      genres: ["Action", "Science Fiction", "Comedy"],
+      name: "Everything Everywhere All at Once", year: "2022", score: 81, ci: null, label: "Universal Acclaim",
+      spread: [89, 11, 0], n: 55,
+      poster: "/u68AjlvlutfEIcpmbYpKcdi09ut.jpg",
+      econ: { budget: 25, marketing: null, boxOffice: 143.4, domesticTotal: 72 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 0.5, label: "Opening (limited, 10 theaters)" },
+        { day: 60, value: 143.4, label: "Eventual total (worldwide)" },
+      ],
+      insight: "A24's highest-grossing release ever (81 Kernel Score, $143M off a $25M budget) never had a traditional wide-release opening weekend — it built entirely through platform expansion and word of mouth.",
+    },
+    pig: {
+      dataId: "pig-2021",
+      genres: ["Drama"],
+      name: "Pig", year: "2021", score: 82, ci: null, label: "Universal Acclaim",
+      spread: [87, 13, 0], n: 39,
+      poster: "/1InMm4Mbjx8wCKvIy5gglo5i3HN.jpg",
+      econ: { budget: 3, marketing: null, boxOffice: 4.6, domesticTotal: 3.8 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 0.945, label: "Opening weekend" },
+        { day: 60, value: 4.6, label: "Eventual total (worldwide)" },
+      ],
+      insight: "One of the best-reviewed films in this dataset (82) barely made back its already-tiny $3M budget theatrically — a textbook hidden gem: adored by critics, seen by almost no one in theaters before finding its real audience on streaming.",
+    },
+    soundofmetal: {
+      dataId: "sound-of-metal-2019",
+      genres: ["Drama", "Music"],
+      name: "Sound of Metal", year: "2019", score: 82, ci: null, label: "Universal Acclaim",
+      spread: [95, 5, 0], n: 37,
+      poster: "/3178oOJKKPDeQ2legWQvMPpllv.jpg",
+      econ: { budget: 5.4, marketing: null, boxOffice: 0.51652 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 60, value: 0.51652, label: "Eventual theatrical total (COVID-disrupted)" },
+      ],
+      insight: "COVID shut theaters mid-rollout, so Sound of Metal's $516K theatrical gross captures almost none of its real audience — one of the best-reviewed films here (82) by a score that barely touched a movie theater; it found its audience on Prime Video instead.",
+    },
+    thewhale: {
+      dataId: "the-whale-2022",
+      genres: ["Drama"],
+      name: "The Whale", year: "2022", score: 60, ci: null, label: "Mixed or Average",
+      spread: [46, 40, 14], n: 57,
+      poster: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
+      econ: { budget: 3, marketing: null, boxOffice: 57.6, domesticTotal: 17.46 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 0.36, label: "Opening (limited, 6 theaters)" },
+        { day: 34, value: 10, label: "Crosses $10M (domestic)" },
+        { day: 60, value: 57.6, label: "Eventual total (worldwide)" },
+      ],
+      insight: "The Whale turned a $3M budget into $57.6M — one of the best returns in this dataset — despite the most divided critical reception (60) of any Aronofsky film in over a decade.",
+      director: {
+        name: "Darren Aronofsky",
+        thisFilm: "The Whale",
+        films: [
+          { title: "Pi", year: 1998, score: 72 },
+          { title: "Requiem for a Dream", year: 2000, score: 71 },
+          { title: "The Fountain", year: 2006, score: 51 },
+          { title: "The Wrestler", year: 2008, score: 80 },
+          { title: "Black Swan", year: 2010, score: 79 },
+          { title: "Noah", year: 2014, score: 68 },
+          { title: "mother!", year: 2017, score: 76 },
+          { title: "The Whale", year: 2022, score: 60 },
+          { title: "Caught Stealing", year: 2025, score: 65 },
+        ],
+      },
+      directorInsight: "The Whale (60) sits noticeably below Aronofsky's 69-point career average — his most divisive reviews in over a decade, even as it revived Brendan Fraser's career and became one of A24's biggest specialty hits.",
+    },
+    barbie: {
+      dataId: "barbie-2023",
+      genres: ["Comedy", "Adventure", "Fantasy"],
+      name: "Barbie", year: "2023", score: 80, ci: null, label: "Generally Favorable",
+      spread: [91, 7, 1], n: 67,
+      poster: "/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
+      econ: { budget: 145, marketing: 150, boxOffice: 1447.138, domesticTotal: 636.238 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 162.022, label: "Opening weekend (domestic)" },
+        { day: 60, value: 1447.138, label: "Eventual total (worldwide)" },
+      ],
+      insight: "Barbie (80) is the only film in this dataset that was simultaneously critically loved, a cultural event, and the single biggest box office hit of its year ($1.45B) — score, hype, and commercial success all pointing the same direction for once.",
+      weeklyGross: [162.022044, 93.011602, 53.008647, 33.833294, 21.030328, 15.104145, 10.214874, 5.701914, 3.821767, 3.201442, 1.424571, 0.781687, 0.475664, 0.253324, 0.090077, 0.085176, 0.058136, 0.020379, 0.013625, 0.007712, 0.003754, 0.006094, 0.001178, 0.001960, 0.002385, 0.002972, 0.002020],
+      domesticTotal: 636.238,
+      legsInsight: "A ~3.9× domestic multiplier on the biggest release of 2023 is a genuinely strong hold for a film this size — Barbenheimer-fueled repeat interest, not just a one-weekend event.",
+    },
+    cats: {
+      dataId: "cats-2019",
+      genres: ["Fantasy", "Musical", "Comedy"],
+      name: "Cats", year: "2019", score: 32, ci: null, label: "Generally Unfavorable",
+      spread: [12, 45, 43], n: 51,
+      poster: "/aCNch5FmzT2WaUcY44925owIZXY.jpg",
+      econ: { budget: 95, marketing: 115, boxOffice: 77.3, domesticTotal: 27.167 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 6.61987, label: "Opening weekend (domestic)" },
+        { day: 60, value: 77.3, label: "Eventual total (worldwide)" },
+      ],
+      insight: "Cats (32) is the cleanest \"justified skip\" in this dataset — a weak score and a weak box office agreeing with each other, on a $95M budget plus $115M in marketing that never had a chance of coming back.",
+      weeklyGross: [6.619870, 4.821760, 2.630135, 0.559260, 0.143680, 0.104785, 0.070405, 0.044530],
+      domesticTotal: 27.167,
+      legsInsight: "A -27.2% second-weekend drop looks almost normal — the damage was already done in a weak opening the reviews had fully predicted, not a cratering hold after the fact.",
+    },
+    morbius: {
+      dataId: "morbius-2022",
+      genres: ["Action", "Science Fiction", "Horror"],
+      name: "Morbius", year: "2022", score: 35, ci: null, label: "Generally Unfavorable",
+      spread: [13, 45, 42], n: 55,
+      poster: "/Av8Z2jZhEm1FLkFzMThzz9hndJF.jpg",
+      econ: { budget: 75, marketing: 50, boxOffice: 167.5, domesticTotal: 73.866, budgetNote: "Reported production budget; some estimates run as high as $83M, with P&A/marketing estimated separately at $37.5–60M (this uses the midpoint)." },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 39.006, label: "Opening weekend (domestic)" },
+        { day: 60, value: 167.5, label: "Eventual total (worldwide)" },
+      ],
+      insight: "Morbius (35) opened to $39M on brand recognition alone, then collapsed — a clean \"hype outran quality\" case: the opening weekend had nothing to do with the reviews, and every weekend after did.",
+      weeklyGross: [39.005895, 10.201332, 4.730148, 2.307137, 1.513341, 0.630040, 0.305809, 0.183065, 0.029802, 0.310665, 0.053052, 0.005695],
+      domesticTotal: 73.866,
+      legsInsight: "A -73.8% second-weekend drop is brutal even by superhero-movie standards — audiences who showed up on brand recognition alone didn't come back, and didn't send anyone else either.",
+    },
+    jokerfad: {
+      dataId: "joker-folie-a-deux-2024",
+      genres: ["Crime", "Drama", "Musical"],
+      name: "Joker: Folie à Deux", year: "2024", score: 46, ci: null, label: "Mixed or Average",
+      spread: [33, 42, 25], n: 64,
+      poster: "/aciP8Km0waTLXEYf5ybFK5CSUxl.jpg",
+      econ: { budget: 200, marketing: 100, boxOffice: 207.5, domesticTotal: 58.3 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 3, value: 37.678, label: "Opening weekend (domestic)" },
+        { day: 60, value: 207.5, label: "Eventual total (worldwide)" },
+      ],
+      insight: "The original Joker returned ~6× its combined spend; this sequel (46, well below the original's 59) needed $450M just to break even and topped out around $207.5M — a direct, real-dollar demonstration of what a worse score can cost.",
+      weeklyGross: [37.678467, 7.002654, 2.146800, 0.584496, 0.140958, 0.025002],
+      domesticTotal: 58.3,
+      legsInsight: "A -81.4% second-weekend drop — one of the steepest of any wide release in this dataset — following a D CinemaScore is about as unambiguous a signal as box office data gets.",
+      director: {
+        name: "Todd Phillips",
+        thisFilm: "Joker: Folie à Deux",
+        films: [
+          { title: "Old School", year: 2003, score: 54 },
+          { title: "Starsky & Hutch", year: 2004, score: 55 },
+          { title: "The Hangover", year: 2009, score: 73 },
+          { title: "War Dogs", year: 2016, score: 57 },
+          { title: "Joker", year: 2019, score: 59 },
+          { title: "Joker: Folie à Deux", year: 2024, score: 46 },
+        ],
+      },
+      directorInsight: "Folie à Deux (46) is Todd Phillips' lowest-scored film to date — below even his early-2000s studio comedies — breaking a run where each of his last three films had scored higher than the one before.",
+    },
+
+    odyssey: {
+      dataId: "the-odyssey-2026",
+      nowPlaying: true,
+      genres: ["Adventure","Action","Fantasy"],
+      name: "The Odyssey", year: "2026", score: 88, ci: null, label: "Universal Acclaim",
+      spread: [92, 8, 0], n: 62,
+      poster: "/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg",
+      econ: { budget: 250, marketing: 125, boxOffice: 303.976, domesticTotal: 181.746 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 7, value: 303.976, label: "Cumulative through 2026-07-24" },
+      ],
+      insight: "Metacritic's own critic aggregate for The Odyssey lands at 88 (\"Universal Acclaim\", 92% positive, 0% negative across 62 reviews) -- a point below OMDb's reported 89, essentially the same near-unanimous consensus. That acclaim sits alongside a genuinely expensive bet: a $250M production budget plus a Forbes-reported $125M marketing spend puts the film's all-in cost near $375M, a bar its $123.5M domestic opening weekend and $304M worldwide start after one week have not yet cleared -- critical consensus and the multi-hundred-million break-even math are two different scoreboards.",
+      weeklyGross: [123.503],
+      domesticTotal: 181.746,
+      director: {
+        name: "Christopher Nolan",
+        thisFilm: "The Odyssey",
+        films: [
+        { title: "Insomnia", year: 2002, score: 78 },
+        { title: "Batman Begins", year: 2005, score: 70 },
+        { title: "The Prestige", year: 2006, score: 66 },
+        { title: "The Dark Knight", year: 2008, score: 85 },
+        { title: "Inception", year: 2010, score: 74 },
+        { title: "The Dark Knight Rises", year: 2012, score: 78 },
+        { title: "Interstellar", year: 2014, score: 74 },
+        { title: "Dunkirk", year: 2017, score: 94 },
+        { title: "Tenet", year: 2020, score: 69 },
+        { title: "Oppenheimer", year: 2023, score: 90 },
+        { title: "The Odyssey", year: 2026, score: 88 },
+        ],
+      },
+      directorInsight: "The Odyssey (88) sits well above Christopher Nolan's own 78.7-point average across 11 scored films — one of his best-reviewed works to date, in a filmography that already skews high for a working director.",
+      actor: {
+        name: "Matt Damon",
+        thisFilm: "The Odyssey",
+        films: [
+        { title: "Mystic Pizza", year: 1988, score: 60 },
+        { title: "Courage Under Fire", year: 1996, score: 77 },
+        { title: "Chasing Amy", year: 1997, score: 71 },
+        { title: "The Rainmaker", year: 1997, score: 72 },
+        { title: "Saving Private Ryan", year: 1998, score: 91 },
+        { title: "Rounders", year: 1998, score: 53 },
+        { title: "The Talented Mr. Ripley", year: 1999, score: 76 },
+        { title: "Dogma", year: 1999, score: 62 },
+        { title: "The Legend of Bagger Vance", year: 2000, score: 47 },
+        { title: "All the Pretty Horses", year: 2000, score: 55 },
+        { title: "Titan A.E.", year: 2000, score: 48 },
+        { title: "Ocean's Eleven", year: 2001, score: 74 },
+        { title: "Gerry", year: 2002, score: 54 },
+        { title: "Spirit: Stallion of the Cimarron", year: 2002, score: 52 },
+        { title: "Stuck on You", year: 2003, score: 62 },
+        { title: "Ocean's Twelve", year: 2004, score: 58 },
+        { title: "The Bourne Supremacy", year: 2004, score: 73 },
+        { title: "Syriana", year: 2005, score: 76 },
+        { title: "The Brothers Grimm", year: 2005, score: 51 },
+        { title: "The Good Shepherd", year: 2006, score: 61 },
+        { title: "The Departed", year: 2006, score: 85 },
+        { title: "Ocean's Thirteen", year: 2007, score: 62 },
+        { title: "The Bourne Ultimatum", year: 2007, score: 85 },
+        { title: "Youth Without Youth", year: 2007, score: 43 },
+        { title: "Invictus", year: 2009, score: 74 },
+        { title: "The Informant!", year: 2009, score: 66 },
+        { title: "Green Zone", year: 2010, score: 63 },
+        { title: "The Odyssey", year: 2026, score: 88 },
+        ],
+      },
+      actorInsight: "The Odyssey (88) is easily Matt Damon's best-reviewed film in this sample — more than 22 points above his 65.7-point average across 28 scored roles.",
+    },
+
+    moana: {
+      dataId: "moana-2026",
+      nowPlaying: true,
+      genres: ["Family","Fantasy","Comedy","Adventure"],
+      name: "Moana", year: "2026", score: 42, ci: null, label: "Mixed or Average",
+      spread: [20, 50, 30], n: 40,
+      poster: "/2B2XvBZFSOrGt7nptyNoBSFPhfb.jpg",
+      econ: { budget: 250, marketing: null, boxOffice: 183.582, domesticTotal: 89.793206 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 14, value: 183.582, label: "Cumulative through 2026-07-24" },
+      ],
+      insight: "Two weekends in, live-action Moana is badly lagging its $250M budget: worldwide gross sits near $184M after a $43.1M domestic opening fell to $17.9M in weekend two (about a 58% drop, steep for a Disney family title). That soft hold lines up with a 42 Metascore (\"Mixed or Average\" from 40 critics, only 20% positive) -- reviews split more toward tepid-to-negative than toward the kind of word-of-mouth that sustains grosses through slow weeks.",
+      weeklyGross: [43.142824, 17.937618],
+      domesticTotal: 89.793206,
+    },
+
+    backrooms: {
+      dataId: "backrooms-2026",
+      nowPlaying: true,
+      genres: ["Horror","Mystery","Science Fiction"],
+      name: "Backrooms", year: "2026", score: 77, ci: null, label: "Generally Favorable",
+      spread: [83, 17, 0], n: 46,
+      poster: "/rhGx6E3qRNMgj3i5su2oukNHwIQ.jpg",
+      econ: { budget: 10, marketing: null, boxOffice: 387.193, domesticTotal: 195.96 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 56, value: 387.193, label: "Cumulative through 2026-07-24" },
+      ],
+      insight: "Backrooms turned a $10M budget into $387.2M worldwide -- roughly a 39x return, among the widest budget-to-gross multiples in this dataset -- not through traditional P&A spend (no marketing budget is publicly disclosed) but through a viral, internet-native rollout: adapted from a found-footage YouTube creepypasta with a built-in fanbase, it drew over 1.1 billion TikTok views in its first 30 days on just 10,000 uploads (TVREV), and A24 broke from its usual platform-release playbook to open wide in 3,442 domestic theaters -- the biggest opening in the studio's history.",
+      weeklyGross: [81.402, 26.256, 11.522, 7.173, 4.384, 3.229, 1.521, 0.715],
+      domesticTotal: 195.96,
+      legsInsight: "The curve is steeply front-loaded rather than long-legged: Backrooms opened to $81.4M, then fell roughly 68% in weekend two and kept dropping 26-56% most weekends after (down to $0.7M by weekend eight per The Numbers), yet still closed with a reported 2.41x legs multiplier (total domestic vs. opening weekend) -- a viral horror hit that behaved like a conventional front-loaded wide release but sustained just enough of a tail to rack up an outsized total.",
+      director: {
+        name: "Kane Parsons",
+        thisFilm: "Backrooms",
+        films: [
+        { title: "Backrooms", year: 2026, score: 77 },
+        ],
+      },
+      directorInsight: "Backrooms (77) is Kane Parsons' feature directorial debut — there's no prior scored filmography yet to compare it against.",
+      actor: {
+        name: "Chiwetel Ejiofor",
+        thisFilm: "Backrooms",
+        films: [
+        { title: "Amistad", year: 1997, score: 64 },
+        { title: "Dirty Pretty Things", year: 2002, score: 78 },
+        { title: "Love Actually", year: 2003, score: 55 },
+        { title: "She Hate Me", year: 2004, score: 30 },
+        { title: "Melinda and Melinda", year: 2004, score: 54 },
+        { title: "Four Brothers", year: 2005, score: 49 },
+        { title: "Serenity", year: 2005, score: 74 },
+        { title: "Kinky Boots", year: 2005, score: 57 },
+        { title: "Slow Burn", year: 2005, score: 34 },
+        { title: "Inside Man", year: 2006, score: 76 },
+        { title: "Children of Men", year: 2006, score: 84 },
+        { title: "American Gangster", year: 2007, score: 76 },
+        { title: "Talk to Me", year: 2007, score: 69 },
+        { title: "Redbelt", year: 2008, score: 69 },
+        { title: "2012", year: 2009, score: 49 },
+        { title: "Endgame", year: 2009, score: 55 },
+        { title: "Salt", year: 2010, score: 65 },
+        { title: "12 Years a Slave", year: 2013, score: 96 },
+        { title: "Savannah", year: 2013, score: 25 },
+        { title: "Z for Zachariah", year: 2015, score: 68 },
+        { title: "Triple 9", year: 2016, score: 52 },
+        { title: "The Pod Generation", year: 2023, score: 60 },
+        { title: "Rob Peace", year: 2024, score: 61 },
+        { title: "Backrooms", year: 2026, score: 77 },
+        ],
+      },
+      actorInsight: "Backrooms (77) ranks among Chiwetel Ejiofor's best-reviewed roles — more than 15 points above his 61.5-point average across 24 films, trailing only his Oscar-nominated turn in 12 Years a Slave (96).",
+    },
+
+    supergirl: {
+      dataId: "supergirl-2026",
+      nowPlaying: true,
+      genres: ["Action","Adventure","Science Fiction"],
+      name: "Supergirl", year: "2026", score: 50, ci: null, label: "Mixed or Average",
+      spread: [30, 63, 7], n: 56,
+      poster: "/niSvU02l2BONH9ivubV6K1a5QiK.jpg",
+      econ: { budget: 175, marketing: 120, boxOffice: 121.7, domesticTotal: 70.68 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 28, value: 121.7, label: "Cumulative through 2026-07-24" },
+      ],
+      insight: "Supergirl's 50 Metascore ('Mixed or Average,' only 7% negative reviews) is nowhere near disaster territory for critics, yet the box office is: a $37.1M domestic opening against a reported $170-175M production budget plus roughly $120M in marketing means the film's ~$120M worldwide total barely covers half of the theatrical investment before P&A is even counted -- a case where the commercial collapse is far more severe than the merely lukewarm critical reception would predict, pointing to audience indifference (superhero fatigue, unproven solo IP) rather than reviews as the real driver of the bomb.",
+      weeklyGross: [37.102, 8.6, 3.8, 1.525],
+      domesticTotal: 70.68,
+      legsInsight: "Weekend-over-weekend drops of roughly -77% (wknd 2), -56% (wknd 3), and -60% (wknd 4) show almost no legs at all after opening weekend -- a steep, front-loaded collapse typical of a title with no positive word-of-mouth pulling audiences in beyond the opening rush.",
+      director: {
+        name: "Craig Gillespie",
+        thisFilm: "Supergirl",
+        films: [
+        { title: "Lars and the Real Girl", year: 2007, score: 70 },
+        { title: "Mr. Woodcock", year: 2007, score: 41 },
+        { title: "Fright Night", year: 2011, score: 64 },
+        { title: "Million Dollar Arm", year: 2014, score: 56 },
+        { title: "The Finest Hours", year: 2016, score: 58 },
+        { title: "I, Tonya", year: 2017, score: 77 },
+        { title: "Cruella", year: 2021, score: 59 },
+        { title: "Dumb Money", year: 2023, score: 66 },
+        { title: "Supergirl", year: 2026, score: 50 },
+        ],
+      },
+      directorInsight: "Supergirl (50) lands about 10 points below Craig Gillespie's 60.1-point career average across 9 films — one of his more tepidly-received efforts, though not his lowest (Mr. Woodcock's 41 still holds that spot).",
+      actor: {
+        name: "Milly Alcock",
+        thisFilm: "Supergirl",
+        films: [
+        { title: "Superman", year: 2025, score: 68 },
+        { title: "Supergirl", year: 2026, score: 50 },
+        ],
+      },
+      actorInsight: "Supergirl (50) is Milly Alcock's lower-scored film credit so far, about 9 points below her early 59.0-point average — still an extremely small two-film sample this early in her film career.",
+    },
+
+    minionsmonsters: {
+      dataId: "minions-monsters-2026",
+      nowPlaying: true,
+      genres: ["Adventure","Animation","Comedy","Family","Fantasy"],
+      name: "Minions & Monsters", year: "2026", score: 70, ci: null, label: "Generally Favorable",
+      spread: [77, 20, 3], n: 30,
+      poster: "/nz7i42yhLIJ4ve9JKgM6NthoLHO.jpg",
+      econ: { budget: 85, marketing: null, boxOffice: 365.923, domesticTotal: 143.861 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 23, value: 365.923, label: "Cumulative through 2026-07-24" },
+      ],
+      insight: "Minions & Monsters posted the best reviews of any 'Minions'-titled entry (69, versus Minions' 56 in 2015) and the second-best of Pierre Coffin's six-film Despicable Me/Minions directorial run, with 77% of 30 Metacritic critics rating it positively and Generally Favorable overall reception -- yet it still opened to a $37.0M domestic weekend, a soft start for a franchise whose prior entries typically opened north of $60M, suggesting strong reviews did little to offset audience fatigue this deep into the series.",
+      weeklyGross: [37.003505, 21.15003, 13.601235],
+      domesticTotal: 143.861,
+      legsInsight: "The domestic run front-loaded hard out of its July 4th debut but steadied afterward, with weekend-over-weekend drops easing from -42.8% (second weekend, to $21.15M) to -35.7% (third weekend, to $13.60M), a moderating decline consistent with the film's unusually strong critical word-of-mouth partially cushioning the post-opening fall-off.",
+      director: {
+        name: "Pierre Coffin",
+        thisFilm: "Minions & Monsters",
+        films: [
+        { title: "Despicable Me", year: 2010, score: 72 },
+        { title: "Despicable Me 2", year: 2013, score: 62 },
+        { title: "Minions", year: 2015, score: 56 },
+        { title: "Despicable Me 3", year: 2017, score: 49 },
+        { title: "Minions & Monsters", year: 2026, score: 70 },
+        ],
+      },
+      directorInsight: "Minions & Monsters (70) is Pierre Coffin's best-reviewed directorial outing in the Despicable Me/Minions franchise, more than 8 points above his 61.8-point average across five films in the series.",
+      actor: {
+        name: "Pierre Coffin",
+        thisFilm: "Minions & Monsters",
+        films: [
+        { title: "Despicable Me", year: 2010, score: 72 },
+        { title: "Despicable Me 2", year: 2013, score: 62 },
+        { title: "Minions", year: 2015, score: 56 },
+        { title: "Despicable Me 3", year: 2017, score: 49 },
+        { title: "Despicable Me 4", year: 2024, score: 52 },
+        { title: "Minions & Monsters", year: 2026, score: 70 },
+        ],
+      },
+      actorInsight: "As a voice performer across the same franchise, Minions & Monsters (70) is likewise Coffin's best-reviewed credit, nearly 10 points above his 60.2-point average across six films.",
+    },
+
+    toystory5: {
+      dataId: "toy-story-5-2026",
+      nowPlaying: true,
+      genres: ["Animation","Family","Comedy","Adventure"],
+      name: "Toy Story 5", year: "2026", score: 73, ci: null, label: "Generally Favorable",
+      spread: [80, 19, 2], n: 54,
+      poster: "/sfQtVlIHljToOwYjhe21KPGzZWK.jpg",
+      econ: { budget: 250, marketing: null, boxOffice: 958.419, domesticTotal: 436.72 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 35, value: 958.419, label: "Cumulative through 2026-07-24" },
+      ],
+      insight: "Toy Story 5 posted the lowest Metascore of the five-film franchise (73, generally favorable, versus Toy Story 4's 84) yet still opened to the second-biggest weekend in Pixar history and crossed $958M worldwide, showing that for an established family franchise, brand loyalty and built-in audience turnout can decouple commercial outcomes from critical consensus.",
+      weeklyGross: [159.677837, 70.829028, 30.320239, 19.007761, 13.760078],
+      domesticTotal: 436.72,
+      legsInsight: "The film front-loaded hard, with weekend-over-weekend drops of -55.6% and -57.2% in its second and third weekends, but the decline moderated to -37.3% and -27.6% by weekends four and five, indicating a steadier long-tail hold typical of a summer family tentpole once the opening-driven rush subsided.",
+      director: {
+        name: "Andrew Stanton",
+        thisFilm: "Toy Story 5",
+        films: [
+        { title: "Finding Nemo", year: 2003, score: 90 },
+        { title: "WALL·E", year: 2008, score: 95 },
+        { title: "John Carter", year: 2012, score: 51 },
+        { title: "Finding Dory", year: 2016, score: 77 },
+        { title: "In the Blink of an Eye", year: 2026, score: 37 },
+        { title: "Toy Story 5", year: 2026, score: 73 },
+        ],
+      },
+      directorInsight: "Toy Story 5 (73) sits modestly above Andrew Stanton's 70.5-point career average across six films — solid, though nowhere near his career-best WALL·E (95) or Finding Nemo (90).",
+      actor: {
+        name: "Tom Hanks",
+        thisFilm: "Toy Story 5",
+        films: [
+        { title: "Splash", year: 1984, score: 71 },
+        { title: "Bachelor Party", year: 1984, score: 56 },
+        { title: "The Man with One Red Shoe", year: 1985, score: 31 },
+        { title: "The Money Pit", year: 1986, score: 49 },
+        { title: "Dragnet", year: 1987, score: 62 },
+        { title: "Big", year: 1988, score: 73 },
+        { title: "Turner & Hooch", year: 1989, score: 36 },
+        { title: "The 'Burbs", year: 1989, score: 45 },
+        { title: "Joe Versus the Volcano", year: 1990, score: 45 },
+        { title: "A League of Their Own", year: 1992, score: 69 },
+        { title: "Sleepless in Seattle", year: 1993, score: 72 },
+        { title: "Forrest Gump", year: 1994, score: 82 },
+        { title: "Toy Story", year: 1995, score: 96 },
+        { title: "Apollo 13", year: 1995, score: 78 },
+        { title: "Saving Private Ryan", year: 1998, score: 91 },
+        { title: "The Green Mile", year: 1999, score: 61 },
+        { title: "Cast Away", year: 2000, score: 74 },
+        { title: "Catch Me If You Can", year: 2002, score: 75 },
+        { title: "Road to Perdition", year: 2002, score: 72 },
+        { title: "The Terminal", year: 2004, score: 55 },
+        { title: "The Polar Express", year: 2004, score: 61 },
+        { title: "The Ladykillers", year: 2004, score: 56 },
+        { title: "Magnificent Desolation: Walking on the Moon", year: 2005, score: 71 },
+        { title: "The Da Vinci Code", year: 2006, score: 46 },
+        { title: "The Simpsons Movie", year: 2007, score: 80 },
+        { title: "Charlie Wilson's War", year: 2007, score: 67 },
+        { title: "Toy Story 3", year: 2010, score: 92 },
+        { title: "Toy Story 5", year: 2026, score: 73 },
+        ],
+      },
+      actorInsight: "Toy Story 5 (73) is comfortably above Tom Hanks' 65.7-point average across 28 scored film roles, in a filmography that spans everything from Toy Story's own 96-point original to lower-scored studio comedies.",
+    },
+
+    robinhood: {
+      dataId: "the-death-of-robin-hood-2026",
+      nowPlaying: true,
+      genres: ["Adventure","Drama","Thriller","Action"],
+      name: "The Death of Robin Hood", year: "2026", score: 60, ci: null, label: "Mixed or Average",
+      spread: [51, 43, 6], n: 35,
+      poster: "/13MmRwmG5NmaMfU8qNrtgGXisiD.jpg",
+      econ: { budget: 25, marketing: null, boxOffice: 6.9, domesticTotal: 5.28 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 35, value: 6.9, label: "Cumulative through 2026-07-24" },
+      ],
+      insight: "The Death of Robin Hood was not a limited or day-and-date streaming release masking a real audience -- it opened wide in roughly 1,762-1,782 domestic theaters on June 19, 2026, before collapsing 78.5% in its second weekend and dropping to just 25 theaters by its fourth (Box Office Mojo), a hold pattern typical of a wide release that failed to connect commercially. That commercial collapse sits alongside a genuinely mixed-to-positive critical reception (Metacritic score 60, \"Mixed or Average\", 51% positive across 35 reviews), so the box office weakness looks like an audience/marketing problem for an unconventional, bleak R-rated take on the legend rather than a reviews problem or a deliberately small release.",
+      weeklyGross: [2.867662, 0.615892, 0.058145, 0.018832, 0.015818],
+      domesticTotal: 5.28,
+      director: {
+        name: "Michael Sarnoski",
+        thisFilm: "The Death of Robin Hood",
+        films: [
+        { title: "Pig", year: 2021, score: 82 },
+        { title: "A Quiet Place: Day One", year: 2024, score: 68 },
+        { title: "The Death of Robin Hood", year: 2026, score: 60 },
+        ],
+      },
+      directorInsight: "The Death of Robin Hood (60) is Michael Sarnoski's lowest-scored film to date, 10 points below his 70.0-point average across three films — a comedown from Pig's acclaimed 82.",
+      actor: {
+        name: "Hugh Jackman",
+        thisFilm: "The Death of Robin Hood",
+        films: [
+        { title: "X-Men", year: 2000, score: 64 },
+        { title: "Kate & Leopold", year: 2001, score: 44 },
+        { title: "Swordfish", year: 2001, score: 32 },
+        { title: "Someone Like You...", year: 2001, score: 32 },
+        { title: "X2", year: 2003, score: 68 },
+        { title: "Van Helsing", year: 2004, score: 35 },
+        { title: "Scoop", year: 2006, score: 48 },
+        { title: "The Prestige", year: 2006, score: 66 },
+        { title: "The Fountain", year: 2006, score: 51 },
+        { title: "Flushed Away", year: 2006, score: 74 },
+        { title: "Happy Feet", year: 2006, score: 77 },
+        { title: "X-Men: The Last Stand", year: 2006, score: 58 },
+        { title: "Australia", year: 2008, score: 53 },
+        { title: "Deception", year: 2008, score: 31 },
+        { title: "X-Men Origins: Wolverine", year: 2009, score: 40 },
+        { title: "Oh My God", year: 2009, score: 30 },
+        { title: "Real Steel", year: 2011, score: 56 },
+        { title: "X-Men: First Class", year: 2011, score: 65 },
+        { title: "Being Elmo: A Puppeteer's Journey", year: 2011, score: 71 },
+        { title: "Snow Flower and the Secret Fan", year: 2011, score: 42 },
+        { title: "Rise of the Guardians", year: 2012, score: 58 },
+        { title: "Les Misérables", year: 2012, score: 63 },
+        { title: "Movie 43", year: 2013, score: 18 },
+        { title: "The Death of Robin Hood", year: 2026, score: 60 },
+        ],
+      },
+      actorInsight: "The Death of Robin Hood (60) actually lands above Hugh Jackman's own 51.5-point average across 24 scored film roles — one of his better-reviewed performances, even as the film struggled commercially.",
+    },
+
+    evildeadburn: {
+      dataId: "evil-dead-burn-2026",
+      nowPlaying: true,
+      genres: ["Horror","Thriller"],
+      name: "Evil Dead Burn", year: "2026", score: 54, ci: null, label: "Mixed or Average",
+      spread: [42, 47, 11], n: 36,
+      poster: "/ztadKzIIR0ERYqpHteaPFtk7inP.jpg",
+      econ: { budget: 20, marketing: null, boxOffice: 53.22, domesticTotal: 26.02 },
+      revenuePoints: [
+        { day: 0, value: 0, label: "Release" },
+        { day: 14, value: 53.22, label: "Cumulative through 2026-07-24" },
+      ],
+      insight: "Evil Dead Burn was not a limited or day-and-date release: it opened wide across 3,004 domestic theaters via Warner Bros./New Line Cinema, a standard franchise-entry footprint (Box Office Mojo). The real story is weak legs, not a small release -- a $13.7M opening weekend fell 65.4% to $4.73M in weekend two, a steep drop that lines up with a middling 54 Metascore (\"Mixed or Average,\" 42% positive across 36 critics): reviews split between praise for the gore/craft (one called it \"the evilest Evil Dead film to date\") and complaints that the story runs out of steam, consistent with audiences not sticking around for weekend two.",
+      weeklyGross: [13.701012, 4.733933],
+      domesticTotal: 26.02,
+      director: {
+        name: "Sebastien Vanicek",
+        thisFilm: "Evil Dead Burn",
+        films: [
+        { title: "Infested", year: 2023, score: 70 },
+        { title: "Evil Dead Burn", year: 2026, score: 54 },
+        ],
+      },
+      directorInsight: "Evil Dead Burn (54) is a step down from Sébastien Vaniček's feature debut Infested (70) — his average across two films is still a very small, early-career sample.",
+      actor: {
+        name: "Souheila Yacoub",
+        thisFilm: "Evil Dead Burn",
+        films: [
+        { title: "Climax", year: 2018, score: 69 },
+        { title: "The Salt of Tears", year: 2020, score: 62 },
+        { title: "Rise", year: 2022, score: 74 },
+        { title: "The Balconettes", year: 2024, score: 66 },
+        { title: "Dune: Part Two", year: 2024, score: 79 },
+        { title: "The Carpenter's Son", year: 2025, score: 40 },
+        { title: "Evil Dead Burn", year: 2026, score: 54 },
+        ],
+      },
+      actorInsight: "Evil Dead Burn (54) is Souheila Yacoub's lowest-scored film in this sample, about 9 points below her 63.4-point average across seven roles, which includes Dune: Part Two's 79.",
+    },
+  };
+
+  const widget = document.getElementById("widget");
+  let tabs = [];
+
+  function buildGallery() {
+    const gallery = document.getElementById("gallery");
+    const nowPlaying = Object.entries(FILMS).filter(([key, f]) => f.nowPlaying);
+    gallery.innerHTML = nowPlaying.map(([key, f], i) => `
+      <button class="tab" role="tab" data-film="${key}" aria-selected="${i === 0}">
+        <div class="tile-poster-wrap">
+          <img class="tile-poster" src="https://image.tmdb.org/t/p/w342${f.poster}" alt="${f.name} poster" loading="lazy" referrerpolicy="no-referrer">
+          <span class="tile-badge">${f.label}</span>
+        </div>
+        <div class="tile-meta">
+          <span class="tile-title">${f.name} <span class="tile-year">${f.year}</span></span>
+          <span class="tile-score"><span class="tile-score-num">${f.score}</span> Kernel Score</span>
+        </div>
+      </button>`).join("");
+  }
+
+  function renderVaultResults(query) {
+    const resultsEl = document.getElementById("vaultResults");
+    const q = query.trim().toLowerCase();
+    if (!q) { resultsEl.innerHTML = ""; return; }
+
+    const matches = Object.entries(FILMS).filter(([key, f]) => {
+      const haystack = [f.name, f.year, f.director && f.director.name, f.actor && f.actor.name]
+        .filter(Boolean).join(" ").toLowerCase();
+      return haystack.includes(q);
+    });
+
+    if (!matches.length) {
+      resultsEl.innerHTML = `<p class="vault-caption">No matches in the vault for &ldquo;${escapeHtml(query.trim())}&rdquo;.</p>`;
+      return;
+    }
+
+    resultsEl.innerHTML = matches.map(([key, f]) => `
+      <button class="vault-row" data-film="${key}">
+        <img class="vault-poster" src="https://image.tmdb.org/t/p/w92${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
+        <span class="vault-meta">
+          <span class="vault-title">${f.name}</span>
+          <span class="vault-year">${f.year}</span>
+        </span>
+        <span class="vault-score">${f.score}</span>
+      </button>`).join("");
+    resultsEl.querySelectorAll(".vault-row").forEach(row => {
+      row.addEventListener("click", () => { location.hash = row.dataset.film; });
+    });
+  }
+
+  function buildVaultSearch() {
+    const input = document.getElementById("vaultSearch");
+    if (!input) return;
+    input.addEventListener("input", () => renderVaultResults(input.value));
+  }
+
+  function interp(keyframes, day) {
+    if (day <= keyframes[0][0]) return keyframes[0][1];
+    for (let i = 1; i < keyframes.length; i++) {
+      const [d0, v0] = keyframes[i - 1], [d1, v1] = keyframes[i];
+      if (day <= d1) return v0 + (v1 - v0) * ((day - d0) / (d1 - d0));
+    }
+    return keyframes[keyframes.length - 1][1];
+  }
+
+  function breakevenOf(f) {
+    const e = f.econ;
+    const budgetOnly = e.marketing == null;
+    const threshold = BREAKEVEN_MULTIPLE * (e.budget + (e.marketing || 0));
+    return { threshold, budgetOnly };
+  }
+
+  function findCrossingDay(points, threshold) {
+    for (let i = 1; i < points.length; i++) {
+      const a = points[i - 1], b = points[i];
+      if (a.value < threshold && b.value >= threshold) {
+        const frac = (threshold - a.value) / (b.value - a.value);
+        return a.day + frac * (b.day - a.day);
+      }
+    }
+    return null; // never crosses within the charted window
+  }
+
+  function revenueValueAt(f, day) {
+    return interp(f.revenuePoints.map(p => [p.day, p.value]), day);
+  }
+
+  // Shared geometry
+  const W = 640, PADL = 30, PADR = 12, PADT = 12;
+  const xAt = day => PADL + (day / DOMAIN_MAX) * (W - PADL - PADR);
+  const dayAt = px => Math.max(0, Math.min(DOMAIN_MAX, ((px - PADL) / (W - PADL - PADR)) * DOMAIN_MAX));
+
+  function revenueSVG(f) {
+    const H = 170, PADB = 20;
+    const { threshold, budgetOnly } = breakevenOf(f);
+    const finalValue = f.revenuePoints[f.revenuePoints.length - 1].value;
+    const maxValue = Math.max(finalValue, threshold) * 1.12;
+    const yAt = v => PADT + (1 - v / maxValue) * (H - PADT - PADB);
+
+    const gridVals = [0, 0.25, 0.5, 0.75, 1].map(t => t * maxValue);
+    const grid = gridVals.map(v => `
+        <line x1="${PADL}" y1="${yAt(v)}" x2="${W - PADR}" y2="${yAt(v)}" stroke="var(--rule)" stroke-width="1" opacity="0.5"/>
+        <text x="${PADL - 6}" y="${yAt(v) + 3}" text-anchor="end" class="axis-label">${formatMoney(v)}</text>`).join("");
+
+    const pathPts = [];
+    for (let d = 0; d <= DOMAIN_MAX; d += 1) pathPts.push([xAt(d), yAt(revenueValueAt(f, d))]);
+    const linePath = "M" + pathPts.map(p => p.join(",")).join(" L");
+    const areaPath = linePath + ` L${xAt(DOMAIN_MAX)},${yAt(0)} L${xAt(0)},${yAt(0)} Z`;
+
+    const beY = yAt(threshold);
+    const beLine = `<line x1="${PADL}" y1="${beY}" x2="${W - PADR}" y2="${beY}" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="5,4"/>`;
+    const beLabel = `<text x="${W - PADR}" y="${beY - 6}" text-anchor="end" class="axis-label gold-label">Breakeven ≈ ${formatMoney(threshold)}${budgetOnly ? " (budget only)" : ""}</text>`;
+
+    const crossDay = findCrossingDay(f.revenuePoints, threshold);
+    let markerSVG;
+    if (crossDay != null) {
+      const cx = xAt(crossDay), cy = yAt(threshold);
+      markerSVG = `
+        <circle cx="${cx}" cy="${cy}" r="4" fill="var(--teal)" stroke="var(--card)" stroke-width="1.5"/>
+        <text x="${cx}" y="${cy + 16}" text-anchor="${crossDay > DOMAIN_MAX - 10 ? "end" : "middle"}" class="axis-label teal-label">Broke even ~Day ${Math.round(crossDay)}</text>`;
+    } else {
+      const ex = xAt(DOMAIN_MAX), ey = yAt(finalValue);
+      markerSVG = `
+        <circle cx="${ex}" cy="${ey}" r="4" fill="var(--neg)" stroke="var(--card)" stroke-width="1.5"/>
+        <text x="${ex}" y="${ey - 10}" text-anchor="end" class="axis-label neg-label">Never broke even</text>`;
+    }
+
+    const anchorMarkers = f.revenuePoints.filter(p => p.day > 0).map(p => `
+        <circle cx="${xAt(p.day)}" cy="${yAt(p.value)}" r="2.5" fill="var(--muted)" opacity="0.7"/>`).join("");
+
+    return `
+      <svg viewBox="0 0 ${W} ${H}" class="revenue-svg" data-chart="revenue">
+        ${grid}
+        <path d="${areaPath}" fill="var(--teal)" opacity="0.16"/>
+        <path d="${linePath}" fill="none" stroke="var(--teal)" stroke-width="2.5"/>
+        ${anchorMarkers}
+        ${beLine}${beLabel}
+        ${markerSVG}
+        <text x="${xAt(0)}" y="${H - 4}" class="axis-label">Day 0</text>
+        <text x="${xAt(30)}" y="${H - 4}" text-anchor="middle" class="axis-label">Day 30</text>
+        <text x="${xAt(60)}" y="${H - 4}" text-anchor="end" class="axis-label">Day 60</text>
+        <line class="crosshair" x1="0" y1="${PADT}" x2="0" y2="${H - PADB}" stroke="var(--ink)" stroke-width="1" opacity="0"/>
+      </svg>`;
+  }
+
+  function formatMoney(m) {
+    if (m == null) return null;
+    if (m >= 1000) return "$" + (m / 1000).toFixed(2) + "B";
+    if (m < 1) return "$" + Math.round(m * 1000) + "K";
+    return "$" + Math.round(m) + "M";
+  }
+
+  function econHTML(f) {
+    const e = f.econ;
+    if (!e) return "";
+    const known = [e.budget, e.marketing, e.boxOffice].filter(v => v != null);
+    const max = Math.max(...known);
+    const rows = [
+      { label: "Budget", value: e.budget, color: "var(--gold)", note: e.budgetNote },
+      { label: "Marketing", value: e.marketing, color: "var(--neg)", note: null },
+      { label: "Box office", value: e.boxOffice, color: "var(--teal)", note: null },
+    ];
+    const rowsHtml = rows.map(r => {
+      if (r.value == null) {
+        return `
+          <div class="econ-row">
+            <span class="econ-label">${r.label}</span>
+            <div class="econ-track"></div>
+            <span class="econ-value undisclosed">not disclosed</span>
+          </div>`;
+      }
+      const pct = Math.max((r.value / max) * 100, 2);
+      return `
+        <div class="econ-row">
+          <span class="econ-label">${r.label}</span>
+          <div class="econ-track"><div class="econ-fill" style="width:${pct}%; background:${r.color}"></div></div>
+          <span class="econ-value">${formatMoney(r.value)}</span>
+        </div>${r.note ? `<div class="econ-value undisclosed" style="text-align:left; margin:-0.35rem 0 0.6rem 4.6rem;">${r.note}</div>` : ""}`;
+    }).join("");
+
+    let multipleHtml = "";
+    if (e.boxOffice != null && e.budget != null) {
+      const denom = e.marketing != null ? e.budget + e.marketing : e.budget;
+      const mult = (e.boxOffice / denom).toFixed(1) + "×";
+      const cap = e.marketing != null
+        ? "Worldwide box office ÷ (budget + marketing)"
+        : "Worldwide box office ÷ budget only — marketing spend not disclosed, so this understates what's actually needed to break even.";
+      multipleHtml = `
+        <div class="econ-multiple">
+          <span class="num">${mult}</span>
+          <span class="cap">${cap}</span>
+        </div>`;
+    }
+
+    return `
+      <div class="chart-block">
+        <div class="chart-head">
+          <span class="chart-title">Budget · Marketing · Box Office</span>
+        </div>
+        ${rowsHtml}
+        ${multipleHtml}
+        ${f.insight ? `<p class="econ-insight">${f.insight}</p>` : ""}
+      </div>`;
+  }
+
+  const LEGS_WEEKS_SHOWN = 6;
+
+  function computeAverageLegsPct() {
+    const perFilmPct = Object.values(FILMS)
+      .filter(f => f.weeklyGross)
+      .map(f => f.weeklyGross.slice(0, LEGS_WEEKS_SHOWN).map(v => (v / f.weeklyGross[0]) * 100));
+    const avg = [];
+    for (let w = 0; w < LEGS_WEEKS_SHOWN; w++) {
+      const vals = perFilmPct.map(p => p[w]).filter(v => v != null);
+      avg.push(vals.reduce((a, b) => a + b, 0) / vals.length);
+    }
+    return avg;
+  }
+
+  function legsHTML(f) {
+    const wg = f.weeklyGross;
+    if (!wg) return "";
+    const multiplier = f.domesticTotal / wg[0];
+    const legsLabel = multiplier >= 3.4 ? "Strong legs" : multiplier >= 2.5 ? "Average legs" : "Front-loaded";
+    const wk2Drop = ((wg[1] - wg[0]) / wg[0]) * 100;
+    const shown = wg.slice(0, LEGS_WEEKS_SHOWN);
+    const max = Math.max(...shown);
+
+    const labels = shown.map((v, i) => {
+      const drop = i === 0 ? "" : (((v - wg[i - 1]) / wg[i - 1]) * 100).toFixed(1) + "%";
+      return `
+        <div class="legs-col-label">
+          <span class="legs-drop">${drop}</span>
+          <span class="legs-val">${formatMoney(v)}</span>
+        </div>`;
+    }).join("");
+
+    const bars = shown.map((v, i) => {
+      const pct = Math.max((v / max) * 100, 1.5);
+      return `
+        <div class="legs-col-track">
+          <div class="legs-bar" style="height:${pct}%" title="Weekend ${i + 1}: ${formatMoney(v)}"></div>
+        </div>`;
+    }).join("");
+
+    const wkLabels = shown.map((v, i) => `<div class="legs-col-wk"><span class="legs-wk">Wk ${i + 1}</span></div>`).join("");
+
+    const nFilms = Object.values(FILMS).filter(fl => fl.weeklyGross).length;
+    const nCols = shown.length; // align the overlay to however many bar columns THIS film actually renders
+    const avgPct = computeAverageLegsPct().slice(0, nCols);
+    const avgPts = avgPct.map((p, i) => {
+      const x = ((i + 0.5) / nCols) * 100;
+      const y = 100 - Math.min(p, 100);
+      return [x, y];
+    });
+    const avgPath = "M" + avgPts.map(p => `${p[0]},${p[1]}`).join(" L");
+    const avgDots = avgPts.map(p => `<circle cx="${p[0]}" cy="${p[1]}" r="1.6" vector-effect="non-scaling-stroke" fill="var(--gold)"/>`).join("");
+    const avgOverlay = `
+      <svg class="legs-avg-overlay" viewBox="0 0 100 100" preserveAspectRatio="none">
+        <path d="${avgPath}" fill="none" stroke="var(--gold)" stroke-width="1" stroke-dasharray="3,2" vector-effect="non-scaling-stroke"/>
+        ${avgDots}
+      </svg>`;
+
+    const moreNote = wg.length > 6
+      ? `<div class="legs-caption">Showing weekends 1–6 of ${wg.length} in the full theatrical run — see the data table for all of them.</div>` : "";
+    const avgNote = `<div class="legs-caption">Dashed line: average hold across these ${nFilms} films, each normalized to its own opening weekend — too small a sample to call an industry benchmark. Marker <em>below</em> the bar's top = held better than average that week; <em>above</em> = held worse.</div>`;
+
+    const tableRows = wg.map((v, i) => {
+      const drop = i === 0 ? "—" : (((v - wg[i - 1]) / wg[i - 1]) * 100).toFixed(1) + "%";
+      return `<tr><td>${i + 1}</td><td>${formatMoney(v)}</td><td>${drop}</td></tr>`;
+    }).join("");
+
+    return `
+      <div class="chart-block">
+        <div class="chart-head">
+          <span class="chart-title">Box office legs — weekend over weekend (domestic)</span>
+          <span class="chart-legend">
+            <span><span class="sw" style="background:var(--teal)"></span>This film</span>
+            <span><span class="sw" style="background:var(--gold)"></span>Average of ${nFilms} films</span>
+          </span>
+        </div>
+        <div class="legs-chart">
+          <div class="legs-label-row">${labels}</div>
+          <div class="legs-track-row">${bars}${avgOverlay}</div>
+          <div class="legs-wk-row">${wkLabels}</div>
+        </div>
+        ${moreNote}
+        ${avgNote}
+        <div class="legs-stats">
+          <div class="legs-stat"><span class="num">${multiplier.toFixed(1)}×</span><span class="cap">Domestic total ÷ opening weekend — ${legsLabel}</span></div>
+          <div class="legs-stat"><span class="num">${wk2Drop.toFixed(1)}%</span><span class="cap">Weekend 2 drop</span></div>
+        </div>
+        ${f.legsInsight ? `<p class="legs-insight">${f.legsInsight}</p>` : ""}
+        <details class="data-details" style="margin-top:0.8rem;">
+          <summary>View full weekend-by-weekend table</summary>
+          <table class="data-table">
+            <tr><th>Weekend</th><th>Gross</th><th>Change</th></tr>
+            ${tableRows}
+          </table>
+        </details>
+      </div>`;
+  }
+
+  function buildGemsChart() {
+    const container = document.getElementById("gemsChart");
+    const films = Object.values(FILMS).map(f => ({ name: f.name, score: f.score, boxOffice: f.econ.boxOffice }));
+
+    const SCORE_CUT = 70, VIEW_CUT = 100; // $100M
+    const W = 640, H = 340, PADL = 34, PADR = 16, PADT = 18, PADB = 34;
+    const xMin = Math.min(...films.map(f => f.boxOffice)) * 0.55;
+    const xMax = Math.max(...films.map(f => f.boxOffice)) * 1.7;
+    const logMin = Math.log10(xMin), logMax = Math.log10(xMax);
+    const x2 = v => PADL + ((Math.log10(v) - logMin) / (logMax - logMin)) * (W - PADL - PADR);
+    const y2 = v => PADT + (1 - v / 100) * (H - PADT - PADB);
+
+    const yGrid = [0, 25, 50, 75, 100].map(v => `
+        <line x1="${PADL}" y1="${y2(v)}" x2="${W - PADR}" y2="${y2(v)}" stroke="var(--rule)" stroke-width="1" opacity="0.35"/>
+        <text x="${PADL - 6}" y="${y2(v) + 3}" text-anchor="end" class="axis-label">${v}</text>`).join("");
+
+    const xTicks = [1, 10, 100, 1000].filter(v => v >= xMin && v <= xMax);
+    const xGrid = xTicks.map(v => `
+        <line x1="${x2(v)}" y1="${PADT}" x2="${x2(v)}" y2="${H - PADB}" stroke="var(--rule)" stroke-width="1" opacity="0.25"/>
+        <text x="${x2(v)}" y="${H - PADB + 14}" text-anchor="middle" class="axis-label">${v >= 1000 ? "$" + (v / 1000).toFixed(1) + "B" : "$" + v + "M"}</text>`).join("");
+
+    const quadX = x2(VIEW_CUT), quadY = y2(SCORE_CUT);
+    const quadLines = `
+        <line x1="${quadX}" y1="${PADT}" x2="${quadX}" y2="${H - PADB}" stroke="var(--gold)" stroke-width="1" stroke-dasharray="3,3" opacity="0.55"/>
+        <line x1="${PADL}" y1="${quadY}" x2="${W - PADR}" y2="${quadY}" stroke="var(--gold)" stroke-width="1" stroke-dasharray="3,3" opacity="0.55"/>`;
+
+    const quadLabels = `
+        <text x="${PADL + 6}" y="${PADT + 12}" class="axis-label quad-label">HIDDEN GEMS</text>
+        <text x="${W - PADR - 6}" y="${PADT + 12}" text-anchor="end" class="axis-label quad-label">CONSENSUS HITS</text>
+        <text x="${PADL + 6}" y="${H - PADB - 6}" class="axis-label quad-label">JUSTIFIED SKIPS</text>
+        <text x="${W - PADR - 6}" y="${H - PADB - 6}" text-anchor="end" class="axis-label quad-label">HYPE-DRIVEN</text>`;
+
+    const dots = films.map(f => {
+      const cx = x2(f.boxOffice), cy = y2(f.score);
+      const isGem = f.score >= SCORE_CUT && f.boxOffice < VIEW_CUT;
+      const moneyLabel = f.boxOffice < 1 ? `$${Math.round(f.boxOffice * 1000)}K` : `$${f.boxOffice.toFixed(1)}M`;
+      const shortName = f.name.length > 18 ? f.name.slice(0, 16) + "…" : f.name;
+      return `
+        <g>
+          <circle cx="${cx}" cy="${cy}" r="5" fill="${isGem ? "var(--teal)" : "var(--gold)"}" stroke="var(--ink)" stroke-width="1.5">
+            <title>${f.name}: Kernel Score ${f.score}, ${moneyLabel} worldwide</title>
+          </circle>
+          <text x="${cx}" y="${cy - 9}" text-anchor="middle" class="axis-label dot-label">${shortName}</text>
+        </g>`;
+    }).join("");
+
+    container.innerHTML = `
+      <svg viewBox="0 0 ${W} ${H}" class="gems-svg">
+        ${yGrid}${xGrid}${quadLines}${quadLabels}${dots}
+      </svg>`;
+  }
+
+  function creatorHTML(f, key, roleLabel) {
+    const d = f[key];
+    if (!d) return "";
+    const films = [...d.films].sort((a, b) => a.year - b.year);
+    const avg = films.reduce((a, b) => a + b.score, 0) / films.length;
+    const thisEntry = films.find(m => m.title === d.thisFilm);
+    const delta = thisEntry.score - avg;
+
+    const W2 = 640, PADL2 = 30, PADR2 = 12, PADT2 = 16, PADB2 = 24, H2 = 150;
+    const minYear = films[0].year, maxYear = films[films.length - 1].year;
+    const yearSpan = Math.max(maxYear - minYear, 1);
+    const x2 = yr => PADL2 + ((yr - minYear) / yearSpan) * (W2 - PADL2 - PADR2);
+    const y2 = sc => PADT2 + (1 - sc / 100) * (H2 - PADT2 - PADB2);
+
+    const grid = [0, 25, 50, 75, 100].map(v => `
+        <line x1="${PADL2}" y1="${y2(v)}" x2="${W2 - PADR2}" y2="${y2(v)}" stroke="var(--rule)" stroke-width="1" opacity="0.5"/>
+        <text x="${PADL2 - 6}" y="${y2(v) + 3}" text-anchor="end" class="axis-label">${v}</text>`).join("");
+
+    const linePath = "M" + films.map(m => `${x2(m.year)},${y2(m.score)}`).join(" L");
+    const avgY = y2(avg);
+    const avgLine = `<line x1="${PADL2}" y1="${avgY}" x2="${W2 - PADR2}" y2="${avgY}" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="4,3"/>
+      <text x="${W2 - PADR2}" y="${avgY - 6}" text-anchor="end" class="axis-label gold-label">Career avg ${avg.toFixed(1)}</text>`;
+
+    const dots = films.map(m => {
+      const isThis = m.title === d.thisFilm;
+      return `
+        <circle cx="${x2(m.year)}" cy="${y2(m.score)}" r="${isThis ? 5 : 3}" fill="${isThis ? "var(--teal)" : "var(--muted)"}" stroke="var(--card)" stroke-width="1.5" title="${m.title} (${m.year}): ${m.score}"/>
+        ${isThis ? `<text x="${x2(m.year)}" y="${y2(m.score) - 11}" text-anchor="middle" class="axis-label teal-label">${m.title}</text>` : ""}`;
+    }).join("");
+
+    const tableRows = films.map(m => `<tr><td>${m.year}</td><td>${m.title}${m.title === d.thisFilm ? " (this film)" : ""}</td><td>${m.score}</td></tr>`).join("");
+    const insight = f[key + "Insight"];
+
+    return `
+      <div class="chart-block">
+        <div class="chart-head">
+          <span class="chart-title">${roleLabel} track record — ${d.name}</span>
+        </div>
+        <div class="creator-svg-wrap">
+          <svg viewBox="0 0 ${W2} ${H2}" class="creator-svg">
+            ${grid}
+            <path d="${linePath}" fill="none" stroke="var(--muted)" stroke-width="1.5" opacity="0.6"/>
+            ${avgLine}
+            ${dots}
+          </svg>
+        </div>
+        <div class="creator-stats">
+          <div><span class="num">${avg.toFixed(1)}</span><span class="cap">Career average Metascore across ${films.length} films</span></div>
+          <div><span class="num">${delta >= 0 ? "+" : ""}${delta.toFixed(1)}</span><span class="cap">${d.thisFilm} vs. career average</span></div>
+        </div>
+        ${insight ? `<p class="creator-insight">${insight}</p>` : ""}
+        <details class="data-details" style="margin-top:0.8rem;">
+          <summary>View full filmography</summary>
+          <table class="data-table">
+            <tr><th>Year</th><th>Film</th><th>Metascore</th></tr>
+            ${tableRows}
+          </table>
+        </details>
+      </div>`;
+  }
+
+  const DATA_SERVICE_URL = "http://localhost:3002";
+
+  function reviewHTML(f) {
+    if (!f.dataId) return "";
+    return `
+      <div class="chart-block">
+        <div class="chart-head">
+          <span class="chart-title">Audience reviews</span>
+        </div>
+        <div class="review-synopsis" id="reviewSynopsis"></div>
+        <div class="review-summary" id="reviewSummary">Loading reviews…</div>
+        <form class="review-form" id="reviewForm">
+          <div class="review-rating-row">
+            <label for="reviewRating">Your score</label>
+            <input type="range" min="0" max="100" class="review-slider" id="reviewRating">
+            <span class="review-rating-num unset" id="reviewRatingNum">—</span>
+          </div>
+          <p class="review-rating-hint" id="reviewRatingHint">Drag the slider to set your score</p>
+          <label class="review-pledge">
+            <input type="checkbox" id="reviewPledge" required>
+            I've seen this film
+          </label>
+          <input type="text" class="review-comment" id="reviewComment" placeholder="Optional comment" maxlength="140">
+          <button type="submit" class="review-submit" id="reviewSubmit" disabled>Submit review</button>
+          <div class="review-status" id="reviewStatus"></div>
+        </form>
+        <div class="review-list" id="reviewList"></div>
+        <p class="review-caption">Self-reported, not ticket-verified — a real deployment would apply the verified-eligibility and velocity-cap methodology described in the footer instead of taking this at face value.</p>
+      </div>`;
+  }
+
+  function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, ch => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[ch]));
+  }
+
+  function formatReviewDate(iso) {
+    const d = new Date(iso);
+    if (isNaN(d)) return "";
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+  }
+
+  async function loadReviews(dataId) {
+    const summaryEl = widget.querySelector("#reviewSummary");
+    const listEl = widget.querySelector("#reviewList");
+    if (!summaryEl) return;
+    try {
+      const res = await fetch(`${DATA_SERVICE_URL}/api/entity/audience_review/${dataId}`);
+      if (res.status === 404) {
+        summaryEl.textContent = "No reviews yet for this film — be the first.";
+        if (listEl) listEl.innerHTML = "";
+        return;
+      }
+      if (!res.ok) throw new Error(`Service responded ${res.status}`);
+      const data = await res.json();
+      const reviews = Object.values(data.fields)
+        .map(entry => {
+          try { return { ...JSON.parse(entry.value), recordedAt: entry.recordedAt }; }
+          catch { return null; }
+        })
+        .filter(Boolean)
+        .sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
+      if (!reviews.length) {
+        summaryEl.textContent = "No reviews yet for this film — be the first.";
+        if (listEl) listEl.innerHTML = "";
+        return;
+      }
+      const avg = reviews.reduce((a, r) => a + Number(r.rating), 0) / reviews.length;
+      summaryEl.innerHTML = `<span class="num">${avg.toFixed(1)}</span>Demo Audience Score — self-reported, n=${reviews.length}`;
+      if (listEl) {
+        listEl.innerHTML = reviews.map(r => `
+          <div class="review-item">
+            <span class="review-item-score">${escapeHtml(r.rating)}</span>
+            <div class="review-item-body">
+              <p class="review-item-comment">${r.comment ? escapeHtml(r.comment) : '<span class="no-comment">No comment left</span>'}</p>
+              <span class="review-item-date">${formatReviewDate(r.recordedAt)}</span>
+            </div>
+          </div>
+        `).join("");
+      }
+    } catch (err) {
+      summaryEl.textContent = "Reviews require the local kernel-data-service running (not reachable right now).";
+      if (listEl) listEl.innerHTML = "";
+    }
+  }
+
+  async function loadSynopsis(f) {
+    const el = widget.querySelector("#reviewSynopsis");
+    if (!el || !f.dataId) return;
+    try {
+      const params = new URLSearchParams({ name: f.name, year: f.year });
+      const res = await fetch(`${DATA_SERVICE_URL}/api/synopsis/${f.dataId}?${params}`);
+      if (!res.ok) throw new Error(`Service responded ${res.status}`);
+      const data = await res.json();
+      if (data.status === "ok") {
+        el.innerHTML = `
+          <span class="review-synopsis-label">AI synopsis</span>
+          <p class="review-synopsis-text">${escapeHtml(data.synopsis)}</p>
+          <p class="review-synopsis-meta">Generated from ${data.basedOn} self-reported reviews by a language model — a read of the comments, not a guarantee it captures every opinion.</p>`;
+      } else if (data.status === "insufficient") {
+        el.innerHTML = `<p class="review-synopsis-meta">Kernel will summarize these once there are at least ${data.needed} reviews (${data.count} so far).</p>`;
+      } else {
+        el.innerHTML = "";
+      }
+    } catch (err) {
+      el.innerHTML = "";
+    }
+  }
+
+  async function submitReview(f, rating, comment) {
+    const statusEl = widget.querySelector("#reviewStatus");
+    try {
+      const fieldName = `review_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+      const res = await fetch(`${DATA_SERVICE_URL}/api/ingest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityType: "audience_review",
+          entityId: f.dataId,
+          field: fieldName,
+          value: { rating, comment: comment || null },
+          source: "Self-reported (unverified) — Kernel widget submission",
+        }),
+      });
+      if (!res.ok) throw new Error(`Service responded ${res.status}`);
+      if (statusEl) statusEl.textContent = "Thanks — your review was logged.";
+      loadReviews(f.dataId);
+      loadSynopsis(f);
+    } catch (err) {
+      if (statusEl) statusEl.textContent = "Couldn't submit — is kernel-data-service running locally?";
+    }
+  }
+
+  function attachReviewForm(f) {
+    const form = widget.querySelector("#reviewForm");
+    if (!form || !f.dataId) return;
+    const slider = form.querySelector("#reviewRating");
+    const numEl = form.querySelector("#reviewRatingNum");
+    const hintEl = form.querySelector("#reviewRatingHint");
+    const submitBtn = form.querySelector("#reviewSubmit");
+    let touched = false;
+
+    function resetRatingState() {
+      touched = false;
+      slider.value = 50;
+      numEl.textContent = "—";
+      numEl.classList.add("unset");
+      hintEl.hidden = false;
+      submitBtn.disabled = true;
+    }
+
+    slider.addEventListener("input", () => {
+      touched = true;
+      numEl.textContent = slider.value;
+      numEl.classList.remove("unset");
+      hintEl.hidden = true;
+      submitBtn.disabled = false;
+    });
+    form.addEventListener("submit", e => {
+      e.preventDefault();
+      if (!touched || !form.querySelector("#reviewPledge").checked) return;
+      const rating = Number(slider.value);
+      const comment = form.querySelector("#reviewComment").value.trim();
+      submitReview(f, rating, comment);
+      form.reset();
+      resetRatingState();
+    });
+    resetRatingState();
+    loadReviews(f.dataId);
+    loadSynopsis(f);
+  }
+
+  function dataTable(f) {
+    const { threshold, budgetOnly } = breakevenOf(f);
+    const rows = f.revenuePoints.map(p => [p.day, formatMoney(p.value), p.label]);
+    return `
+      <details class="data-details">
+        <summary>View data table</summary>
+        <table class="data-table">
+          <tr><th>Day</th><th>Cumulative revenue</th><th>Milestone</th></tr>
+          ${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join("")}
+          <tr><td>—</td><td>${formatMoney(threshold)}</td><td>Breakeven threshold (2× ${budgetOnly ? "budget" : "budget + marketing"})</td></tr>
+        </table>
+      </details>`;
+  }
+
+  function attachHover(container, f) {
+    const tooltip = container.querySelector(".chart-tooltip");
+    const svgs = container.querySelectorAll("svg");
+    const { threshold } = breakevenOf(f);
+    container.querySelectorAll(".chart-svg-wrap").forEach(wrap => {
+      wrap.addEventListener("mousemove", (e) => {
+        const svg = wrap.querySelector("svg");
+        const rect = svg.getBoundingClientRect();
+        const px = ((e.clientX - rect.left) / rect.width) * W;
+        const day = Math.round(dayAt(px));
+        const revenue = revenueValueAt(f, day);
+        svgs.forEach(s => {
+          const cx = xAt(day);
+          const ch = s.querySelector(".crosshair");
+          if (ch) { ch.setAttribute("x1", cx); ch.setAttribute("x2", cx); ch.setAttribute("opacity", "0.5"); }
+        });
+        const containerRect = container.getBoundingClientRect();
+        tooltip.style.opacity = "1";
+        tooltip.style.left = Math.min(e.clientX - containerRect.left + 14, container.clientWidth - 200) + "px";
+        tooltip.style.top = Math.max(e.clientY - containerRect.top - 10, 0) + "px";
+        tooltip.innerHTML = `
+          <div class="tt-day">Day ${day}</div>
+          <div class="tt-row"><span>Cumulative revenue</span><span>${formatMoney(revenue)}</span></div>
+          <div class="tt-row"><span>Breakeven at</span><span>${formatMoney(threshold)}</span></div>
+          <div class="tt-row"><span>Status</span><span>${revenue >= threshold ? "past breakeven" : "below breakeven"}</span></div>`;
+      });
+      wrap.addEventListener("mouseleave", () => {
+        tooltip.style.opacity = "0";
+        svgs.forEach(s => { const ch = s.querySelector(".crosshair"); if (ch) ch.setAttribute("opacity", "0"); });
+      });
+    });
+  }
+
+  const ARTWORK_SERVICE_URL = "http://localhost:3001/api/artwork";
+  let renderToken = 0;
+
+  async function tryLiveArtwork(f, token) {
+    const imgEl = widget.querySelector(".poster-thumb");
+    if (!imgEl) return;
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 1500);
+    try {
+      const params = new URLSearchParams({ title: f.name, year: f.year });
+      const res = await fetch(`${ARTWORK_SERVICE_URL}?${params}`, { signal: controller.signal });
+      if (token !== renderToken) return; // a different film was selected while this was in flight
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.poster) return;
+      imgEl.src = data.poster;
+    } catch (err) {
+      // No backend reachable — the hardcoded poster already showing is the fallback, silently.
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  function render(filmKey) {
+    const f = FILMS[filmKey];
+    renderToken += 1;
+    const myToken = renderToken;
+    widget.innerHTML = `
+      <div class="widget-head">
+        <div class="widget-head-main">
+          ${f.poster ? `<img class="poster-thumb" src="https://image.tmdb.org/t/p/w185${f.poster}" alt="${f.name} poster" loading="lazy" referrerpolicy="no-referrer">` : ""}
+          <div>
+            <h2>${f.name} <span class="year">(${f.year})</span></h2>
+          </div>
+        </div>
+        <span class="badge">${f.label}</span>
+      </div>
+      <div class="score-row">
+        <span class="score-num">${f.score}</span>
+        <span class="score-ci">${f.ci ? f.ci + " · " : ""}n=${f.n}</span>
+      </div>
+      <div class="score-label">
+        <svg class="mini-kernel" viewBox="0 0 60 60" aria-hidden="true">
+          <circle cx="18" cy="26" r="11" fill="var(--gold)"/>
+          <circle cx="42" cy="24" r="12" fill="var(--gold)"/>
+          <circle cx="30" cy="14" r="9" fill="var(--gold)"/>
+          <circle cx="30" cy="34" r="14" fill="var(--gold)"/>
+          <circle cx="30" cy="48" r="7" fill="var(--gold)"/>
+        </svg>
+        Kernel Score — weighted critic average
+      </div>
+      <div class="spread-bar">
+        <span class="pos" style="flex:${f.spread[0]}"></span>
+        <span class="mix" style="flex:${f.spread[1]}"></span>
+        <span class="neg" style="flex:${f.spread[2]}"></span>
+      </div>
+      <div class="spread-legend">
+        <span class="pos-c">${f.spread[0]}% positive</span>
+        <span class="mix-c">${f.spread[1]}% mixed</span>
+        <span class="neg-c">${f.spread[2]}% negative</span>
+      </div>
+      <div class="divider"></div>
+      <div class="charts-section">
+        <div class="chart-block">
+          <div class="chart-head">
+            <span class="chart-title">Revenue since release</span>
+            <span class="chart-legend">
+              <span><span class="sw" style="background:var(--teal)"></span>Cumulative revenue</span>
+              <span><span class="sw" style="background:var(--gold)"></span>Breakeven threshold</span>
+            </span>
+          </div>
+          <div class="chart-svg-wrap">${revenueSVG(f)}</div>
+        </div>
+        <div class="chart-tooltip"></div>
+        ${dataTable(f)}
+        ${econHTML(f)}
+        ${legsHTML(f)}
+        ${creatorHTML(f, "director", "Director")}
+        ${creatorHTML(f, "actor", "Lead Actor")}
+        ${reviewHTML(f)}
+      </div>
+    `;
+
+    if (f.poster) tryLiveArtwork(f, myToken);
+    attachHover(widget, f);
+    attachReviewForm(f);
+
+    tabs.forEach(t => t.setAttribute("aria-selected", t.dataset.film === filmKey ? "true" : "false"));
+  }
+
+  const landingPage = document.getElementById("landingPage");
+  const filmPage = document.getElementById("filmPage");
+  const topPage = document.getElementById("topPage");
+  const backLink = document.getElementById("backLink");
+  const backLinkTop = document.getElementById("backLinkTop");
+
+  function showLanding() {
+    landingPage.hidden = false;
+    filmPage.hidden = true;
+    topPage.hidden = true;
+    window.scrollTo(0, 0);
+  }
+
+  function showFilmPage(filmKey) {
+    render(filmKey);
+    landingPage.hidden = true;
+    topPage.hidden = true;
+    filmPage.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  function showTopPage() {
+    buildTopPage();
+    landingPage.hidden = true;
+    filmPage.hidden = true;
+    topPage.hidden = false;
+    window.scrollTo(0, 0);
+  }
+
+  function renderTopList(genre) {
+    const sub = document.getElementById("top100Sub");
+    const list = document.getElementById("rankList");
+    const ranked = Object.entries(FILMS)
+      .filter(([key, f]) => !genre || (f.genres || []).includes(genre))
+      .sort((a, b) => {
+        if (b[1].score !== a[1].score) return b[1].score - a[1].score;
+        return (b[1].n || 0) - (a[1].n || 0);
+      });
+
+    if (genre && !ranked.length) {
+      sub.textContent = `No ${genre} films scored yet — this ranking starts as soon as one qualifies.`;
+      list.innerHTML = `<p class="top100-empty">No films tagged ${escapeHtml(genre)} yet — check back as the catalog grows.</p>`;
+      return;
+    }
+
+    sub.textContent = genre
+      ? `Top ${ranked.length} of a growing ${genre} ranking, by Kernel Score. Too small a sample to call a real top 100 yet — every entry here is fully sourced, not a placeholder.`
+      : `Top ${ranked.length} of a growing all-time ranking, by Kernel Score. Not yet 100 films — every entry here is fully sourced, not a placeholder.`;
+
+    list.innerHTML = ranked.map(([key, f], i) => `
+      <button class="rank-row" data-film="${key}">
+        <span class="rank-num${i === 0 ? " rank-top" : ""}">#${i + 1}</span>
+        <img class="rank-poster" src="https://image.tmdb.org/t/p/w92${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
+        <span class="rank-meta">
+          <span class="rank-title">${f.name}</span>
+          <span class="rank-year">${f.year}</span>
+        </span>
+        <span class="rank-score">${f.score}</span>
+      </button>
+    `).join("");
+    list.querySelectorAll(".rank-row").forEach(row => {
+      row.addEventListener("click", () => { location.hash = row.dataset.film; });
+    });
+  }
+
+  // Genres shown even before any film carries them yet — kept separate from
+  // the FILMS-derived set so the pill (and its honest empty state) exists
+  // ahead of the data, rather than only appearing once something qualifies.
+  const RESERVED_GENRES = ["Family"];
+
+  function buildTopPage() {
+    const filterEl = document.getElementById("genreFilter");
+    const allGenres = Array.from(new Set([
+      ...Object.values(FILMS).flatMap(f => f.genres || []),
+      ...RESERVED_GENRES,
+    ])).sort();
+
+    filterEl.innerHTML = ["", ...allGenres].map(g => `
+      <button class="genre-pill" role="tab" data-genre="${g}" aria-selected="${g === "" ? "true" : "false"}">${g || "All genres"}</button>
+    `).join("");
+    filterEl.querySelectorAll(".genre-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        filterEl.querySelectorAll(".genre-pill").forEach(p => p.setAttribute("aria-selected", p === pill ? "true" : "false"));
+        renderTopList(pill.dataset.genre);
+      });
+    });
+
+    renderTopList("");
+  }
+
+  function routeFromHash() {
+    const key = location.hash.slice(1);
+    if (key === "top100") {
+      showTopPage();
+    } else if (FILMS[key]) {
+      showFilmPage(key);
+    } else {
+      showLanding();
+    }
+  }
+
+  document.getElementById("tmdbAttribution").innerHTML =
+    TMDB_LOGO_SVG + `<span>This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span>`;
+
+  buildGallery();
+  buildVaultSearch();
+  buildGemsChart();
+  tabs = document.querySelectorAll(".tab");
+  tabs.forEach(tab => {
+    tab.addEventListener("click", () => {
+      location.hash = tab.dataset.film;
+    });
+  });
+  function goToLanding() { location.hash = ""; }
+  backLink.addEventListener("click", goToLanding);
+  backLinkTop.addEventListener("click", goToLanding);
+  window.addEventListener("hashchange", routeFromHash);
+
+  routeFromHash();
+</script>
