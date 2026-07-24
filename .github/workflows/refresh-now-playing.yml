@@ -31,31 +31,42 @@ jobs:
         run: node --experimental-sqlite refresh-now-playing.js
 
       # Purely mechanical (nowPlaying: true -> false) — no editorial judgment,
-      # so this commits straight to main rather than opening a PR.
+      # so this commits straight to main rather than opening a PR. REMOVED is
+      # passed via env (not spliced into the script text) so it's never
+      # re-parsed as shell syntax.
       - name: Commit removals
         if: steps.refresh.outputs.removed != ''
+        env:
+          REMOVED: ${{ steps.refresh.outputs.removed }}
         run: |
           git config user.name "kernel-bot"
           git config user.email "actions@github.com"
           git add widget/index.html
-          git commit -m "Auto-update: remove ${{ steps.refresh.outputs.removed }} from Now Playing [skip ci]"
+          git commit -m "Auto-update: remove $REMOVED from Now Playing [skip ci]"
           git push
 
       # New releases still need a human for Tier 2 research (weekly gross,
       # marketing spend, critic spread, editorial insight) before they can be
       # added to the widget — this just surfaces what's worth looking at.
       # Reuses one open issue instead of filing a new one every day.
+      # NEW_FILMS is passed via env and written with a quoted heredoc so its
+      # backticks/quotes are never re-parsed as shell syntax (this is exactly
+      # what broke the first run: an inlined ${{ }} put a backtick-wrapped
+      # command into the script text, and bash ran it as command substitution).
       - name: Open or update new-films issue
         if: steps.refresh.outputs.new-films != ''
         env:
           GH_TOKEN: ${{ github.token }}
+          NEW_FILMS: ${{ steps.refresh.outputs.new-films }}
         run: |
-          EXISTING=$(gh issue list --label now-playing-alert --state open --json number --jq '.[0].number')
-          BODY="New films TMDb lists as now playing that aren't onboarded yet. Run the listed command, then complete Tier 2 research and \`ingest-film.js\` as usual.
+          cat > /tmp/issue-body.md <<'EOF'
+          New films TMDb lists as now playing that aren't onboarded yet. Run the listed command, then complete Tier 2 research and `ingest-film.js` as usual.
 
-          ${{ steps.refresh.outputs.new-films }}"
+          EOF
+          echo "$NEW_FILMS" >> /tmp/issue-body.md
+          EXISTING=$(gh issue list --label now-playing-alert --state open --json number --jq '.[0].number')
           if [ -n "$EXISTING" ]; then
-            gh issue edit "$EXISTING" --body "$BODY"
+            gh issue edit "$EXISTING" --body-file /tmp/issue-body.md
           else
-            gh issue create --title "New films to onboard" --body "$BODY" --label now-playing-alert
+            gh issue create --title "New films to onboard" --body-file /tmp/issue-body.md --label now-playing-alert
           fi
