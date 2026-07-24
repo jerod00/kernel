@@ -1683,10 +1683,15 @@
 
   function creatorHTML(f, key, roleLabel) {
     const d = f[key];
-    if (!d) return "";
+    // A director/actor with zero OMDb-matched credits (films: []), or whose
+    // own current film somehow isn't in that list, has nothing to chart —
+    // rendering used to assume both always hold and crashed the entire film
+    // page (not just this section) the first time neither did.
+    if (!d || !d.films || !d.films.length) return "";
     const films = [...d.films].sort((a, b) => a.year - b.year);
-    const avg = films.reduce((a, b) => a + b.score, 0) / films.length;
     const thisEntry = films.find(m => m.title === d.thisFilm);
+    if (!thisEntry) return "";
+    const avg = films.reduce((a, b) => a + b.score, 0) / films.length;
     const delta = thisEntry.score - avg;
 
     const W2 = 640, PADL2 = 30, PADR2 = 12, PADT2 = 16, PADB2 = 24, H2 = 150;
