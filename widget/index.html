@@ -48,6 +48,29 @@
   .film-gallery{ display:grid; grid-template-columns:repeat(3, 1fr); gap:1rem; margin-bottom:2.2rem; }
   @media (max-width:560px){ .film-gallery{ grid-template-columns:1fr; max-width:280px; margin-left:auto; margin-right:auto; } }
 
+  /* Recent releases (last 90 days, not currently in theaters) — horizontal slider */
+  .recent-section{ margin-bottom:2.6rem; }
+  .recent-heading{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); margin-bottom:0.4rem; }
+  .recent-caption{ font-size:0.82rem; color:var(--muted); margin:0 0 0.9rem; max-width:60ch; }
+  .recent-slider{ display:flex; gap:0.9rem; overflow-x:auto; scroll-snap-type:x proximity; padding-bottom:0.6rem; -webkit-overflow-scrolling:touch; }
+  .recent-slider:empty{ display:none; }
+  .recent-tile{ flex:0 0 128px; scroll-snap-align:start; cursor:pointer; background:none; border:none; padding:0; text-align:left; font:inherit; color:inherit; }
+  .recent-tile-poster-wrap{ position:relative; width:100%; aspect-ratio:2/3; background:var(--rule); overflow:hidden; }
+  .recent-tile-poster{ width:100%; height:100%; object-fit:cover; display:block; }
+  .recent-tile-badge{
+    position:absolute; top:0.4rem; right:0.4rem;
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.56rem;
+    letter-spacing:0.04em; text-transform:uppercase; color:var(--ink); background:var(--gold);
+    padding:0.15rem 0.35rem; max-width:calc(100% - 0.8rem);
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .recent-tile-meta{ display:block; padding:0.5rem 0.05rem 0; }
+  .recent-tile-title{ font-size:0.8rem; display:block; line-height:1.25; }
+  .recent-tile-year{ color:var(--muted); font-size:0.74rem; }
+  .recent-tile-score{ font-size:0.76rem; color:var(--muted); display:block; margin-top:0.25rem; }
+  .recent-tile-score-num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; color:var(--gold); font-size:0.9rem; }
+  .recent-empty{ color:var(--muted); font-size:0.85rem; padding:0.4rem 0 0; }
+
   .gems-section{ margin-bottom:2.6rem; padding-bottom:2rem; border-bottom:1px solid var(--rule); }
   .gems-section .chart-title{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; letter-spacing:0.06em; text-transform:uppercase; color:var(--muted); }
   .gems-svg{ display:block; width:100%; height:auto; min-width:460px; }
@@ -414,6 +437,13 @@
   </div>
 
   <div class="film-gallery" role="tablist" aria-label="Select a film" id="gallery"></div>
+
+  <div class="recent-section">
+    <div class="recent-heading">New, but not in theaters</div>
+    <p class="recent-caption">Released in the last 90 days and worth watching — just not on a big screen near you right now.</p>
+    <div class="recent-slider" id="recentSlider"></div>
+    <p class="recent-empty" id="recentEmpty" hidden>Nothing new outside theaters right now — check back soon.</p>
+  </div>
 
   <a href="#top100" class="top100-link">
     <span class="top100-link-label">Kernel <strong>All-Time</strong> ranking</span>
@@ -810,6 +840,7 @@
     odyssey: {
       dataId: "the-odyssey-2026",
       nowPlaying: true,
+      releaseDate: "2026-07-15",
       genres: ["Adventure","Action","Fantasy"],
       name: "The Odyssey", year: "2026", score: 88, ci: null, label: "Universal Acclaim",
       spread: [92, 8, 0], n: 62,
@@ -880,6 +911,7 @@
     moana: {
       dataId: "moana-2026",
       nowPlaying: true,
+      releaseDate: "2026-07-08",
       genres: ["Family","Fantasy","Comedy","Adventure"],
       name: "Moana", year: "2026", score: 42, ci: null, label: "Mixed or Average",
       spread: [20, 50, 30], n: 40,
@@ -897,6 +929,7 @@
     backrooms: {
       dataId: "backrooms-2026",
       nowPlaying: true,
+      releaseDate: "2026-05-27",
       genres: ["Horror","Mystery","Science Fiction"],
       name: "Backrooms", year: "2026", score: 77, ci: null, label: "Generally Favorable",
       spread: [83, 17, 0], n: 46,
@@ -954,6 +987,7 @@
     supergirl: {
       dataId: "supergirl-2026",
       nowPlaying: true,
+      releaseDate: "2026-06-24",
       genres: ["Action","Adventure","Science Fiction"],
       name: "Supergirl", year: "2026", score: 50, ci: null, label: "Mixed or Average",
       spread: [30, 63, 7], n: 56,
@@ -997,6 +1031,7 @@
     minionsmonsters: {
       dataId: "minions-monsters-2026",
       nowPlaying: true,
+      releaseDate: "2026-06-24",
       genres: ["Adventure","Animation","Comedy","Family","Fantasy"],
       name: "Minions & Monsters", year: "2026", score: 70, ci: null, label: "Generally Favorable",
       spread: [77, 20, 3], n: 30,
@@ -1040,6 +1075,7 @@
     toystory5: {
       dataId: "toy-story-5-2026",
       nowPlaying: true,
+      releaseDate: "2026-06-17",
       genres: ["Animation","Family","Comedy","Adventure"],
       name: "Toy Story 5", year: "2026", score: 73, ci: null, label: "Generally Favorable",
       spread: [80, 19, 2], n: 54,
@@ -1106,6 +1142,7 @@
     robinhood: {
       dataId: "the-death-of-robin-hood-2026",
       nowPlaying: true,
+      releaseDate: "2026-06-18",
       genres: ["Adventure","Drama","Thriller","Action"],
       name: "The Death of Robin Hood", year: "2026", score: 60, ci: null, label: "Mixed or Average",
       spread: [51, 43, 6], n: 35,
@@ -1164,6 +1201,7 @@
     evildeadburn: {
       dataId: "evil-dead-burn-2026",
       nowPlaying: true,
+      releaseDate: "2026-07-07",
       genres: ["Horror","Thriller"],
       name: "Evil Dead Burn", year: "2026", score: 54, ci: null, label: "Mixed or Average",
       spread: [42, 47, 11], n: 36,
@@ -1204,6 +1242,7 @@
     borderline: {
       dataId: "borderline-2026",
       nowPlaying: true,
+      releaseDate: "2026-07-17",
       genres: ["Thriller"],
       name: "Borderline", year: "2026", score: null, ci: null, label: null,
       spread: null, n: null,
@@ -1235,6 +1274,7 @@
     citizenVigilante: {
       dataId: "citizen-vigilante-2026",
       nowPlaying: true,
+      releaseDate: "2026-06-19",
       genres: ["Thriller","Action"],
       name: "Citizen Vigilante", year: "2026", score: 10, ci: null, label: "Overwhelming Dislike",
       spread: [0, 0, 100], n: 2,
@@ -1289,7 +1329,8 @@
 
     avatarAangTheLastAirbender: {
       dataId: "avatar-aang-the-last-airbender-2026",
-      nowPlaying: true,
+      nowPlaying: false, // real release is Paramount+ streaming, plus a 2-city awards-qualifying run — not a normal theatrical release
+      releaseDate: "2026-07-24",
       genres: ["Animation","Action","Adventure","Fantasy"],
       name: "Avatar Aang: The Last Airbender", year: "2026", score: 68, ci: null, label: "Generally Favorable",
       spread: [70, 30, 0], n: 10,
@@ -1337,6 +1378,46 @@
           <span class="tile-score"><span class="tile-score-num">${f.score != null ? f.score : "—"}</span> Kernel Score</span>
         </div>
       </button>`).join("");
+  }
+
+  const RECENT_RELEASE_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
+
+  function buildRecentReleases() {
+    const slider = document.getElementById("recentSlider");
+    const emptyEl = document.getElementById("recentEmpty");
+    const now = Date.now();
+    // Not nowPlaying + released within the window — no separate flag to
+    // maintain: a film ages out on its own, and one leaving nowPlaying
+    // (e.g. via the daily automation) flows straight in here automatically
+    // for whatever's left of its 90 days, no code change needed either place.
+    const recent = Object.entries(FILMS)
+      .filter(([key, f]) => !f.nowPlaying && f.releaseDate)
+      .filter(([key, f]) => {
+        const age = now - new Date(f.releaseDate).getTime();
+        return age >= 0 && age <= RECENT_RELEASE_WINDOW_MS;
+      })
+      .sort((a, b) => new Date(b[1].releaseDate) - new Date(a[1].releaseDate));
+
+    if (!recent.length) {
+      slider.innerHTML = "";
+      emptyEl.hidden = false;
+      return;
+    }
+    emptyEl.hidden = true;
+    slider.innerHTML = recent.map(([key, f]) => `
+      <button class="recent-tile" data-film="${key}">
+        <div class="recent-tile-poster-wrap">
+          <img class="recent-tile-poster" src="https://image.tmdb.org/t/p/w185${f.poster}" alt="${f.name} poster" loading="lazy" referrerpolicy="no-referrer">
+          <span class="recent-tile-badge">${f.label || "Not yet reviewed"}</span>
+        </div>
+        <span class="recent-tile-meta">
+          <span class="recent-tile-title">${f.name}</span> <span class="recent-tile-year">${f.year}</span>
+          <span class="recent-tile-score"><span class="recent-tile-score-num">${f.score != null ? f.score : "—"}</span> Kernel Score</span>
+        </span>
+      </button>`).join("");
+    slider.querySelectorAll(".recent-tile").forEach(tile => {
+      tile.addEventListener("click", () => { location.hash = tile.dataset.film; });
+    });
   }
 
   function renderVaultResults(query) {
@@ -2218,6 +2299,7 @@
     TMDB_LOGO_SVG + `<span>This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span>`;
 
   buildGallery();
+  buildRecentReleases();
   buildVaultSearch();
   buildGemsChart();
   tabs = document.querySelectorAll(".tab");
