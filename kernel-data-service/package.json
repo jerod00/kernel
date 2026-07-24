@@ -1,0 +1,29 @@
+{
+  "name": "kernel-data-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Append-only, HMAC-hash-chained data log for Kernel — every ingested fact is written once and never modified or deleted; /verify proves the log hasn't been tampered with.",
+  "main": "server.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "node --experimental-sqlite server.js",
+    "start:dev": "node --experimental-sqlite dev-start.js",
+    "seed": "node --experimental-sqlite seed.js",
+    "seed:batch2": "node --experimental-sqlite seed-batch-2.js",
+    "seed:dev": "node --experimental-sqlite dev-seed.js",
+    "seed:batch2:dev": "node --experimental-sqlite dev-seed-batch-2.js",
+    "onboard-film": "node --experimental-sqlite onboard-film.js",
+    "ingest-film": "node --experimental-sqlite ingest-film.js",
+    "verify-cli": "node --experimental-sqlite verify-cli.js",
+    "test:append-only": "node --experimental-sqlite test-tamper.js",
+    "test:hmac-integrity": "node --experimental-sqlite test-tamper-advanced.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2"
+  },
+  "engines": {
+    "node": ">=22.5"
+  }
+}
