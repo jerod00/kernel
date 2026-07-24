@@ -14,6 +14,7 @@
     "seed:batch2:dev": "node --experimental-sqlite dev-seed-batch-2.js",
     "onboard-film": "node --experimental-sqlite onboard-film.js",
     "refresh-now-playing": "node --experimental-sqlite refresh-now-playing.js",
+    "draft-onboard": "node --experimental-sqlite draft-onboard.js",
     "ingest-film": "node --experimental-sqlite ingest-film.js",
     "ingest-film:dev": "node --experimental-sqlite dev-ingest-film.js",
     "verify-cli": "node --experimental-sqlite verify-cli.js",

@@ -219,6 +219,7 @@ function assertWidgetScriptParses(html) {
   const existingKeys = [...html.matchAll(/^ {4}(\w+):\s*\{/gm)].map(m => m[1]);
   let entriesText = "";
   const processed = [];
+  const skipped = [];
 
   for (const { title, year } of filmsToProcess) {
     console.log(`\n=== Drafting ${title} (${year}) ===`);
@@ -237,11 +238,16 @@ function assertWidgetScriptParses(html) {
       console.log(`  -> FILMS.${key} drafted (score=${data.critic.score ?? "n/a"}, director=${!!data.director}, actor=${!!data.actor})`);
     } catch (err) {
       console.error(`  Skipping "${title}" (${year}): ${err.message}`);
+      skipped.push({ title, year, reason: err.message });
     }
   }
 
+  const outPath = process.env.GITHUB_OUTPUT;
+  if (outPath) fs.appendFileSync(outPath, `skipped<<EOF\n${JSON.stringify(skipped)}\nEOF\n`);
+
   if (!processed.length) {
     console.log("\nNothing drafted — no changes to write.");
+    if (outPath) fs.appendFileSync(outPath, `drafted<<EOF\n[]\nEOF\n`);
     return;
   }
 
@@ -261,8 +267,13 @@ function assertWidgetScriptParses(html) {
   console.log(`\nWrote ${processed.length} draft entr${processed.length === 1 ? "y" : "ies"} into ${WIDGET_PATH}`);
   console.log("Remaining TODOs per entry: critic spread/review count (Metacritic), marketing spend (trade press), weekly gross (Box Office Mojo), legsInsight (after weekly gross).");
 
-  const outPath = process.env.GITHUB_OUTPUT;
-  if (outPath) fs.appendFileSync(outPath, `drafted<<EOF\n${JSON.stringify(processed)}\nEOF\n`);
+  if (outPath) {
+    fs.appendFileSync(outPath, `drafted<<EOF\n${JSON.stringify(processed)}\nEOF\n`);
+    const prTitle = `Draft: ${processed.map(p => p.title).join(", ")}`;
+    const prBodyList = processed.map(p => `- **${p.title}** (${p.year}) as \`FILMS.${p.key}\``).join("\n");
+    fs.appendFileSync(outPath, `pr-title<<EOF\n${prTitle}\nEOF\n`);
+    fs.appendFileSync(outPath, `pr-body-list<<EOF\n${prBodyList}\nEOF\n`);
+  }
 })().catch(err => {
   console.error("Failed:", err.message);
   process.exit(1);

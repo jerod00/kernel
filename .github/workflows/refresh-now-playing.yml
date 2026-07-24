@@ -8,6 +8,7 @@ on:
 permissions:
   contents: write
   issues: write
+  pull-requests: write
 
 jobs:
   refresh:
@@ -45,14 +46,62 @@ jobs:
           git commit -m "Auto-update: remove $REMOVED from Now Playing [skip ci]"
           git push
 
-      # New releases still need a human for Tier 2 research (weekly gross,
-      # marketing spend, critic spread, editorial insight) before they can be
-      # added to the widget — this just surfaces what's worth looking at.
-      # Reuses one open issue instead of filing a new one every day.
-      # NEW_FILMS is passed via env and written with a quoted heredoc so its
-      # backticks/quotes are never re-parsed as shell syntax (this is exactly
-      # what broke the first run: an inlined ${{ }} put a backtick-wrapped
-      # command into the script text, and bash ran it as command substitution).
+      # Auto-drafts a small number of new releases (capped in
+      # refresh-now-playing.js) using the same Tier 1 fetch as manual
+      # onboarding, plus AI-drafted insight text from real, already-fetched
+      # numbers. Never merged automatically — see the PR step below. Needs
+      # TMDB_ACCESS_TOKEN/OMDB_API_KEY (Tier 1 fetch) and ANTHROPIC_API_KEY
+      # (insight text) as repo secrets.
+      - name: Draft new films (AI-assisted, PR only — never auto-merged)
+        id: draft
+        if: steps.refresh.outputs.new-films-json != '' && steps.refresh.outputs.new-films-json != '[]'
+        working-directory: kernel-data-service
+        env:
+          TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+          OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          FILMS_JSON: ${{ steps.refresh.outputs.new-films-json }}
+        run: node --experimental-sqlite draft-onboard.js
+
+      # Opens a PR (never merges) with whatever draft-onboard.js actually
+      # produced. All templated values come through env, never spliced
+      # into the script text — see the earlier commit that fixed exactly
+      # that bug for the issue step below.
+      - name: Open PR for drafted films
+        if: steps.draft.outputs.drafted != '' && steps.draft.outputs.drafted != '[]'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_TITLE: ${{ steps.draft.outputs.pr-title }}
+          PR_BODY_LIST: ${{ steps.draft.outputs.pr-body-list }}
+        run: |
+          BRANCH="auto-onboard/${{ github.run_id }}"
+          git config user.name "kernel-bot"
+          git config user.email "actions@github.com"
+          git checkout -b "$BRANCH"
+          git add widget/index.html
+          git commit -m "Draft new films: auto Tier 1 + AI-drafted insight text"
+          git push origin "$BRANCH"
+          cat > /tmp/pr-body.md <<'EOF'
+          Auto-drafted from today's Now Playing check: Tier 1 data (TMDb/OMDb) fetched automatically; insight/directorInsight/actorInsight text drafted from the real numbers already fetched (never fabricated numbers — averages/deltas are computed in code and handed to the model, not left for it to calculate).
+
+          **Do not merge as-is.** Each entry still has 3 TODOs that genuinely can't be automated — Metacritic and Box Office Mojo both prohibit automated/scraped access in their terms of use, the same restriction already found for Rotten Tomatoes:
+          - `spread` / `n` — Metacritic's own critic-spread page
+          - `econ.marketing` — trade press estimate
+          - `weeklyGross` — Box Office Mojo weekend-by-weekend, then write `legsInsight` once that's filled in
+
+          Films drafted this run:
+          EOF
+          echo "$PR_BODY_LIST" >> /tmp/pr-body.md
+          gh pr create --title "$PR_TITLE" --body-file /tmp/pr-body.md --base main --head "$BRANCH"
+
+      # Whatever's left over (beyond the auto-draft cap, or films
+      # draft-onboard.js skipped) still needs a human for Tier 2 research —
+      # this just surfaces what's worth looking at. Reuses one open issue
+      # instead of filing a new one every day. NEW_FILMS is passed via env
+      # and written with a quoted heredoc so its backticks/quotes are never
+      # re-parsed as shell syntax (this is exactly what broke the first run:
+      # an inlined ${{ }} put a backtick-wrapped command into the script
+      # text, and bash ran it as command substitution).
       - name: Open or update new-films issue
         if: steps.refresh.outputs.new-films != ''
         env:
@@ -60,7 +109,7 @@ jobs:
           NEW_FILMS: ${{ steps.refresh.outputs.new-films }}
         run: |
           cat > /tmp/issue-body.md <<'EOF'
-          New films TMDb lists as now playing that aren't onboarded yet. Run the listed command, then complete Tier 2 research and `ingest-film.js` as usual.
+          New films TMDb lists as now playing that aren't onboarded yet (beyond today's auto-draft cap, or skipped — see the workflow run log for why). Run the listed command, then complete Tier 2 research and `ingest-film.js` as usual.
 
           EOF
           echo "$NEW_FILMS" >> /tmp/issue-body.md

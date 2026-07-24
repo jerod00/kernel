@@ -20,6 +20,7 @@ const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const WIDGET_PATH = path.join(__dirname, "..", "widget", "index.html");
 const NEW_FILM_ALERT_CAP = 10; // top N by TMDb's own now_playing ordering — avoids flooding an issue with minor/limited releases
+const AUTO_DRAFT_CAP = 3; // of those, how many get the full AI-drafting + PR treatment per run — bounds API cost and PR review burden
 
 if (!TMDB_ACCESS_TOKEN) {
   console.error("Set TMDB_ACCESS_TOKEN in kernel-data-service/.env first.");
@@ -99,10 +100,19 @@ function writeGithubOutput(key, value) {
     console.log("No new films to onboard.");
   }
 
+  const toAutoDraft = newFilms.slice(0, AUTO_DRAFT_CAP).map(m => ({
+    title: m.title,
+    year: (m.release_date || "").slice(0, 4),
+  }));
+  // Films beyond the auto-draft cap still get listed in the issue, just
+  // without a PR — same manual "run onboard-film.js yourself" path as today.
+  const remainder = newFilms.slice(AUTO_DRAFT_CAP);
+
   writeGithubOutput("removed", removedTitles.join(", "));
+  writeGithubOutput("new-films-json", JSON.stringify(toAutoDraft));
   writeGithubOutput(
     "new-films",
-    newFilms.map(m => `- **${m.title}** (${(m.release_date || "").slice(0, 4)}) — https://www.themoviedb.org/movie/${m.id}\n  \`node onboard-film.js "${m.title.replace(/"/g, '\\"')}" ${(m.release_date || "").slice(0, 4)}\``).join("\n")
+    remainder.map(m => `- **${m.title}** (${(m.release_date || "").slice(0, 4)}) — https://www.themoviedb.org/movie/${m.id}\n  \`node onboard-film.js "${m.title.replace(/"/g, '\\"')}" ${(m.release_date || "").slice(0, 4)}\``).join("\n")
   );
 })().catch(err => {
   console.error("Failed:", err.message);
