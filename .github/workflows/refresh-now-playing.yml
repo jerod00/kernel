@@ -103,7 +103,10 @@ jobs:
       # an inlined ${{ }} put a backtick-wrapped command into the script
       # text, and bash ran it as command substitution).
       - name: Open or update new-films issue
-        if: steps.refresh.outputs.new-films != ''
+        # always() so a failure in the PR step above (independent concern)
+        # doesn't silently suppress this one too — GitHub Actions skips all
+        # later steps by default after any earlier failure.
+        if: always() && steps.refresh.outputs.new-films != ''
         env:
           GH_TOKEN: ${{ github.token }}
           NEW_FILMS: ${{ steps.refresh.outputs.new-films }}
