@@ -54,6 +54,16 @@ function toMillions(n) {
   return n == null ? null : +(n / 1e6).toFixed(3);
 }
 
+// Cuts at the last word boundary before maxLen and appends an ellipsis —
+// used for TMDb review text so only a short excerpt (never the full review)
+// ever enters the append-only log, regardless of what the widget renders.
+function excerpt(text, maxLen) {
+  if (!text || text.length <= maxLen) return text || "";
+  const cut = text.slice(0, maxLen);
+  const lastSpace = cut.lastIndexOf(" ");
+  return (lastSpace > 0 ? cut.slice(0, lastSpace) : cut).trim() + "…";
+}
+
 async function tmdb(pathName) {
   // Bearer token: TMDb's current recommended auth method, a single token
   // that works across both their v3 and v4 endpoints.
@@ -132,6 +142,9 @@ async function buildPersonFilmography(personId, isDirector) {
 
   const omdb = await omdbLookup({ imdbId: externalIds.imdb_id });
   const omdbUrl = externalIds.imdb_id ? `https://www.omdbapi.com/?i=${externalIds.imdb_id}` : null;
+  // A human-checkable page (unlike the bare OMDb API URL, which 401s without
+  // a key if anyone actually clicks the citation) for the IMDb-rating seed.
+  const imdbUrl = externalIds.imdb_id ? `https://www.imdb.com/title/${externalIds.imdb_id}/` : null;
 
   // Cross-check: the exact class of mistake that produced the wrong Whale
   // score earlier this project — a same-titled, different film.
@@ -168,6 +181,14 @@ async function buildPersonFilmography(personId, isDirector) {
     weeklyGross: [],
     director: director ? { name: slugify(director.name), films: {} } : null,
     actor: leadActor ? { name: slugify(leadActor.name), films: {} } : null,
+    // Cold-start seed content (Tier 1, fully automatic) — a starting score +
+    // up to 3 excerpted, attributed reviews shown only until the film has
+    // enough real self-submitted Kernel reviews. Full review text is never
+    // captured here (see excerpt() above) — only a short quote plus a link
+    // back to the original, which is what a reader actually verifies against.
+    seedScore: null,
+    seedScoreUrl: null,
+    seedReviews: [],
     sources: {
       genres: tmdbUrl,
       budget: tmdbUrl,
@@ -181,6 +202,22 @@ async function buildPersonFilmography(personId, isDirector) {
     mismatches,
   };
 
+  if (omdb && omdb.imdbRating && omdb.imdbRating !== "N/A") {
+    draft.seedScore = Math.round(Number(omdb.imdbRating) * 10);
+    draft.seedScoreUrl = imdbUrl;
+  }
+
+  try {
+    const reviewsRes = await tmdb(`/movie/${match.id}/reviews?language=en-US`);
+    draft.seedReviews = (reviewsRes.results || []).slice(0, 3).map(r => ({
+      author: r.author,
+      content: excerpt(r.content, 280),
+      url: r.url,
+    }));
+  } catch (err) {
+    console.warn(`  (TMDb reviews fetch failed: ${err.message} — continuing without seed reviews)`);
+  }
+
   console.log("\n--- TIER 1 (auto-fetched, fill nothing here unless flagged) ---");
   console.log(`dataId: ${dataId}`);
   console.log(`genres: ${JSON.stringify(draft.genres)}   [TMDb]`);
@@ -190,6 +227,8 @@ async function buildPersonFilmography(personId, isDirector) {
   console.log(`econ.domesticTotal (OMDb): ${draft.econ.domesticTotal != null ? draft.econ.domesticTotal + "M" : "not available from OMDb"}`);
   console.log(`director: ${director ? director.name : "not found"}`);
   console.log(`leadActor: ${leadActor ? leadActor.name : "not found"}`);
+  console.log(`seedScore (IMDb rating x10): ${draft.seedScore != null ? draft.seedScore : "not available from OMDb"}`);
+  console.log(`seedReviews (TMDb, excerpted, capped at 3): ${draft.seedReviews.length} found`);
 
   if (mismatches.length) {
     console.log("\n--- MISMATCH WARNINGS ---");

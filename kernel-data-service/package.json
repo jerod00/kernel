@@ -14,6 +14,7 @@
     "seed:batch2:dev": "node --experimental-sqlite dev-seed-batch-2.js",
     "onboard-film": "node --experimental-sqlite onboard-film.js",
     "ingest-film": "node --experimental-sqlite ingest-film.js",
+    "ingest-film:dev": "node --experimental-sqlite dev-ingest-film.js",
     "verify-cli": "node --experimental-sqlite verify-cli.js",
     "test:append-only": "node --experimental-sqlite test-tamper.js",
     "test:hmac-integrity": "node --experimental-sqlite test-tamper-advanced.js"

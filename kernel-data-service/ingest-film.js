@@ -57,6 +57,11 @@ if (data.actor && data.actor.name) {
   }
 }
 
+logIngest("seed_content", filmId, "score", data.seedScore, data.seedScoreUrl);
+(data.seedReviews || []).forEach((r, i) => {
+  logIngest("seed_content", filmId, `review_${i}`, r, r.url);
+});
+
 console.log(`Ingested ${count} facts for ${filmId}.`);
 if (uncited) console.log(`WARNING: ${uncited} of those facts had no source URL — fix the draft's "sources" map.`);
 console.log(verifyChain());

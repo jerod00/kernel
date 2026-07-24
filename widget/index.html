@@ -321,6 +321,21 @@
   .review-item-date{ font-size:0.74rem; color:var(--muted); }
   .review-caption{ font-size:0.78rem; color:var(--muted); margin-top:0.9rem; max-width:64ch; }
 
+  /* Cold-start seed content (borrowed score + reviews, retired once real reviews accumulate) */
+  .seed-block{ margin-bottom:1.1rem; padding-bottom:1rem; border-bottom:1px solid var(--rule); }
+  .seed-block:empty{ margin-bottom:0; padding-bottom:0; border-bottom:none; }
+  .seed-eyebrow{
+    display:block; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.68rem;
+    letter-spacing:0.08em; text-transform:uppercase; color:var(--teal); margin-bottom:0.35rem;
+  }
+  .seed-score{ display:flex; align-items:baseline; gap:0.6rem; margin-bottom:0.9rem; }
+  .seed-score .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.5rem; color:var(--gold); }
+  .seed-review{ margin:0 0 0.8rem; padding:0.7rem 0 0.7rem 0.9rem; border-left:2px solid var(--rule); }
+  .seed-review:last-child{ margin-bottom:0; }
+  .seed-review-content{ margin:0 0 0.35rem; font-size:0.9rem; color:var(--ink); font-style:italic; }
+  .seed-review-attr{ font-size:0.76rem; color:var(--muted); }
+  .seed-review-attr a{ color:var(--teal); }
+
   .revenue-svg text{ font-family:ui-monospace,"SF Mono",Consolas,monospace; }
   .axis-label{ font-size:8px; fill:var(--muted); }
   .gold-label{ fill:var(--gold); }
@@ -428,7 +443,7 @@
   </div>
 
   <footer>
-    Scores reuse published Metacritic data as a stand-in for a full weighted, per-critic model. Revenue and box-office curves connect real reported checkpoints with straight-line interpolation, not a daily feed. Breakeven uses an industry rule of thumb (2× budget + marketing). The legs average reflects only the films in this dataset with weekend-by-weekend data — still a small sample, not an industry benchmark. Director and lead-actor averages are simple means of each person's published scores and may not reflect a complete filmography. The audience-review form logs submissions to kernel-data-service as an unmodifiable, timestamped fact, same as the rest of this dataset — but it does not apply the verified-eligibility, velocity-cap, or cold-start-floor methodology described elsewhere; anyone can submit, so the resulting "Demo Audience Score" is exactly what it says: self-reported and unverified, not a real Kernel audience score.
+    Scores reuse published Metacritic data as a stand-in for a full weighted, per-critic model. Revenue and box-office curves connect real reported checkpoints with straight-line interpolation, not a daily feed. Breakeven uses an industry rule of thumb (2× budget + marketing). The legs average reflects only the films in this dataset with weekend-by-weekend data — still a small sample, not an industry benchmark. Director and lead-actor averages are simple means of each person's published scores and may not reflect a complete filmography. The audience-review form logs submissions to kernel-data-service as an unmodifiable, timestamped fact, same as the rest of this dataset — but it does not apply the verified-eligibility, velocity-cap, or cold-start-floor methodology described elsewhere; anyone can submit, so the resulting "Demo Audience Score" is exactly what it says: self-reported and unverified, not a real Kernel audience score. Films with fewer than 3 self-reported reviews additionally show a borrowed IMDb audience average and up to 3 TMDb user reviews (capped, excerpted, always linked back to the original) to avoid looking empty; both disappear automatically and permanently once 3 real reviews accumulate.
   </footer>
   <div class="sign-off">
     <svg class="mini-kernel" viewBox="0 0 60 60" aria-hidden="true">
@@ -1602,6 +1617,9 @@
   }
 
   const DATA_SERVICE_URL = "http://localhost:3002";
+  // Independent of synopsis.js's MIN_REVIEWS on purpose — cold-start retirement
+  // shouldn't depend on the AI-synopsis feature or its API key being healthy.
+  const MIN_REAL_REVIEWS = 3;
 
   function reviewHTML(f) {
     if (!f.dataId) return "";
@@ -1612,6 +1630,7 @@
         </div>
         <div class="review-synopsis" id="reviewSynopsis"></div>
         <div class="review-summary" id="reviewSummary">Loading reviews…</div>
+        <div class="seed-block" id="seedBlock"></div>
         <form class="review-form" id="reviewForm">
           <div class="review-rating-row">
             <label for="reviewRating">Your score</label>
@@ -1647,12 +1666,14 @@
   async function loadReviews(dataId) {
     const summaryEl = widget.querySelector("#reviewSummary");
     const listEl = widget.querySelector("#reviewList");
+    const seedEl = widget.querySelector("#seedBlock");
     if (!summaryEl) return;
     try {
       const res = await fetch(`${DATA_SERVICE_URL}/api/entity/audience_review/${dataId}`);
       if (res.status === 404) {
         summaryEl.textContent = "No reviews yet for this film — be the first.";
         if (listEl) listEl.innerHTML = "";
+        if (seedEl) loadSeedContent(dataId, seedEl);
         return;
       }
       if (!res.ok) throw new Error(`Service responded ${res.status}`);
@@ -1667,6 +1688,7 @@
       if (!reviews.length) {
         summaryEl.textContent = "No reviews yet for this film — be the first.";
         if (listEl) listEl.innerHTML = "";
+        if (seedEl) loadSeedContent(dataId, seedEl);
         return;
       }
       const avg = reviews.reduce((a, r) => a + Number(r.rating), 0) / reviews.length;
@@ -1682,9 +1704,53 @@
           </div>
         `).join("");
       }
+      if (seedEl) {
+        if (reviews.length >= MIN_REAL_REVIEWS) seedEl.innerHTML = "";
+        else loadSeedContent(dataId, seedEl);
+      }
     } catch (err) {
       summaryEl.textContent = "Reviews require the local kernel-data-service running (not reachable right now).";
       if (listEl) listEl.innerHTML = "";
+    }
+  }
+
+  async function loadSeedContent(dataId, el) {
+    try {
+      const res = await fetch(`${DATA_SERVICE_URL}/api/entity/seed_content/${dataId}`);
+      if (!res.ok) { el.innerHTML = ""; return; }
+      const data = await res.json();
+      const fields = data.fields || {};
+      const scoreEntry = fields.score;
+      const reviewEntries = Object.entries(fields)
+        .filter(([field]) => field.startsWith("review_"))
+        .sort(([a], [b]) => a.localeCompare(b));
+
+      let html = "";
+      if (scoreEntry) {
+        const score = Number(scoreEntry.value);
+        if (!isNaN(score)) {
+          html += `
+            <div class="seed-score">
+              <span class="num">${score}</span>
+              <span class="seed-eyebrow" style="margin-bottom:0;">Starting point — IMDb audience average, not yet a Kernel score</span>
+            </div>`;
+        }
+      }
+      reviewEntries.forEach(([, entry]) => {
+        let review;
+        try { review = JSON.parse(entry.value); } catch { return; }
+        if (!review || !review.content) return;
+        const url = review.url || "";
+        html += `
+          <blockquote class="seed-review"${url ? ` cite="${escapeHtml(url)}"` : ""}>
+            <span class="seed-eyebrow">Borrowed from TMDb to get started — not a Kernel review</span>
+            <p class="seed-review-content">${escapeHtml(review.content)}</p>
+            <p class="seed-review-attr">— ${escapeHtml(review.author || "TMDb user")}${url ? ` · <a href="${escapeHtml(url)}" target="_blank" rel="noopener noreferrer nofollow">View original</a>` : ""}</p>
+          </blockquote>`;
+      });
+      el.innerHTML = html;
+    } catch (err) {
+      el.innerHTML = "";
     }
   }
 
