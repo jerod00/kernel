@@ -4033,7 +4033,7 @@ theSubstance: {
       </div>`;
   }
 
-  const DATA_SERVICE_URL = "http://localhost:3002";
+  const DATA_SERVICE_URL = "https://kernel-data-service-themoviekernel.fly.dev";
   // Independent of synopsis.js's MIN_REVIEWS on purpose — cold-start retirement
   // shouldn't depend on the AI-synopsis feature or its API key being healthy.
   const MIN_REAL_REVIEWS = 3;
@@ -4196,26 +4196,22 @@ theSubstance: {
 
   async function submitReview(f, rating, comment) {
     const statusEl = widget.querySelector("#reviewStatus");
-    try {
-      const fieldName = `review_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-      const res = await fetch(`${DATA_SERVICE_URL}/api/ingest`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          entityType: "audience_review",
-          entityId: f.dataId,
-          field: fieldName,
-          value: { rating, comment: comment || null },
-          source: "Self-reported (unverified) — Kernel widget submission",
-        }),
-      });
-      if (!res.ok) throw new Error(`Service responded ${res.status}`);
-      if (statusEl) statusEl.textContent = "Thanks — your review was logged.";
-      loadReviews(f.dataId);
-      loadSynopsis(f);
-    } catch (err) {
-      if (statusEl) statusEl.textContent = "Couldn't submit — is kernel-data-service running locally?";
-    }
+    const fieldName = `review_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const res = await fetch(`${DATA_SERVICE_URL}/api/ingest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        entityType: "audience_review",
+        entityId: f.dataId,
+        field: fieldName,
+        value: { rating, comment: comment || null },
+        source: "Self-reported (unverified) — Kernel widget submission",
+      }),
+    });
+    if (!res.ok) throw new Error(`Service responded ${res.status}`);
+    if (statusEl) statusEl.textContent = "Thanks — your review was logged.";
+    loadReviews(f.dataId);
+    loadSynopsis(f);
   }
 
   function attachReviewForm(f) {
@@ -4225,6 +4221,7 @@ theSubstance: {
     const numEl = form.querySelector("#reviewRatingNum");
     const hintEl = form.querySelector("#reviewRatingHint");
     const submitBtn = form.querySelector("#reviewSubmit");
+    const statusEl = form.querySelector("#reviewStatus");
     let touched = false;
 
     function resetRatingState() {
@@ -4243,14 +4240,27 @@ theSubstance: {
       hintEl.hidden = true;
       submitBtn.disabled = false;
     });
-    form.addEventListener("submit", e => {
+    form.addEventListener("submit", async e => {
       e.preventDefault();
       if (!touched || !form.querySelector("#reviewPledge").checked) return;
       const rating = Number(slider.value);
       const comment = form.querySelector("#reviewComment").value.trim();
-      submitReview(f, rating, comment);
-      form.reset();
-      resetRatingState();
+      // Disable the button to block a double-submit, but leave the slider/
+      // comment/checkbox exactly as the user left them — resetting anything
+      // before we know the request actually succeeded is what made a normal
+      // submit look identical to a silent failure (the button would grey out
+      // instantly while the status text stayed blank for however long the
+      // request took, which read as "nothing happened").
+      submitBtn.disabled = true;
+      if (statusEl) statusEl.textContent = "Submitting…";
+      try {
+        await submitReview(f, rating, comment);
+        form.reset();
+        resetRatingState();
+      } catch (err) {
+        if (statusEl) statusEl.textContent = "Couldn't submit — is kernel-data-service running locally? Your answer is still here, try again.";
+        submitBtn.disabled = false;
+      }
     });
     resetRatingState();
     loadReviews(f.dataId);
@@ -4304,7 +4314,7 @@ theSubstance: {
     });
   }
 
-  const ARTWORK_SERVICE_URL = "http://localhost:3001/api/artwork";
+  const ARTWORK_SERVICE_URL = "https://kernel-artwork-service-themoviekernel.fly.dev/api/artwork";
   let renderToken = 0;
 
   async function tryLiveArtwork(f, token) {
