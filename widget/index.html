@@ -1212,11 +1212,11 @@
       <button class="tab" role="tab" data-film="${key}" aria-selected="${i === 0}">
         <div class="tile-poster-wrap">
           <img class="tile-poster" src="https://image.tmdb.org/t/p/w342${f.poster}" alt="${f.name} poster" loading="lazy" referrerpolicy="no-referrer">
-          <span class="tile-badge">${f.label}</span>
+          <span class="tile-badge">${f.label || "Not yet reviewed"}</span>
         </div>
         <div class="tile-meta">
           <span class="tile-title">${f.name} <span class="tile-year">${f.year}</span></span>
-          <span class="tile-score"><span class="tile-score-num">${f.score}</span> Kernel Score</span>
+          <span class="tile-score"><span class="tile-score-num">${f.score != null ? f.score : "—"}</span> Kernel Score</span>
         </div>
       </button>`).join("");
   }
@@ -1244,7 +1244,7 @@
           <span class="vault-title">${f.name}</span>
           <span class="vault-year">${f.year}</span>
         </span>
-        <span class="vault-score">${f.score}</span>
+        <span class="vault-score">${f.score != null ? f.score : "—"}</span>
       </button>`).join("");
     resultsEl.querySelectorAll(".vault-row").forEach(row => {
       row.addEventListener("click", () => { location.hash = row.dataset.film; });
@@ -1297,7 +1297,9 @@
     const H = 170, PADB = 20;
     const { threshold, budgetOnly } = breakevenOf(f);
     const finalValue = f.revenuePoints[f.revenuePoints.length - 1].value;
-    const maxValue = Math.max(finalValue, threshold) * 1.12;
+    // Guard against 0 (a film with no known budget/revenue at all) — v/0
+    // produces NaN/Infinity SVG coordinates, silently rendering an empty chart.
+    const maxValue = Math.max(finalValue, threshold, 1) * 1.12;
     const yAt = v => PADT + (1 - v / maxValue) * (H - PADT - PADB);
 
     const gridVals = [0, 0.25, 0.5, 0.75, 1].map(t => t * maxValue);
@@ -1506,7 +1508,12 @@
 
   function buildGemsChart() {
     const container = document.getElementById("gemsChart");
-    const films = Object.values(FILMS).map(f => ({ name: f.name, score: f.score, boxOffice: f.econ.boxOffice }));
+    // Films without a real score or box office figure have nothing meaningful
+    // to plot here — including one would corrupt the log-scale axis math for
+    // every other film too (Math.log10(0) = -Infinity), not just its own dot.
+    const films = Object.values(FILMS)
+      .filter(f => f.score != null && f.econ.boxOffice != null)
+      .map(f => ({ name: f.name, score: f.score, boxOffice: f.econ.boxOffice }));
 
     const SCORE_CUT = 70, VIEW_CUT = 100; // $100M
     const W = 640, H = 340, PADL = 34, PADR = 16, PADT = 18, PADB = 34;
@@ -1924,11 +1931,11 @@
             <h2>${f.name} <span class="year">(${f.year})</span></h2>
           </div>
         </div>
-        <span class="badge">${f.label}</span>
+        <span class="badge">${f.label || "Not yet reviewed"}</span>
       </div>
       <div class="score-row">
-        <span class="score-num">${f.score}</span>
-        <span class="score-ci">${f.ci ? f.ci + " · " : ""}n=${f.n}</span>
+        <span class="score-num">${f.score != null ? f.score : "—"}</span>
+        ${f.n != null ? `<span class="score-ci">${f.ci ? f.ci + " · " : ""}n=${f.n}</span>` : ""}
       </div>
       <div class="score-label">
         <svg class="mini-kernel" viewBox="0 0 60 60" aria-hidden="true">
@@ -1940,6 +1947,7 @@
         </svg>
         Kernel Score — weighted critic average
       </div>
+      ${Array.isArray(f.spread) ? `
       <div class="spread-bar">
         <span class="pos" style="flex:${f.spread[0]}"></span>
         <span class="mix" style="flex:${f.spread[1]}"></span>
@@ -1949,7 +1957,8 @@
         <span class="pos-c">${f.spread[0]}% positive</span>
         <span class="mix-c">${f.spread[1]}% mixed</span>
         <span class="neg-c">${f.spread[2]}% negative</span>
-      </div>
+      </div>` : `
+      <p class="spread-legend">Not enough critic coverage yet for a positive/mixed/negative breakdown.</p>`}
       <div class="divider"></div>
       <div class="charts-section">
         <div class="chart-block">
@@ -2012,7 +2021,9 @@
     const sub = document.getElementById("top100Sub");
     const list = document.getElementById("rankList");
     const ranked = Object.entries(FILMS)
-      .filter(([key, f]) => !genre || (f.genres || []).includes(genre))
+      // A film with no score yet has nothing to rank — leaving it in would
+      // also feed NaN into the sort comparator below.
+      .filter(([key, f]) => f.score != null && (!genre || (f.genres || []).includes(genre)))
       .sort((a, b) => {
         if (b[1].score !== a[1].score) return b[1].score - a[1].score;
         return (b[1].n || 0) - (a[1].n || 0);
