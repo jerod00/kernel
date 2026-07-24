@@ -1,6 +1,7 @@
 require("dotenv").config();
 const fs = require("node:fs");
 const path = require("node:path");
+const { slugify } = require("./slugify");
 
 // Tier 1 of the data pipeline: pulls what real, free, ToS-compliant APIs can
 // actually provide (TMDb + OMDb), cross-checks them against each other, and
@@ -29,19 +30,6 @@ const [, , titleArg, yearArg] = process.argv;
 if (!titleArg) {
   console.error('Usage: node onboard-film.js "Film Title" [year]');
   process.exit(1);
-}
-
-// Built from char codes (Unicode combining-diacritical-marks block,
-// 0x0300-0x036f) instead of a literal, so no raw multi-byte characters sit
-// in this file.
-const COMBINING_MARK_LOW = String.fromCharCode(0x0300);
-const COMBINING_MARK_HIGH = String.fromCharCode(0x036f);
-const COMBINING_MARKS = new RegExp("[" + COMBINING_MARK_LOW + "-" + COMBINING_MARK_HIGH + "]", "g");
-
-function slugify(title, year) {
-  const ascii = title.normalize("NFD").replace(COMBINING_MARKS, ""); // decompose then strip accent marks (matches the existing dataset's convention)
-  const base = ascii.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-+|-+$)/g, "");
-  return year ? `${base}-${year}` : base;
 }
 
 function parseMoney(str) {

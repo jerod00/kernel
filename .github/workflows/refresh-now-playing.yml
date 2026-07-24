@@ -1,0 +1,61 @@
+name: Refresh Now Playing
+
+on:
+  schedule:
+    - cron: "0 13 * * *" # once daily, ~8am US Eastern
+  workflow_dispatch: {} # allows a manual run from the Actions tab for testing
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: kernel-data-service
+        run: npm ci
+
+      - name: Run refresh
+        id: refresh
+        working-directory: kernel-data-service
+        env:
+          TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+        run: node --experimental-sqlite refresh-now-playing.js
+
+      # Purely mechanical (nowPlaying: true -> false) — no editorial judgment,
+      # so this commits straight to main rather than opening a PR.
+      - name: Commit removals
+        if: steps.refresh.outputs.removed != ''
+        run: |
+          git config user.name "kernel-bot"
+          git config user.email "actions@github.com"
+          git add widget/index.html
+          git commit -m "Auto-update: remove ${{ steps.refresh.outputs.removed }} from Now Playing [skip ci]"
+          git push
+
+      # New releases still need a human for Tier 2 research (weekly gross,
+      # marketing spend, critic spread, editorial insight) before they can be
+      # added to the widget — this just surfaces what's worth looking at.
+      # Reuses one open issue instead of filing a new one every day.
+      - name: Open or update new-films issue
+        if: steps.refresh.outputs.new-films != ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          EXISTING=$(gh issue list --label now-playing-alert --state open --json number --jq '.[0].number')
+          BODY="New films TMDb lists as now playing that aren't onboarded yet. Run the listed command, then complete Tier 2 research and \`ingest-film.js\` as usual.
+
+          ${{ steps.refresh.outputs.new-films }}"
+          if [ -n "$EXISTING" ]; then
+            gh issue edit "$EXISTING" --body "$BODY"
+          else
+            gh issue create --title "New films to onboard" --body "$BODY" --label now-playing-alert
+          fi
