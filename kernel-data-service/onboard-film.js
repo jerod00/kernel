@@ -97,13 +97,16 @@ async function omdbLookup({ imdbId, title, year }) {
 async function buildPersonFilmography(personId, isDirector) {
   const credits = await tmdb(`/person/${personId}/movie_credits`);
   const list = isDirector ? credits.crew.filter(c => c.job === "Director") : credits.cast;
-  const films = {};
+  // Array of {title, year, score} rather than a {slug: score} map — the
+  // widget's own director/actor track-record chart needs the real title and
+  // year to render, not just the slug used as the DB's field key.
+  const films = [];
   for (const c of list.slice(0, PERSON_CREDIT_CAP)) {
     const y = (c.release_date || "").slice(0, 4);
     if (!y) continue;
     const omdb = await omdbLookup({ title: c.title, year: y });
     if (omdb && omdb.Metascore && omdb.Metascore !== "N/A") {
-      films[slugify(c.title, y)] = Number(omdb.Metascore);
+      films.push({ title: c.title, year: Number(y), score: Number(omdb.Metascore) });
     }
   }
   return films;
@@ -154,6 +157,7 @@ async function buildPersonFilmography(personId, isDirector) {
     dataId,
     name: details.title,
     year: resolvedYear,
+    releaseDate: details.release_date || null,
     poster: details.poster_path,
     genres: (details.genres || []).map(g => g.name),
     critic: {
@@ -167,8 +171,10 @@ async function buildPersonFilmography(personId, isDirector) {
       domesticTotal: omdb ? toMillions(parseMoney(omdb.BoxOffice)) : null,
     },
     weeklyGross: [],
-    director: director ? { name: slugify(director.name), films: {} } : null,
-    actor: leadActor ? { name: slugify(leadActor.name), films: {} } : null,
+    // name: slugified, used as the DB entityId (existing convention).
+    // displayName: the real name, for anything that renders to a person.
+    director: director ? { name: slugify(director.name), displayName: director.name, films: [] } : null,
+    actor: leadActor ? { name: slugify(leadActor.name), displayName: leadActor.name, films: [] } : null,
     // Cold-start seed content (Tier 1, fully automatic) — a starting score +
     // up to 3 excerpted, attributed reviews shown only until the film has
     // enough real self-submitted Kernel reviews. Full review text is never
@@ -234,14 +240,14 @@ async function buildPersonFilmography(personId, isDirector) {
   if (director) {
     console.log(`\nFetching director filmography for ${director.name}...`);
     draft.director.films = await buildPersonFilmography(director.id, true);
-    console.log(`  ${Object.keys(draft.director.films).length} scored titles found via OMDb`);
-    if (Object.keys(draft.director.films).length) filmographyFromOmdb = true;
+    console.log(`  ${draft.director.films.length} scored titles found via OMDb`);
+    if (draft.director.films.length) filmographyFromOmdb = true;
   }
   if (leadActor) {
     console.log(`\nFetching lead actor filmography for ${leadActor.name}...`);
     draft.actor.films = await buildPersonFilmography(leadActor.id, false);
-    console.log(`  ${Object.keys(draft.actor.films).length} scored titles found via OMDb`);
-    if (Object.keys(draft.actor.films).length) filmographyFromOmdb = true;
+    console.log(`  ${draft.actor.films.length} scored titles found via OMDb`);
+    if (draft.actor.films.length) filmographyFromOmdb = true;
   }
   // OMDb has no single permalink for "this person's whole filmography" — each
   // title was looked up individually by name+year (visible in the draft

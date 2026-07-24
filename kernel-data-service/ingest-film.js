@@ -1,6 +1,7 @@
 require("dotenv").config();
 const fs = require("node:fs");
 const { ingest, verifyChain } = require("./db");
+const { slugify } = require("./slugify");
 
 // Takes a finished draft (onboard-film.js output, Tier 2 fields filled in by
 // hand) and logs each fact through the same append-only ingest() path
@@ -47,13 +48,13 @@ for (const [field, value] of Object.entries(data.econ || {})) {
   logIngest("film_weekend_gross", `${filmId}:week${i + 1}`, "gross_millions_usd", gross, sources.weeklyGross);
 });
 if (data.director && data.director.name) {
-  for (const [creditedFilm, score] of Object.entries(data.director.films || {})) {
-    logIngest("director_filmography", data.director.name, creditedFilm, score, sources.filmography);
+  for (const film of data.director.films || []) {
+    logIngest("director_filmography", data.director.name, slugify(film.title, film.year), film.score, sources.filmography);
   }
 }
 if (data.actor && data.actor.name) {
-  for (const [creditedFilm, score] of Object.entries(data.actor.films || {})) {
-    logIngest("actor_filmography", data.actor.name, creditedFilm, score, sources.filmography);
+  for (const film of data.actor.films || []) {
+    logIngest("actor_filmography", data.actor.name, slugify(film.title, film.year), film.score, sources.filmography);
   }
 }
 
