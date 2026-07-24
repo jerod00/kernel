@@ -271,6 +271,13 @@
   .econ-insight{ font-size:0.9rem; margin-top:0.8rem; max-width:64ch; }
   .econ-insight strong{ color:var(--ink); opacity:0.95; }
 
+  /* Streaming performance (Nielsen weekly Top 10) — replaces the box-office
+     chart for films with no theatrical run */
+  .streaming-metric{ display:flex; align-items:baseline; gap:0.8rem; flex-wrap:wrap; }
+  .streaming-metric .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.6rem; color:var(--gold); }
+  .streaming-metric .cap{ font-size:0.82rem; color:var(--muted); max-width:44ch; }
+  .streaming-empty{ font-size:0.9rem; color:var(--muted); max-width:60ch; }
+
   /* Box office legs */
   .legs-chart{ margin:0.9rem 0 0.2rem; }
   .legs-label-row{ display:flex; align-items:flex-end; gap:0.6rem; }
@@ -474,7 +481,7 @@
   </div>
 
   <footer>
-    Scores reuse published Metacritic data as a stand-in for a full weighted, per-critic model. Revenue and box-office curves connect real reported checkpoints with straight-line interpolation, not a daily feed. Breakeven uses an industry rule of thumb (2× budget + marketing). The legs average reflects only the films in this dataset with weekend-by-weekend data — still a small sample, not an industry benchmark. Director and lead-actor averages are simple means of each person's published scores and may not reflect a complete filmography. The audience-review form logs submissions to kernel-data-service as an unmodifiable, timestamped fact, same as the rest of this dataset — but it does not apply the verified-eligibility, velocity-cap, or cold-start-floor methodology described elsewhere; anyone can submit, so the resulting "Demo Audience Score" is exactly what it says: self-reported and unverified, not a real Kernel audience score. Films with fewer than 3 self-reported reviews additionally show a borrowed IMDb audience average and up to 3 TMDb user reviews (capped, excerpted, always linked back to the original) to avoid looking empty; both disappear automatically and permanently once 3 real reviews accumulate.
+    Scores reuse published Metacritic data as a stand-in for a full weighted, per-critic model. Revenue and box-office curves connect real reported checkpoints with straight-line interpolation, not a daily feed. Breakeven uses an industry rule of thumb (2× budget + marketing). The legs average reflects only the films in this dataset with weekend-by-weekend data — still a small sample, not an industry benchmark. Director and lead-actor averages are simple means of each person's published scores and may not reflect a complete filmography. The audience-review form logs submissions to kernel-data-service as an unmodifiable, timestamped fact, same as the rest of this dataset — but it does not apply the verified-eligibility, velocity-cap, or cold-start-floor methodology described elsewhere; anyone can submit, so the resulting "Demo Audience Score" is exactly what it says: self-reported and unverified, not a real Kernel audience score. Films with fewer than 3 self-reported reviews additionally show a borrowed IMDb audience average and up to 3 TMDb user reviews (capped, excerpted, always linked back to the original) to avoid looking empty; both disappear automatically and permanently once 3 real reviews accumulate. Films released via streaming instead of a theatrical run show Nielsen's weekly Streaming Top 10 hours viewed in place of a box-office chart — Nielsen only publishes the top 10 titles per week across all platforms, so a film needs enough viewership to qualify, the same constraint Metacritic applies to critic scores.
   </footer>
   <div class="sign-off">
     <svg class="mini-kernel" viewBox="0 0 60 60" aria-hidden="true">
@@ -1340,6 +1347,8 @@
       insight: "A 68 Metascore (\"Generally Favorable,\" 70% positive across 10 reviews) is a solid critical result, but this isn't a normal theatrical run — its wide release was reportedly canceled in favor of a limited, awards-qualifying engagement in New York and LA only, with the film's real distribution happening via Paramount+ streaming. There's no box office story to tell here because it was never meant to have one.",
       weeklyGross: [],
       domesticTotal: null,
+      streaming: { platform: "Paramount+", hoursViewedMillions: null, weekOf: null, rank: null },
+      streamingInsight: null,
       director: {
         name: "Lauren Montgomery",
         thisFilm: "Avatar Aang: The Last Airbender",
@@ -1623,7 +1632,7 @@
 
   function legsHTML(f) {
     const wg = f.weeklyGross;
-    if (!wg) return "";
+    if (!wg || !wg.length) return "";
     const multiplier = f.domesticTotal / wg[0];
     const legsLabel = multiplier >= 3.4 ? "Strong legs" : multiplier >= 2.5 ? "Average legs" : "Front-loaded";
     const wk2Drop = ((wg[1] - wg[0]) / wg[0]) * 100;
@@ -1649,7 +1658,7 @@
 
     const wkLabels = shown.map((v, i) => `<div class="legs-col-wk"><span class="legs-wk">Wk ${i + 1}</span></div>`).join("");
 
-    const nFilms = Object.values(FILMS).filter(fl => fl.weeklyGross).length;
+    const nFilms = Object.values(FILMS).filter(fl => fl.weeklyGross && fl.weeklyGross.length).length;
     const nCols = shown.length; // align the overlay to however many bar columns THIS film actually renders
     const avgPct = computeAverageLegsPct().slice(0, nCols);
     const avgPts = avgPct.map((p, i) => {
@@ -1702,6 +1711,25 @@
             ${tableRows}
           </table>
         </details>
+      </div>`;
+  }
+
+  function streamingHTML(f) {
+    const s = f.streaming;
+    if (!s) return "";
+    const hasData = s.hoursViewedMillions != null;
+    return `
+      <div class="chart-block">
+        <div class="chart-head">
+          <span class="chart-title">Streaming performance — ${escapeHtml(s.platform)}</span>
+        </div>
+        ${hasData ? `
+        <div class="streaming-metric">
+          <span class="num">${s.hoursViewedMillions}M</span>
+          <span class="cap">hours viewed, week of ${s.weekOf}${s.rank ? ` — #${s.rank} on Nielsen's weekly Streaming Top 10` : ""}</span>
+        </div>` : `
+        <p class="streaming-empty">Not yet ranked in Nielsen's weekly Streaming Top 10 — Nielsen only publishes the top 10 titles per week across all platforms, so a film needs enough viewership to qualify, the same way a film needs enough critic reviews before Metacritic will publish a score. Check back as new weekly charts come out.</p>`}
+        ${f.streamingInsight ? `<p class="econ-insight">${f.streamingInsight}</p>` : ""}
       </div>`;
   }
 
@@ -2165,6 +2193,7 @@
       <p class="spread-legend">Not enough critic coverage yet for a positive/mixed/negative breakdown.</p>`}
       <div class="divider"></div>
       <div class="charts-section">
+        ${f.econ.boxOffice != null ? `
         <div class="chart-block">
           <div class="chart-head">
             <span class="chart-title">Revenue since release</span>
@@ -2176,9 +2205,9 @@
           <div class="chart-svg-wrap">${revenueSVG(f)}</div>
         </div>
         <div class="chart-tooltip"></div>
-        ${dataTable(f)}
+        ${dataTable(f)}` : streamingHTML(f)}
         ${econHTML(f)}
-        ${legsHTML(f)}
+        ${f.econ.boxOffice != null ? legsHTML(f) : ""}
         ${creatorHTML(f, "director", "Director")}
         ${creatorHTML(f, "actor", "Lead Actor")}
         ${reviewHTML(f)}
