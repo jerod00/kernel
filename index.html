@@ -182,6 +182,7 @@
   }
   .rank-num.rank-top{ color:var(--gold); }
   .rank-poster{ width:40px; height:60px; object-fit:cover; border:1px solid var(--rule); flex-shrink:0; background:var(--rule); }
+  .rank-poster-lg{ width:80px; height:120px; }
   .rank-meta{ flex:1; min-width:0; }
   .rank-title{ display:block; font-family:Georgia,serif; font-size:1rem; text-wrap:balance; }
   .rank-year{ color:var(--muted); font-size:0.85rem; }
@@ -6601,7 +6602,7 @@ theSubstance: {
         <button class="back-to-breakdown" id="backToBreakdown">&larr; Back</button>
         ${entries.map(([key, f]) => `
           <button class="rank-row" data-film="${key}">
-            <img class="rank-poster" src="https://image.tmdb.org/t/p/w92${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
+            <img class="rank-poster rank-poster-lg" src="https://image.tmdb.org/t/p/w154${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
             <span class="rank-meta">
               <span class="rank-title">${escapeHtml(f.name)}</span>
               <span class="rank-year">${f.year}</span>
