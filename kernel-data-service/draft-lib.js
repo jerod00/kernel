@@ -239,6 +239,7 @@ function buildFilmsEntryText(key, data, aiText, category) {
       dataId: ${JSON.stringify(data.dataId)},
 ${nowPlayingLine}${releaseDateLine}      genres: ${JSON.stringify(data.genres)},
       overview: ${data.overview ? JSON.stringify(data.overview) : "null"},
+      popularity: ${data.popularity != null ? data.popularity : "null"},
       name: ${JSON.stringify(data.name)}, year: ${JSON.stringify(data.year)}, score: ${scoreField}, ci: null, label: ${labelField},
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: ${JSON.stringify(data.poster)},

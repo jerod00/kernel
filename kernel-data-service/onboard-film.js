@@ -172,6 +172,12 @@ async function buildPersonFilmography(personId, isDirector) {
     releaseDate: details.release_date || null,
     poster: details.poster_path,
     overview: details.overview || null,
+    // TMDb's own relative-interest score — an undisclosed internal
+    // composite (views, ratings, recency, etc.), not a hard number like a
+    // view count. Useful as a rough "is anyone paying attention" signal
+    // specifically for streaming-only titles that have no box office at
+    // all to fall back on.
+    popularity: typeof details.popularity === "number" ? details.popularity : null,
     genres: (details.genres || []).map(g => g.name),
     critic: {
       score: omdb && omdb.Metascore !== "N/A" ? Number(omdb.Metascore) : null,
@@ -200,6 +206,7 @@ async function buildPersonFilmography(personId, isDirector) {
     sources: {
       genres: tmdbUrl,
       overview: tmdbUrl,
+      popularity: tmdbUrl,
       budget: tmdbUrl,
       boxOfficeWorldwide: tmdbUrl,
       critic: omdbUrl,
@@ -243,6 +250,7 @@ async function buildPersonFilmography(personId, isDirector) {
   console.log(`dataId: ${dataId}`);
   console.log(`genres: ${JSON.stringify(draft.genres)}   [TMDb]`);
   console.log(`overview: ${draft.overview ? `"${draft.overview.slice(0, 80)}${draft.overview.length > 80 ? "…" : ""}"` : "not available from TMDb"}`);
+  console.log(`popularity (TMDb): ${draft.popularity != null ? draft.popularity : "not available from TMDb"}`);
   console.log(`econ.budget: ${draft.econ.budget != null ? draft.econ.budget + "M" : "not disclosed by TMDb"}`);
   console.log(`econ.boxOfficeWorldwide: ${draft.econ.boxOfficeWorldwide != null ? draft.econ.boxOfficeWorldwide + "M" : "not disclosed by TMDb"}`);
   console.log(`critic.score (Metascore): ${draft.critic.score != null ? draft.critic.score : "not available from OMDb"}`);
