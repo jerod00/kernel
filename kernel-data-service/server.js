@@ -1,9 +1,14 @@
 require("dotenv").config();
 const path = require("node:path");
+const crypto = require("node:crypto");
 const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
-const { ingest, getLatest, getHistory, listEntities, verifyChain } = require("./db");
+const {
+  ingest, getLatest, getHistory, listEntities, verifyChain,
+  logPageview, getPageviewSummary, logError, getRecentErrors,
+} = require("./db");
+const { looksLikeSpam } = require("./spam-filter");
 const { getSynopsis } = require("./synopsis");
 const {
   requireAdminToken,
@@ -48,6 +53,17 @@ const ingestLimiter = rateLimit({
   message: { error: "Too many review submissions from this address — try again later." },
 });
 
+// Generous compared to ingestLimiter — a real visitor fires one of these per
+// route change while browsing, easily a dozen+ in a session, vs. the review
+// form which a person submits a handful of times at most.
+const pageviewLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: "Too many pageview pings." },
+});
+
 // Defense in depth alongside the admin token itself — the token's own
 // entropy is the real protection, this just blunts a brute-force scan.
 const adminLimiter = rateLimit({
@@ -88,6 +104,10 @@ app.post("/api/ingest", ingestLimiter, (req, res) => {
     return res.status(400).json({ error: `value.rating must be a number between ${MIN_RATING} and ${MAX_RATING}.` });
   }
   const comment = value && value.comment != null ? String(value.comment).slice(0, MAX_COMMENT_LEN) : null;
+  const spamReason = looksLikeSpam(comment);
+  if (spamReason) {
+    return res.status(400).json({ error: `Comment rejected (${spamReason}) — please write a genuine review.` });
+  }
   try {
     const row = ingest({
       entityType,
@@ -97,6 +117,35 @@ app.post("/api/ingest", ingestLimiter, (req, res) => {
       source: "Self-reported (unverified) — Kernel widget submission",
     });
     res.status(201).json(row);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+const MAX_PATH_LEN = 200, MAX_REFERRER_LEN = 300;
+
+// Public, unauthenticated pageview beacon — deliberately minimal: no raw IP
+// is ever stored. The visitor hash mixes in today's UTC date, so it can
+// answer "roughly how many distinct visitors today" without being usable to
+// link the same person's visits across different days.
+app.post("/api/pageview", pageviewLimiter, (req, res) => {
+  const { path: pagePath, referrer } = req.body || {};
+  if (typeof pagePath !== "string" || !pagePath) {
+    return res.status(400).json({ error: "path is required." });
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  const visitorHash = crypto
+    .createHash("sha256")
+    .update(`${req.ip}|${req.get("user-agent") || ""}|${today}`)
+    .digest("hex")
+    .slice(0, 16);
+  try {
+    logPageview({
+      path: pagePath.slice(0, MAX_PATH_LEN),
+      referrer: referrer ? String(referrer).slice(0, MAX_REFERRER_LEN) : null,
+      visitorHash,
+    });
+    res.status(204).end();
   } catch (err) {
     res.status(400).json({ error: err.message });
   }
@@ -261,6 +310,15 @@ app.post("/admin/api/ingest-seed-content", adminLimiter, requireIngestToken, (re
   }
 });
 
+app.get("/admin/api/analytics/summary", adminLimiter, requireAdminToken, (req, res) => {
+  const days = Math.min(90, Math.max(1, Number(req.query.days) || 7));
+  res.json(getPageviewSummary(days));
+});
+
+app.get("/admin/api/errors", adminLimiter, requireAdminToken, (req, res) => {
+  res.json(getRecentErrors(50));
+});
+
 app.get("/admin/api/prs", adminLimiter, requireAdminToken, async (req, res) => {
   try {
     res.json(await listOpenPRs());
@@ -286,6 +344,58 @@ app.post("/admin/api/prs/:number/close", adminLimiter, requireAdminToken, async 
 });
 
 app.get("/healthz", (req, res) => res.json({ ok: true }));
+
+// Best-effort push alert reusing the same admin-PWA push channel the daily
+// pipeline already uses for "new PR opened" — a crash is just another thing
+// the admin should get pinged about. Cooldown avoids a crash loop paging
+// every single time it happens; the errors are all still logged to
+// error_log regardless, so nothing is lost, just the alert is throttled.
+let lastErrorAlertAt = 0;
+const ERROR_ALERT_COOLDOWN_MS = 15 * 60 * 1000;
+
+function alertOnError(message) {
+  const now = Date.now();
+  if (now - lastErrorAlertAt < ERROR_ALERT_COOLDOWN_MS) return;
+  lastErrorAlertAt = now;
+  sendPushNotification({
+    title: "Kernel backend error",
+    body: String(message).slice(0, 120),
+    url: "/admin",
+  }).catch(() => {
+    /* best-effort — a failed alert shouldn't itself throw */
+  });
+}
+
+function captureError(err, context) {
+  console.error(err);
+  try {
+    logError({ message: err.message, stack: err.stack, context });
+  } catch (logErr) {
+    console.error("Failed to persist error to error_log:", logErr);
+  }
+  alertOnError(err.message);
+}
+
+// Catches anything a route handler passes to next(err), or throws
+// synchronously — everything here already has its own try/catch and
+// responds directly, so this is a safety net for whatever isn't.
+app.use((err, req, res, next) => {
+  captureError(err, { path: req.path, method: req.method });
+  if (res.headersSent) return next(err);
+  res.status(500).json({ error: "Internal server error." });
+});
+
+process.on("uncaughtException", (err) => {
+  captureError(err, { type: "uncaughtException" });
+  // The process is in an undefined state after this — Fly's health check
+  // will restart the machine, which is safer than continuing to run.
+  process.exit(1);
+});
+
+process.on("unhandledRejection", (reason) => {
+  const err = reason instanceof Error ? reason : new Error(String(reason));
+  captureError(err, { type: "unhandledRejection" });
+});
 
 app.listen(PORT, () => {
   console.log(`Kernel data service listening on port ${PORT}`);

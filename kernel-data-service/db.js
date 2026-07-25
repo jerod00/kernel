@@ -43,6 +43,29 @@ db.exec(`
   END;
 `);
 
+// Pageviews and errors are operational telemetry, not audited facts — they
+// don't belong in the hash chain above (no source to cite, no reason a user
+// would ever need to verify one wasn't tampered with), so they get their own
+// plain, mutable tables instead.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS pageviews (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recorded_at TEXT NOT NULL,
+    path TEXT NOT NULL,
+    referrer TEXT,
+    visitor_hash TEXT NOT NULL
+  );
+`);
+db.exec(`
+  CREATE TABLE IF NOT EXISTS error_log (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    recorded_at TEXT NOT NULL,
+    message TEXT NOT NULL,
+    stack TEXT,
+    context TEXT
+  );
+`);
+
 const GENESIS = hmac("GENESIS");
 
 function hmac(input) {
@@ -129,4 +152,46 @@ function verifyChain() {
   return { valid: true, rowsVerified: rows.length };
 }
 
-module.exports = { db, ingest, getLatest, getHistory, listEntities, verifyChain };
+function logPageview({ path: pagePath, referrer, visitorHash }) {
+  const stmt = db.prepare(`
+    INSERT INTO pageviews (recorded_at, path, referrer, visitor_hash) VALUES (?, ?, ?, ?)
+  `);
+  stmt.run(new Date().toISOString(), pagePath, referrer || null, visitorHash);
+}
+
+function getPageviewSummary(days = 7) {
+  const sinceIso = new Date(Date.now() - days * 86400000).toISOString();
+  const total = db.prepare(`SELECT COUNT(*) AS n FROM pageviews WHERE recorded_at >= ?`).get(sinceIso).n;
+  const uniqueVisitors = db.prepare(`SELECT COUNT(DISTINCT visitor_hash) AS n FROM pageviews WHERE recorded_at >= ?`).get(sinceIso).n;
+  const topPaths = db.prepare(`
+    SELECT path, COUNT(*) AS n FROM pageviews WHERE recorded_at >= ? GROUP BY path ORDER BY n DESC LIMIT 15
+  `).all(sinceIso);
+  const topReferrers = db.prepare(`
+    SELECT COALESCE(referrer, '(direct)') AS referrer, COUNT(*) AS n FROM pageviews WHERE recorded_at >= ? GROUP BY referrer ORDER BY n DESC LIMIT 15
+  `).all(sinceIso);
+  const byDay = db.prepare(`
+    SELECT substr(recorded_at, 1, 10) AS day, COUNT(*) AS n FROM pageviews WHERE recorded_at >= ? GROUP BY day ORDER BY day ASC
+  `).all(sinceIso);
+  return { since: sinceIso, days, total, uniqueVisitors, topPaths, topReferrers, byDay };
+}
+
+function logError({ message, stack, context }) {
+  const stmt = db.prepare(`
+    INSERT INTO error_log (recorded_at, message, stack, context) VALUES (?, ?, ?, ?)
+  `);
+  stmt.run(
+    new Date().toISOString(),
+    String(message).slice(0, 2000),
+    stack ? String(stack).slice(0, 4000) : null,
+    context ? JSON.stringify(context).slice(0, 1000) : null
+  );
+}
+
+function getRecentErrors(limit = 50) {
+  return db.prepare(`SELECT * FROM error_log ORDER BY id DESC LIMIT ?`).all(limit);
+}
+
+module.exports = {
+  db, ingest, getLatest, getHistory, listEntities, verifyChain,
+  logPageview, getPageviewSummary, logError, getRecentErrors,
+};

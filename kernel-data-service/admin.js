@@ -248,6 +248,23 @@ function adminPageHtml(token) {
   }
   .push-btn:hover{ background:var(--gold); color:var(--ink); }
   .push-btn:disabled{ opacity:0.4; cursor:default; }
+  .section-block{ margin-top:2.6rem; }
+  .section-block h2{ font-family:Georgia,serif; font-size:1.15rem; margin:0 0 0.9rem; border-bottom:1px solid var(--rule); padding-bottom:0.4rem; }
+  .stat-grid{ display:flex; gap:0.8rem; flex-wrap:wrap; margin-bottom:1.1rem; }
+  .stat-tile{ background:var(--card); border:1px solid var(--rule); padding:0.8rem 1.1rem; flex:1; min-width:110px; }
+  .stat-num{ font-family:Georgia,serif; font-size:1.4rem; color:var(--gold); display:block; }
+  .stat-label{ font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.03em; }
+  .break-lists{ display:flex; gap:1.5rem; flex-wrap:wrap; }
+  .break-list{ flex:1; min-width:200px; }
+  .break-list h3{ font-family:Georgia,serif; font-size:0.85rem; color:var(--muted); font-weight:normal; margin:0 0 0.4rem; }
+  .break-list ol{ list-style:none; margin:0; padding:0; font-size:0.85rem; }
+  .break-list li{ display:flex; justify-content:space-between; gap:0.6rem; padding:0.3rem 0; border-bottom:1px solid var(--rule); }
+  .break-list li span:last-child{ color:var(--muted); font-family:ui-monospace,Consolas,monospace; }
+  .error-card{ background:var(--card); border:1px solid var(--neg); border-left-width:3px; padding:0.9rem 1.1rem; margin-bottom:0.8rem; }
+  .error-head{ display:flex; justify-content:space-between; gap:1rem; align-items:baseline; flex-wrap:wrap; }
+  .error-msg{ font-size:0.9rem; color:var(--neg); }
+  .error-time{ font-family:ui-monospace,Consolas,monospace; font-size:0.72rem; color:var(--muted); white-space:nowrap; }
+  .error-stack{ font-family:ui-monospace,Consolas,monospace; font-size:0.75rem; color:var(--muted); white-space:pre-wrap; margin-top:0.5rem; max-height:200px; overflow-y:auto; }
 </style>
 </head>
 <body>
@@ -256,6 +273,16 @@ function adminPageHtml(token) {
   <p class="sub">Open pull requests from the daily catalog-review pipeline. Merging here pushes to <code>main</code> exactly like the GitHub "Merge" button — nothing skipped.</p>
   <div id="pushBanner" class="push-banner" hidden></div>
   <div id="list" class="loading">Loading open PRs…</div>
+
+  <div class="section-block">
+    <h2>Traffic (last 7 days)</h2>
+    <div id="analyticsSummary" class="loading">Loading traffic…</div>
+  </div>
+
+  <div class="section-block">
+    <h2>Recent Errors</h2>
+    <div id="errorList" class="loading">Loading errors…</div>
+  </div>
 </div>
 <script>
   const token = new URLSearchParams(location.search).get("token") || "";
@@ -392,7 +419,69 @@ function adminPageHtml(token) {
     return String(str).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   }
 
+  function renderBreakList(title, rows, keyField, labelFn) {
+    if (!rows.length) return "";
+    const items = rows
+      .map(r => \`<li><span>\${escapeHtml(labelFn(r))}</span><span>\${r.n}</span></li>\`)
+      .join("");
+    return \`<div class="break-list"><h3>\${escapeHtml(title)}</h3><ol>\${items}</ol></div>\`;
+  }
+
+  async function loadAnalytics() {
+    const el = document.getElementById("analyticsSummary");
+    try {
+      const summary = await api("/admin/api/analytics/summary?days=7");
+      if (!summary.total) {
+        el.innerHTML = '<p class="empty">No pageviews logged yet.</p>';
+        return;
+      }
+      el.innerHTML = \`
+        <div class="stat-grid">
+          <div class="stat-tile"><span class="stat-num">\${summary.total}</span><span class="stat-label">Pageviews</span></div>
+          <div class="stat-tile"><span class="stat-num">\${summary.uniqueVisitors}</span><span class="stat-label">Unique visitors</span></div>
+        </div>
+        <div class="break-lists">
+          \${renderBreakList("Top pages", summary.topPaths, "path", r => r.path)}
+          \${renderBreakList("Top referrers", summary.topReferrers, "referrer", r => r.referrer)}
+        </div>
+      \`;
+    } catch (err) {
+      el.innerHTML = '<p class="status err">Failed to load: ' + escapeHtml(err.message) + "</p>";
+    }
+  }
+
+  function errorCard(e) {
+    const el = document.createElement("div");
+    el.className = "error-card";
+    el.innerHTML = \`
+      <div class="error-head">
+        <span class="error-msg">\${escapeHtml(e.message)}</span>
+        <span class="error-time">\${escapeHtml(e.recorded_at)}</span>
+      </div>
+      \${e.context ? \`<div class="error-time">\${escapeHtml(e.context)}</div>\` : ""}
+      \${e.stack ? \`<div class="error-stack">\${escapeHtml(e.stack)}</div>\` : ""}
+    \`;
+    return el;
+  }
+
+  async function loadErrors() {
+    const el = document.getElementById("errorList");
+    try {
+      const errors = await api("/admin/api/errors");
+      el.innerHTML = "";
+      if (!errors.length) {
+        el.innerHTML = '<p class="empty">No errors logged. Good sign.</p>';
+        return;
+      }
+      errors.forEach(e => el.appendChild(errorCard(e)));
+    } catch (err) {
+      el.innerHTML = '<p class="status err">Failed to load: ' + escapeHtml(err.message) + "</p>";
+    }
+  }
+
   initPush().catch(err => console.error("Push setup failed:", err));
+  loadAnalytics();
+  loadErrors();
 
   (async () => {
     try {

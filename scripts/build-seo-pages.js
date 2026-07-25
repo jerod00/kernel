@@ -296,7 +296,7 @@ ${JSON.stringify(jsonLd, null, 2)}
 
   <footer>
     Self-reported audience data, not critic scores. Poster art and metadata via TMDb — this page uses the TMDB API but is not endorsed, certified, or otherwise approved by TMDB.
-    <br><a href="${SITE_URL}/">Back to The Kernel</a>
+    <br><a href="${SITE_URL}/">Back to The Kernel</a> · <a href="${SITE_URL}/privacy.html">Privacy</a> · <a href="${SITE_URL}/terms.html">Terms</a>
   </footer>
 </div>
 </body>
@@ -382,7 +382,7 @@ ${JSON.stringify(jsonLd, null, 2)}
   <ul class="hub-list">${rows}</ul>
   <footer>
     Ranked by Kernel Score — audience-submitted, not critic scores.
-    <br><a href="${SITE_URL}/">Back to The Kernel</a>
+    <br><a href="${SITE_URL}/">Back to The Kernel</a> · <a href="${SITE_URL}/privacy.html">Privacy</a> · <a href="${SITE_URL}/terms.html">Terms</a>
   </footer>
 </div>
 </body>

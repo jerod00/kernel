@@ -243,6 +243,8 @@
      leaderboard pages otherwise show no branding at all on screen. */
   .site-brand-footer{ font-size:0.8rem; color:var(--muted); margin-top:2.2rem; letter-spacing:0.02em; }
   .site-brand-footer strong{ color:var(--gold); font-weight:normal; font-family:Georgia,serif; }
+  .site-brand-footer a{ color:var(--muted); text-decoration:underline; text-decoration-color:var(--rule); }
+  .site-brand-footer a:hover{ color:var(--teal); text-decoration-color:var(--teal); }
   .tmdb-logo{ height:1em; width:auto; flex-shrink:0; }
   .badge{
     font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.68rem;
@@ -643,7 +645,7 @@
   <div class="rank-list" id="rankList"></div>
 </div>
 
-<div class="site-brand-footer"><strong>The Kernel</strong> · themoviekernel.com</div>
+<div class="site-brand-footer"><strong>The Kernel</strong> · themoviekernel.com · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></div>
 <div class="tmdb-attribution" id="tmdbAttribution"></div>
 </div>
 
@@ -5937,6 +5939,16 @@ theSubstance: {
   // shouldn't depend on the AI-synopsis feature or its API key being healthy.
   const MIN_REAL_REVIEWS = 3;
 
+  // Fire-and-forget — a pageview ping failing (offline, ad blocker, backend
+  // hiccup) should never affect browsing, so this never throws or awaits.
+  function logPageview(pagePath) {
+    fetch(`${DATA_SERVICE_URL}/api/pageview`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ path: pagePath, referrer: document.referrer || null }),
+    }).catch(() => {});
+  }
+
   function reviewHTML(f) {
     if (!f.dataId) return "";
     return `
@@ -6876,10 +6888,13 @@ theSubstance: {
     if (key === "top100" || key.startsWith("top100/")) {
       const [, mode, encodedGenre] = key.split("/");
       showTopPage(mode, encodedGenre ? decodeURIComponent(encodedGenre) : "");
+      logPageview(`/top100/${mode || "score"}`);
     } else if (FILMS[key]) {
       showFilmPage(key);
+      logPageview(`/film/${key}`);
     } else {
       showLanding();
+      logPageview("/");
     }
   }
 
