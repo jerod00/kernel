@@ -323,6 +323,11 @@
   .legs-stat .cap{ font-size:0.74rem; color:var(--muted); max-width:24ch; }
   .legs-insight{ font-size:0.9rem; margin-top:0.9rem; max-width:64ch; }
 
+  .interest-stats{ display:flex; gap:2rem; flex-wrap:wrap; }
+  .interest-stat .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.3rem; color:var(--gold); display:block; }
+  .interest-stat .cap{ font-size:0.74rem; color:var(--muted); max-width:24ch; }
+  .interest-note{ font-size:0.78rem; color:var(--muted); margin-top:0.9rem; max-width:64ch; }
+
   /* Creator (director / lead actor) track record */
   .creator-svg-wrap{ overflow-x:auto; margin-top:0.7rem; }
   .creator-svg{ display:block; width:100%; height:auto; min-width:420px; }
@@ -555,6 +560,7 @@
       trailer: { key: "t433PEQGErc", name: "Teaser Trailer" },
       genres: ["Crime", "Drama", "Thriller"],
       overview: "During the 1980s, a failed stand-up comedian is driven insane and turns to a life of crime and chaos in Gotham City while becoming an infamous psychopathic crime figure.",
+      popularity: 23.7283,
       name: "Joker", year: "2019", score: 59, ci: "± 4", label: "Mixed",
       spread: [55, 27, 18], n: 60,
       poster: "/udDclJoHjfjb8Ekgsd4FDteOkCU.jpg",
@@ -614,6 +620,7 @@
       trailer: { key: "XpICoc65uh0", name: "official trailer" },
       genres: ["Drama", "Horror", "Mystery"],
       overview: "A couple's relationship is tested when uninvited guests arrive at their home, disrupting their tranquil existence.",
+      popularity: 6.34,
       name: "mother!", year: "2017", score: 76, ci: "± 3", label: "Generally Positive",
       spread: [71, 27, 2], n: 51,
       poster: "/fjny9chXPx69ln1LMJxbwi5yHMt.jpg",
@@ -680,6 +687,7 @@
       trailer: { key: "Q0CbN8sfihY", name: "Official Trailer" },
       genres: ["Action", "Adventure", "Science Fiction"],
       overview: "Rey develops her newly discovered abilities with the guidance of Luke Skywalker, who is unsettled by the strength of her powers. Meanwhile, the Resistance prepares to do battle with the First Order.",
+      popularity: 24.3573,
       name: "The Last Jedi", year: "2017", score: 84, ci: "± 2", label: "Widely Acclaimed",
       spread: [93, 7, 0], n: 56,
       poster: "/kOVEVeg59E0wsnXmF9nrh6OmWII.jpg",
@@ -727,6 +735,7 @@
       trailer: { key: "wxN1T1uxQ2g", name: "Official Trailer" },
       genres: ["Action", "Science Fiction", "Comedy"],
       overview: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what's important to her by connecting with the lives she could have led in other universes.",
+      popularity: 24.8002,
       name: "Everything Everywhere All at Once", year: "2022", score: 81, ci: null, label: "Universal Acclaim",
       spread: [89, 11, 0], n: 55,
       poster: "/u68AjlvlutfEIcpmbYpKcdi09ut.jpg",
@@ -743,6 +752,7 @@
       trailer: { key: "1i-_CRKdh4Y", name: "Official Trailer" },
       genres: ["Drama"],
       overview: "A truffle hunter who lives alone in the Oregon wilderness must visit Portland to find the mysterious person who stole his beloved foraging pig.",
+      popularity: 3.8503,
       name: "Pig", year: "2021", score: 82, ci: null, label: "Universal Acclaim",
       spread: [87, 13, 0], n: 39,
       poster: "/1InMm4Mbjx8wCKvIy5gglo5i3HN.jpg",
@@ -759,6 +769,7 @@
       trailer: { key: "VFOrGkAvjAE", name: "Official Trailer" },
       genres: ["Drama", "Music"],
       overview: "Metal drummer Ruben begins to lose his hearing. When a doctor tells him his condition will worsen, he thinks his career and life is over. His girlfriend Lou checks the former addict into a rehab for the deaf hoping it will prevent a relapse and help him adapt to his new life. After being welcomed and accepted just as he is, Ruben must choose between his new normal and the life he once knew.",
+      popularity: 4.0679,
       name: "Sound of Metal", year: "2019", score: 82, ci: null, label: "Universal Acclaim",
       spread: [95, 5, 0], n: 37,
       poster: "/3178oOJKKPDeQ2legWQvMPpllv.jpg",
@@ -774,6 +785,7 @@
       trailer: { key: "D30r0CwtIKc", name: "Official Trailer" },
       genres: ["Drama"],
       overview: "A reclusive English teacher suffering from severe obesity attempts to reconnect with his estranged teenage daughter for one last chance at redemption.",
+      popularity: 13.9123,
       name: "The Whale", year: "2022", score: 60, ci: null, label: "Mixed or Average",
       spread: [46, 40, 14], n: 57,
       poster: "/jQ0gylJMxWSL490sy0RrPj1Lj7e.jpg",
@@ -807,6 +819,7 @@
       trailer: { key: "8zIf0XvoL9Y", name: "Teaser Trailer" },
       genres: ["Comedy", "Adventure", "Fantasy"],
       overview: "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land. However, when they get a chance to go to the real world, they soon discover the joys and perils of living among humans.",
+      popularity: 20.4889,
       name: "Barbie", year: "2023", score: 80, ci: null, label: "Generally Favorable",
       spread: [91, 7, 1], n: 67,
       poster: "/iuFNMS8U5cb6xfzi51Dbkovj7vM.jpg",
@@ -826,6 +839,7 @@
       trailer: { key: "FtSd844cI7U", name: "Official Trailer" },
       genres: ["Fantasy", "Musical", "Comedy"],
       overview: "A tribe of cats called the Jellicles must decide yearly which one will ascend to the Heaviside Layer and come back to a new Jellicle life.",
+      popularity: 4.2813,
       name: "Cats", year: "2019", score: 32, ci: null, label: "Generally Unfavorable",
       spread: [12, 45, 43], n: 51,
       poster: "/aCNch5FmzT2WaUcY44925owIZXY.jpg",
@@ -845,6 +859,7 @@
       trailer: { key: "jLMBLuGJTsA", name: "Teaser Trailer" },
       genres: ["Action", "Science Fiction", "Horror"],
       overview: "Dangerously ill with a rare blood disorder, and determined to save others suffering his same fate, Dr. Michael Morbius attempts a desperate gamble. What at first appears to be a radical success soon reveals itself to be a remedy potentially worse than the disease.",
+      popularity: 13.8501,
       name: "Morbius", year: "2022", score: 35, ci: null, label: "Generally Unfavorable",
       spread: [13, 45, 42], n: 55,
       poster: "/Av8Z2jZhEm1FLkFzMThzz9hndJF.jpg",
@@ -864,6 +879,7 @@
       trailer: { key: "xy8aJw1vYHo", name: "Official Teaser Trailer" },
       genres: ["Crime", "Drama", "Musical"],
       overview: "While struggling with his dual identity, Arthur Fleck not only stumbles upon true love, but also finds the music that's always been inside him.",
+      popularity: 9.9495,
       name: "Joker: Folie à Deux", year: "2024", score: 46, ci: null, label: "Mixed or Average",
       spread: [33, 42, 25], n: 64,
       poster: "/aciP8Km0waTLXEYf5ybFK5CSUxl.jpg",
@@ -899,6 +915,7 @@
       releaseDate: "2026-07-15",
       genres: ["Adventure","Action","Fantasy"],
       overview: "Odysseus, the legendary King of Ithaca, embarks on a long and perilous journey home following the Trojan War. Throughout his voyage, he is forced to confront the whims of gods, mythological monsters, and trials that stretch both his cunning and his humanity to the breaking point.",
+      popularity: 979.0823,
       name: "The Odyssey", year: "2026", score: 88, ci: null, label: "Universal Acclaim",
       spread: [92, 8, 0], n: 62,
       poster: "/5rhTDKUhPYvpdQIijFIs5VoWsON.jpg",
@@ -972,6 +989,7 @@
       releaseDate: "2026-07-08",
       genres: ["Family","Fantasy","Comedy","Adventure"],
       overview: "Teenage Moana answers the Ocean's call and, for the first time, voyages beyond the reef of her island of Motunui with infamous demigod Maui on an unforgettable journey to restore prosperity to her people.",
+      popularity: 515.4828,
       name: "Moana", year: "2026", score: 42, ci: null, label: "Mixed or Average",
       spread: [20, 50, 30], n: 40,
       poster: "/2B2XvBZFSOrGt7nptyNoBSFPhfb.jpg",
@@ -992,6 +1010,7 @@
       releaseDate: "2026-05-27",
       genres: ["Horror","Mystery","Science Fiction"],
       overview: "A strange doorway appears in the basement of a furniture showroom.",
+      popularity: 385.4853,
       name: "Backrooms", year: "2026", score: 77, ci: null, label: "Generally Favorable",
       spread: [83, 17, 0], n: 46,
       poster: "/rhGx6E3qRNMgj3i5su2oukNHwIQ.jpg",
@@ -1052,6 +1071,7 @@
       releaseDate: "2026-06-24",
       genres: ["Action","Adventure","Science Fiction"],
       overview: "When an unexpected and ruthless adversary strikes too close to home, Kara Zor-El, aka Supergirl, reluctantly joins forces with an unlikely companion on an epic, interstellar journey of vengeance and justice.",
+      popularity: 364.8746,
       name: "Supergirl", year: "2026", score: 50, ci: null, label: "Mixed or Average",
       spread: [30, 63, 7], n: 56,
       poster: "/niSvU02l2BONH9ivubV6K1a5QiK.jpg",
@@ -1098,6 +1118,7 @@
       releaseDate: "2026-06-24",
       genres: ["Adventure","Animation","Comedy","Family","Fantasy"],
       overview: "This is the rambunctious, ridiculous and totally true story of how the Minions conquered Hollywood, became movie stars, lost everything, unleashed monsters onto the world and then banded together to try and save the planet from the mayhem they had just created.",
+      popularity: 333.0288,
       name: "Minions & Monsters", year: "2026", score: 70, ci: null, label: "Generally Favorable",
       spread: [77, 20, 3], n: 30,
       poster: "/nz7i42yhLIJ4ve9JKgM6NthoLHO.jpg",
@@ -1144,6 +1165,7 @@
       releaseDate: "2026-06-17",
       genres: ["Animation","Family","Comedy","Adventure"],
       overview: "When Bonnie receives a Lilypad tablet as a gift and becomes obsessed, Buzz, Woody, Jessie and the rest of the gang's jobs become exponentially harder when they have to go head to head with the all-new threat to playtime.",
+      popularity: 322.0636,
       name: "Toy Story 5", year: "2026", score: 73, ci: null, label: "Generally Favorable",
       spread: [80, 19, 2], n: 54,
       poster: "/sfQtVlIHljToOwYjhe21KPGzZWK.jpg",
@@ -1213,6 +1235,7 @@
       releaseDate: "2026-06-18",
       genres: ["Adventure","Drama","Thriller","Action"],
       overview: "Grappling with his past after a life of crime and murder, Robin Hood finds himself gravely injured after a battle he thought would be his last. In the hands of a mysterious woman, he is offered a chance at salvation.",
+      popularity: 145.96,
       name: "The Death of Robin Hood", year: "2026", score: 60, ci: null, label: "Mixed or Average",
       spread: [51, 43, 6], n: 35,
       poster: "/13MmRwmG5NmaMfU8qNrtgGXisiD.jpg",
@@ -1274,6 +1297,7 @@
       releaseDate: "2026-07-07",
       genres: ["Horror","Thriller"],
       overview: "After her husband's abrupt death, Alice seeks solace with his remaining family — descendants of a leading researcher on demonic possession. As her in-laws transform one by one into creatures that feed on fear, she comes to discover that the vows she took in life survive even in death.",
+      popularity: 56.8987,
       name: "Evil Dead Burn", year: "2026", score: 54, ci: null, label: "Mixed or Average",
       spread: [42, 47, 11], n: 36,
       poster: "/ztadKzIIR0ERYqpHteaPFtk7inP.jpg",
@@ -1317,6 +1341,7 @@
       releaseDate: "2026-07-17",
       genres: ["Thriller"],
       overview: "Convinced they are our secret saviors, rogue U.S. operatives abduct Mexican gang members and seed them across major American cities, unleashing criminal chaos, swaying voters by playing on nativist prejudices, and forcing law enforcement into a race to expose the plot as the escalating carnage threatens democracy itself.",
+      popularity: 219.5783,
       name: "Borderline", year: "2026", score: null, ci: null, label: null,
       spread: null, n: null,
       poster: "/sAA2mjpYJFAKydtzG4P4aHC4mZk.jpg",
@@ -1351,6 +1376,7 @@
       releaseDate: "2026-06-19",
       genres: ["Thriller","Action"],
       overview: "A man takes justice into his own hands, hunting down criminals. His vigilante crusade makes him a social media star but puts him at odds with the local police chief.",
+      popularity: 96.1332,
       name: "Citizen Vigilante", year: "2026", score: 10, ci: null, label: "Overwhelming Dislike",
       spread: [0, 0, 100], n: 2,
       poster: "/6LmJD3Wohe0g4U62wgi7RyJqfE4.jpg",
@@ -1409,6 +1435,7 @@
       releaseDate: "2026-07-24",
       genres: ["Animation","Action","Adventure","Fantasy"],
       overview: "Avatar Aang, the world's last Airbender, learns of an ancient power that could save his culture from extinction. With the help of his friends, he embarks on a global quest to find it before it falls into the wrong hands and threatens to upend the peace they sacrificed everything to achieve.",
+      popularity: 73.6858,
       name: "Avatar Aang: The Last Airbender", year: "2026", score: 68, ci: null, label: "Generally Favorable",
       spread: [70, 30, 0], n: 10,
       poster: "/3sgnSfNT27Bx5O5ukr7B26mhEQq.jpg",
@@ -1445,6 +1472,7 @@
       releaseDate: "2026-06-20",
       genres: ["Romance", "Comedy"],
       overview: "A young woman's hilariously confessional voicemails to her late sister are unknowingly redirected to a stranger, who begins to fall in love from afar.",
+      popularity: 31.2632,
       name: "Voicemails for Isabelle", year: "2026", score: 62, ci: null, label: "Generally Favorable",
       spread: [67, 33, 0], n: 12,
       poster: "/canZTWSxACSnAluir3dCtMxKpA1.jpg",
@@ -1503,6 +1531,7 @@
       releaseDate: "2026-06-25",
       genres: ["Drama", "Comedy"],
       overview: "Joe and Angela's marriage is on thin ice. When they invite their enigmatic upstairs neighbors for a dinner party, the night spirals into unexpected places.",
+      popularity: 31.0334,
       name: "The Invite", year: "2026", score: 82, ci: null, label: "Universal Acclaim",
       spread: [91, 9, 0], n: 47,
       poster: "/b7Dr8Chzse8VagexAporUu2RtLx.jpg",
@@ -1562,6 +1591,7 @@
       releaseDate: "2026-06-18",
       genres: ["Action", "Thriller"],
       overview: "A nightclub owner is on the verge of leaving his dangerous past behind for retirement with his girlfriend. When masked gunmen rob him and he finds himself squeezed by ruthless cartels, a mysterious newcomer arrives with an interest in buying the business. With danger closing in from all sides, he must navigate a deadly web of deception, power, and survival  -  where escape may no longer be an option.",
+      popularity: 39.8043,
       name: "The Get Out", year: "2026", score: 49, ci: null, label: "Mixed or Average",
       spread: [17, 67, 17], n: 6,
       poster: "/zlkeH0s7dDxcnuPcHBqAyXFUxqN.jpg",
@@ -1616,6 +1646,7 @@
       releaseDate: "2026-06-18",
       genres: ["Romance", "Drama"],
       overview: "Coley, 17, from rural Oregon, navigates intimacy after her mother's passing. Meeting Sonya sparks new feelings, but self-doubt hinders their connection. Sonya, unfamiliar with dating girls, is uncertain. They learn to embrace emotions.",
+      popularity: 21.1132,
       name: "Girls Like Girls", year: "2026", score: 70, ci: null, label: "Generally Favorable",
       spread: [76, 24, 0], n: 17,
       poster: "/m1hSTBv3qLeywznEGsnqVSln1Tg.jpg",
@@ -1653,6 +1684,7 @@
       releaseDate: "2026-06-19",
       genres: ["History", "Drama"],
       overview: "On 1949 October 1, the day of the founding ceremony of the People's Republic of China, Xiao Dali enters the city and is reorganized as the director of the public security police station. He finds that primary school teacher Feng Jingbo is full of doubts. With the high vigilance of a soldier and the sense of responsibility of a public security official, Dali insists on partnering with Feng and becomes his neighbor. He then spends his whole life carrying out a nearly four-decade pursuit without regrets.",
+      popularity: 50.0118,
       name: "I Know Who You Are", year: "2026", score: null, ci: null, label: null,
       spread: null, n: null,
       poster: "/dzS3PxisVd9y9BrLPiFfA2MvcI8.jpg",
@@ -1694,6 +1726,7 @@
       releaseDate: "2026-06-18",
       genres: ["Action", "Thriller", "Drama"],
       overview: "Through both her moments of fear and bravery, a woman discovers that embracing her vulnerabilities is as vital to her inner strength as facing challenges head-on.",
+      popularity: 41.3722,
       name: "Maa Inti Bangaram", year: "2026", score: null, ci: null, label: null,
       spread: null, n: null,
       poster: "/v8JvcEmBfszcvEzwlB8FN1aPVaK.jpg",
@@ -1731,6 +1764,7 @@
       releaseDate: "1997-07-19",
       genres: ["Animation", "Science Fiction", "Drama", "Fantasy", "Action"],
       overview: "SEELE orders an all-out attack on NERV, aiming to destroy the Evas before Gendo can advance his own plans for the Human Instrumentality Project. Shinji is pushed to the limits of his sanity as he is forced to decide the fate of humanity.",
+      popularity: 15.3284,
       name: "Neon Genesis Evangelion: The End of Evangelion", year: "1997", score: null, ci: null, label: null,
       spread: null, n: null,
       poster: "/j6G24dqI4WgUtChhWjfnI4lnmiK.jpg",
@@ -1772,6 +1806,7 @@
       releaseDate: "2026-06-10",
       genres: ["Science Fiction", "Thriller"],
       overview: "A cybersecurity expert becomes a whistleblower after uncovering secrets about aliens, putting him on the run from a corporation. Meanwhile, a meteorologist experiencing strange phenomena joins forces with him to prove there's life beyond our understanding.",
+      popularity: 558.4583,
       name: "Disclosure Day", year: "2026", score: 74, ci: null, label: "Generally Favorable",
       spread: [79, 21, 0], n: 63,
       poster: "/AnJ8IQJI23hNpYXVNaythu061Ru.jpg",
@@ -1856,6 +1891,7 @@ obsession2026: {
   releaseDate: "2026-05-13",
   genres: ["Horror", "Thriller"],
   overview: "After breaking the mysterious \"One Wish Willow\" to win his crush's heart, a hopeless romantic finds himself getting exactly what he asked for but soon discovers that some desires come at a dark, sinister price.",
+  popularity: 407.6643,
   name: "Obsession", year: "2026", score: 77, ci: null, label: "Generally Favorable",
   spread: [89, 8, 3], n: 37,
   poster: "/bRwnj8WEKBCvmfeUNOukJPwB43K.jpg",
@@ -1895,6 +1931,7 @@ scaryMovie2026: {
   releaseDate: "2026-06-03",
   genres: ["Comedy"],
   overview: "Twenty-six years after outrunning a suspiciously familiar masked killer, the Core Four are back in the killer's crosshairs and no horror movie IP is safe.",
+  popularity: 314.886,
   name: "Scary Movie", year: "2026", score: 38, ci: null, label: "Generally Unfavorable",
   spread: [0, 74, 26], n: 27,
   poster: "/znHT8peERZRWG1ME3r0Db0EV8k8.jpg",
@@ -1955,6 +1992,7 @@ mastersOfTheUniverse2026: {
   releaseDate: "2026-06-05",
   genres: ["Action", "Fantasy", "Science Fiction"],
   overview: "After being separated for 15 years, the Sword of Power leads Prince Adam back to Eternia, where he discovers his home shattered under the fiendish rule of Skeletor. To save his family and his world, Adam must join forces with his closest allies, Teela and Duncan/Man-At-Arms, and embrace his true destiny as He-Man — the most powerful man in the universe.",
+  popularity: 359.8509,
   name: "Masters of the Universe", year: "2026", score: 52, ci: null, label: "Mixed or Average",
   spread: [41, 41, 18], n: 44,
   poster: "/oRuyGUHdoaQxWP3SDfafGkStxTC.jpg",
@@ -2006,6 +2044,7 @@ mandalorianAndGrogu2026: {
   releaseDate: "2026-05-20",
   genres: ["Action", "Adventure", "Science Fiction"],
   overview: "The evil Empire has fallen, and Imperial warlords remain scattered throughout the galaxy. As the fledgling New Republic works to protect everything the Rebellion fought for, they have enlisted the help of legendary Mandalorian bounty hunter Din Djarin and his young apprentice Grogu.",
+  popularity: 217.959,
   name: "The Mandalorian and Grogu", year: "2026", score: 53, ci: null, label: "Mixed or Average",
   spread: [30, 64, 6], n: 53,
   poster: "/7GV5rrUJf0BRUhoh2cyFoeNthlQ.jpg",
@@ -2065,6 +2104,7 @@ devilWearsPrada2: {
   releaseDate: "2026-04-29",
   genres: ["Comedy", "Drama"],
   overview: "Andy Sachs returns to Runway as Miranda Priestly navigates a new media landscape and Runway's position within. The duo reconnect with former assistant Emily Charlton, now the head of a luxury brand that possesses funding which could ensure Runway's survival.",
+  popularity: 153.6012,
   name: "The Devil Wears Prada 2", year: "2026", score: 63, ci: null, label: "Generally Favorable",
   spread: [54, 44, 2], n: 57,
   poster: "/fCAURTUx3YfsJ8k9I0UamjSILiR.jpg",
@@ -2135,6 +2175,7 @@ deepWater2026: {
   releaseDate: "2026-05-01",
   genres: ["Horror", "Thriller"],
   overview: "A group of international passengers on a flight from Los Angeles to Shanghai is forced to make an emergency landing in shark-infested waters. The terrified group is forced to work together and overcome their differences if they hope to escape their sinking plane and the frenzy of sharks drawn to the wreckage.",
+  popularity: 146.807,
   name: "Deep Water", year: "2026", score: 53, ci: null, label: "Mixed or Average",
   spread: [25, 69, 6], n: 16,
   poster: "/kjcuS7xaRyqRjVaVcH4t0qHshuX.jpg",
@@ -2215,6 +2256,7 @@ passenger2026: {
   releaseDate: "2026-05-20",
   genres: ["Horror", "Thriller"],
   overview: "After a young couple witnesses a gruesome highway accident, they soon realize they did not leave the crash scene alone, as a demonic presence called the Passenger that won't stop until it claims them both turns their van life adventure into a nightmare.",
+  popularity: 122.5057,
   name: "Passenger", year: "2026", score: 52, ci: null, label: "Mixed or Average",
   spread: [29, 64, 7], n: 14,
   poster: "/2sOEJzhPzjTkZSlPbGxOJ7xgIyS.jpg",
@@ -2261,6 +2303,7 @@ theFurious: {
   releaseDate: "2026-06-10",
   genres: ["Action", "Crime", "Thriller"],
   overview: "After a criminal network kidnaps Wang Wei's daughter and the corrupt police refuse to assist him, Wei sets out on his own to locate her. Navin, a tenacious journalist whose wife has mysteriously vanished, is his only ally. In this explosive martial arts showdown, the unlikely duo fights the kidnappers ruthlessly driven by a furious vengeance.",
+  popularity: 122.6649,
   name: "The Furious", year: "2026", score: 85, ci: null, label: "Universal Acclaim",
   spread: [100, 0, 0], n: 21,
   poster: "/zP19YO60jwEsfKd5Qf1UvA5uJu8.jpg",
@@ -2299,6 +2342,7 @@ nineteenSeventeen: {
       trailer: { key: "UcmZN0Mbl04", name: "Official Trailer" },
   genres: ["War", "History", "Drama"],
   overview: "At the height of the First World War, two young British soldiers must cross enemy territory and deliver a message that will stop a deadly attack on hundreds of soldiers.",
+  popularity: 12.2335,
   name: "1917", year: "2019", score: 78, ci: null, label: "Generally Favorable",
   spread: [86, 12, 2], n: 57,
   poster: "/iZf0KyrE25z1sage4SYFLCCrMi9.jpg",
@@ -2354,6 +2398,7 @@ anyoneButYou: {
       trailer: { key: "UtjH6Sk7Gxs", name: "Official Trailer" },
   genres: ["Romance", "Comedy"],
   overview: "After an amazing first date, Bea and Ben’s fiery attraction turns ice cold — until they find themselves unexpectedly reunited at a destination wedding in Australia. So they do what any two mature adults would do: pretend to be a couple.",
+  popularity: 14.5215,
   name: "Anyone but You", year: "2023", score: 52, ci: null, label: "Mixed or Average",
   spread: [38, 58, 4], n: 26,
   poster: "/5qHoazZiaLe7oFBok7XlUhg96f2.jpg",
@@ -2403,6 +2448,7 @@ arrival2016: {
       trailer: { key: "tFMo3UJ4B4g", name: "Trailer" },
   genres: ["Drama", "Science Fiction", "Mystery"],
   overview: "Taking place after alien crafts land around the world, an expert linguist is recruited by the military to determine whether they come in peace or are a threat.",
+  popularity: 17.9662,
   name: "Arrival", year: "2016", score: 81, ci: null, label: "Universal Acclaim",
   spread: [90, 8, 2], n: 52,
   poster: "/x2FJsf1ElAgr63Y3PNPtJrcmpoe.jpg",
@@ -2470,6 +2516,7 @@ bladeRunner2049: {
       trailer: { key: "gCcx85zbxz4", name: "Official Trailer" },
   genres: ["Science Fiction", "Drama"],
   overview: "Thirty years after the events of the first film, a new blade runner, LAPD Officer K, unearths a long-buried secret that has the potential to plunge what's left of society into chaos. K's discovery leads him on a quest to find Rick Deckard, a former LAPD blade runner who has been missing for 30 years.",
+  popularity: 24.9992,
   name: "Blade Runner 2049", year: "2017", score: 81, ci: null, label: "Universal Acclaim",
   spread: [87, 13, 0], n: 54,
   poster: "/gajva2L0rPYkEWjzgFlBXCAVBE5.jpg",
@@ -2537,6 +2584,7 @@ dune2021: {
       trailer: { key: "n9xhJrPXop4", name: "Official Trailer" },
   genres: ["Science Fiction", "Adventure"],
   overview: "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people. As malevolent forces explode into conflict over the planet's exclusive supply of the most precious resource in existence - a commodity capable of unlocking humanity's greatest potential - only those who can conquer their fear will survive.",
+  popularity: 35.3254,
   name: "Dune", year: "2021", score: 74, ci: null, label: "Generally Favorable",
   spread: [79, 19, 1], n: 68,
   poster: "/gDzOcq0pfeCeqMBwKIJlSmQpjkZ.jpg",
@@ -2597,6 +2645,7 @@ getOut2017: {
       trailer: { key: "sRfnevzM9kQ", name: "Official Trailer" },
   genres: ["Mystery", "Thriller", "Horror"],
   overview: "Chris and his girlfriend Rose go upstate to visit her parents for the weekend. At first, Chris reads the family's overly accommodating behavior as nervous attempts to deal with their daughter's interracial relationship, but as the weekend progresses, a series of increasingly disturbing discoveries lead him to a truth that he never could have imagined.",
+  popularity: 16.4597,
   name: "Get Out", year: "2017", score: 85, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 48,
   poster: "/tFXcEccSQMf3lfhfXKSU9iRBpa3.jpg",
@@ -2644,6 +2693,7 @@ goneGirl2014: {
       trailer: { key: "JU9PdgB3rsk", name: "Teaser Trailer" },
   genres: ["Mystery", "Thriller", "Drama"],
   overview: "With his wife's disappearance having become the focus of an intense media circus, a man sees the spotlight turned on him when it's suspected that he may not be innocent.",
+  popularity: 18.4378,
   name: "Gone Girl", year: "2014", score: 79, ci: null, label: "Generally Favorable",
   spread: [80, 20, 0], n: 49,
   poster: "/ts996lKsxvjkO2yiYG0ht4qAicO.jpg",
@@ -2713,6 +2763,7 @@ hereditary2018: {
       trailer: { key: "V6wWKNij_1M", name: "Official Trailer" },
   genres: ["Horror", "Mystery", "Thriller"],
   overview: "Following the death of the Leigh family matriarch, Annie and her children uncover disturbing secrets about their heritage. Their daily lives are not only impacted, but they also become entangled in a chilling fate from which they cannot escape, driving them to the brink of madness.",
+  popularity: 14.7417,
   name: "Hereditary", year: "2018", score: 87, ci: null, label: "Universal Acclaim",
   spread: [94, 4, 2], n: 49,
   poster: "/4GFPuL14eXi66V96xBWY73Y9PfR.jpg",
@@ -2772,6 +2823,7 @@ johnWick2014: {
       trailer: { key: "2AUmvWm5ZDQ", name: "Official Trailer" },
   genres: ["Action", "Thriller"],
   overview: "Ex-hitman John Wick comes out of retirement to track down the gangsters that took everything from him.",
+  popularity: 13.6099,
   name: "John Wick", year: "2014", score: 68, ci: null, label: "Generally Favorable",
   spread: [77, 13, 10], n: 39,
   poster: "/wXqWR7dHncNRbxoEGybEy7QTe9h.jpg",
@@ -2838,6 +2890,7 @@ laLaLand2016: {
       trailer: { key: "je0aAf2f8XQ", name: "Official Teaser Trailer – 'City Of Stars'" },
   genres: ["Comedy", "Drama", "Romance"],
   overview: "Mia, an aspiring actress, serves lattes to movie stars in between auditions and Sebastian, a jazz musician, scrapes by playing cocktail party gigs in dingy bars, but as success mounts they are faced with decisions that begin to fray the fragile fabric of their love affair, and the dreams they worked so hard to maintain in each other threaten to rip them apart.",
+  popularity: 20.4238,
   name: "La La Land", year: "2016", score: 94, ci: null, label: "Universal Acclaim",
   spread: [96, 4, 0], n: 54,
   poster: "/uDO8zWDhfWwoFdKS4fzkUJt0Rf0.jpg",
@@ -2900,6 +2953,7 @@ madMaxFuryRoad: {
       trailer: { key: "akX3Is3qBpw", name: "Comic-Con First Look" },
   genres: ["Action", "Adventure", "Science Fiction"],
   overview: "An apocalyptic story set in the furthest reaches of our planet, in a stark desert landscape where humanity is broken, and most everyone is crazed fighting for the necessities of life. Within this world exist two rebels on the run who just might be able to restore order.",
+  popularity: 26.1354,
   name: "Mad Max: Fury Road", year: "2015", score: 90, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 51,
   poster: "/ulcAi4dKpAjHwYGS08vNyx9H6I9.jpg",
@@ -2958,6 +3012,7 @@ noCountryForOldMen: {
       trailer: { key: "A0oNrgumrlE", name: "Official Trailer" },
   genres: ["Crime", "Thriller", "Western"],
   overview: "Llewelyn Moss stumbles upon dead bodies, $2 million and a hoard of heroin in a Texas desert, but methodical killer Anton Chigurh comes looking for it, with local sheriff Ed Tom Bell hot on his trail. The roles of prey and predator blur as the violent pursuit of money and justice collide.",
+  popularity: 20.017,
   name: "No Country for Old Men", year: "2007", score: 92, ci: null, label: "Universal Acclaim",
   spread: [95, 5, 0], n: 39,
   poster: "/uB7RDZby43Wvu8SKGHHTwGyTDBX.jpg",
@@ -3023,6 +3078,7 @@ oppenheimer2023: {
       trailer: { key: "bK6ldnjE3Y0", name: "Official Trailer" },
   genres: ["Drama", "History"],
   overview: "The story of J. Robert Oppenheimer's role in the development of the atomic bomb during World War II.",
+  popularity: 43.6219,
   name: "Oppenheimer", year: "2023", score: 90, ci: null, label: "Universal Acclaim",
   spread: [97, 3, 0], n: 69,
   poster: "/8Gxv8gSFCU0XGDykEGv7zR1n2ua.jpg",
@@ -3087,6 +3143,7 @@ parasite2019: {
       trailer: { key: "hb1iOVvkykY", name: "Official Int'l Main Trailer [Subtitled]" },
   genres: ["Comedy", "Thriller", "Drama"],
   overview: "All unemployed, Ki-taek's family takes peculiar interest in the wealthy and glamorous Parks for their livelihood until they get entangled in an unexpected incident.",
+  popularity: 34.9083,
   name: "Parasite", year: "2019", score: 97, ci: null, label: "Universal Acclaim",
   spread: [100, 0, 0], n: 56,
   poster: "/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg",
@@ -3141,6 +3198,7 @@ pastLives: {
       trailer: { key: "kA244xewjcI", name: "Official Trailer" },
   genres: ["Drama", "Romance"],
   overview: "After decades apart, childhood friends Nora and Hae Sung are reunited in New York for one fateful weekend as they confront notions of destiny, love, and the choices that make a life.",
+  popularity: 10.4652,
   name: "Past Lives", year: "2023", score: 94, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 52,
   poster: "/k3waqVXSnvCZWfJYNtdamTgTtTA.jpg",
@@ -3193,6 +3251,7 @@ poorThings: {
       trailer: { key: "RlbR5N6veqw", name: "Official Trailer" },
   genres: ["Science Fiction", "Romance", "Comedy"],
   overview: "Brought back to life by an unorthodox scientist, a young woman runs off with a lawyer on a whirlwind adventure across the continents. Free from the prejudices of her times, she grows steadfast in her purpose to stand for equality and liberation.",
+  popularity: 13.3948,
   name: "Poor Things", year: "2023", score: 88, ci: null, label: "Universal Acclaim",
   spread: [92, 3, 5], n: 62,
   poster: "/kCGlIMHnOm8JPXq3rXM6c5wMxcT.jpg",
@@ -3263,6 +3322,7 @@ spiderVerse2018: {
       trailer: { key: "ii3n7hYQOl4", name: "Official Teaser Trailer" },
   genres: ["Animation", "Action", "Adventure", "Science Fiction"],
   overview: "Struggling to find his place in the world while juggling school and family, Brooklyn teenager Miles Morales is unexpectedly bitten by a radioactive spider and develops unfathomable powers just like the one and only Spider-Man. While wrestling with the implications of his new abilities, Miles discovers a super collider created by the madman Wilson \"Kingpin\" Fisk, causing others from across the Spider-Verse to be inadvertently transported to his dimension.",
+  popularity: 34.9864,
   name: "Spider-Man: Into the Spider-Verse", year: "2018", score: 87, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 50,
   poster: "/iiZZdoQBEYBv6id8su7ImL0oCbD.jpg",
@@ -3306,6 +3366,7 @@ talkToMe2023: {
       trailer: { key: "aLAKJu9aJys", name: "Official US Trailer" },
   genres: ["Horror"],
   overview: "When a group of friends discover how to conjure spirits using an embalmed hand, they become hooked on the new thrill, until one of them goes too far and unleashes terrifying supernatural forces.",
+  popularity: 10.6898,
   name: "Talk to Me", year: "2023", score: 76, ci: null, label: "Generally Favorable",
   spread: [93, 7, 0], n: 44,
   poster: "/kdPMUMJzyYAc4roD52qavX0nLIC.jpg",
@@ -3342,6 +3403,7 @@ banshees: {
       trailer: { key: "uRu3zLOJN2c", name: "Official Trailer" },
   genres: ["Drama", "Comedy"],
   overview: "Two lifelong friends find themselves at an impasse when one abruptly ends their relationship, with alarming consequences for both of them.",
+  popularity: 7.3096,
   name: "The Banshees of Inisherin", year: "2022", score: 87, ci: null, label: "Universal Acclaim",
   spread: [94, 6, 0], n: 62,
   poster: "/4yFG6cSPaCaPhyJ1vtGOtMD1lgh.jpg",
@@ -3404,6 +3466,7 @@ theBoyAndTheHeron: {
       trailer: { key: "t5khm-VjEu4", name: "Official English Trailer" },
   genres: ["Animation", "Fantasy", "Drama"],
   overview: "While the Second World War rages, the teenage Mahito, haunted by his mother's tragic death, is relocated from Tokyo to the serene rural home of his new stepmother Natsuko, a woman who bears a striking resemblance to the boy's mother.  As he tries to adjust, this strange new world grows even stranger following the appearance of a persistent gray heron, who perplexes and bedevils Mahito, dubbing him the \"long-awaited one.\"",
+  popularity: 9.9114,
   name: "The Boy and the Heron", year: "2023", score: 91, ci: null, label: "Universal Acclaim",
   spread: [95, 5, 0], n: 55,
   poster: "/f4oZTcfGrVTXKTWg157AwikXqmP.jpg",
@@ -3448,6 +3511,7 @@ theMenu2022: {
       trailer: { key: "CAWZMssP3gM", name: "Official Teaser Trailer" },
   genres: ["Comedy", "Horror"],
   overview: "A young couple travels to a remote island to eat at an exclusive restaurant where the chef has prepared a lavish menu, with some shocking surprises.",
+  popularity: 15.1552,
   name: "The Menu", year: "2022", score: 71, ci: null, label: "Generally Favorable",
   spread: [80, 18, 2], n: 45,
   poster: "/fPtUgMcLIboqlTlPrq0bQpKK8eq.jpg",
@@ -3502,6 +3566,7 @@ shapeOfWater: {
       trailer: { key: "XFYWazblaUA", name: "Official Trailer" },
   genres: ["Drama", "Fantasy", "Romance"],
   overview: "An other-worldly story, set against the backdrop of Cold War era America circa 1962, where a mute janitor working at a lab falls in love with an amphibious man being held captive there and devises a plan to help him escape.",
+  popularity: 10.8937,
   name: "The Shape of Water", year: "2017", score: 87, ci: null, label: "Universal Acclaim",
   spread: [92, 6, 2], n: 53,
   poster: "/9zfwPffUXpBrEP26yp0q1ckXDcj.jpg",
@@ -3563,6 +3628,7 @@ theSubstance: {
       trailer: { key: "LNlrGhBpYjc", name: "Official Trailer" },
   genres: ["Horror", "Science Fiction", "Thriller"],
   overview: "A fading celebrity decides to use a black market drug, a cell-replicating substance that temporarily creates a younger, better version of herself.",
+  popularity: 26.5993,
   name: "The Substance", year: "2024", score: 78, ci: null, label: "Generally Favorable",
   spread: [86, 11, 4], n: 57,
   poster: "/uYJvxMWMb9W4zIY3cbM50sj3dpC.jpg",
@@ -3621,6 +3687,7 @@ theSubstance: {
       dataId: "interstellar-2014",
       genres: ["Adventure","Drama","Science Fiction"],
       overview: "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.",
+      popularity: 72.6471,
       name: "Interstellar", year: "2014", score: 74, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/yQvGrMoipbRoddT0ZR8tPoR7NfX.jpg",
@@ -3684,6 +3751,7 @@ theSubstance: {
       dataId: "inception-2010",
       genres: ["Action","Science Fiction","Adventure"],
       overview: "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
+      popularity: 57.0172,
       name: "Inception", year: "2010", score: 74, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/xlaY2zyzMfkhk0HSC5VUwzoZPU1.jpg",
@@ -3750,6 +3818,7 @@ theSubstance: {
       dataId: "the-avengers-2012",
       genres: ["Science Fiction","Action","Adventure"],
       overview: "When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!",
+      popularity: 48.8139,
       name: "The Avengers", year: "2012", score: 69, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/RYMX2wcKCBAr24UyPD7xwmjaTn.jpg",
@@ -3812,6 +3881,7 @@ theSubstance: {
       dataId: "the-dark-knight-2008",
       genres: ["Action","Crime","Thriller"],
       overview: "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.",
+      popularity: 51.612,
       name: "The Dark Knight", year: "2008", score: 85, ci: null, label: "Universal Acclaim",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/qJ2tW6WMUDux911r6m7haRef0WH.jpg",
@@ -3877,6 +3947,7 @@ theSubstance: {
       dataId: "avatar-2009",
       genres: ["Action","Science Fiction","Adventure"],
       overview: "In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization.",
+      popularity: 34.3159,
       name: "Avatar", year: "2009", score: 83, ci: null, label: "Universal Acclaim",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/gKY6q7SjCkAU6FqvqWybDYgUKIF.jpg",
@@ -3937,6 +4008,7 @@ theSubstance: {
       dataId: "deadpool-2016",
       genres: ["Action","Adventure","Comedy"],
       overview: "The origin story of former Special Forces operative turned mercenary Wade Wilson, who, after being subjected to a rogue experiment that leaves him with accelerated healing powers, adopts the alter ego Deadpool. Armed with his new abilities and a dark, twisted sense of humor, Deadpool hunts down the man who nearly destroyed his life.",
+      popularity: 21.369,
       name: "Deadpool", year: "2016", score: 65, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/3E53WEZJqP6aM84D8CckXx4pIHw.jpg",
@@ -3990,6 +4062,7 @@ theSubstance: {
       dataId: "fight-club-1999",
       genres: ["Drama","Thriller"],
       overview: "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground \"fight clubs\" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion.",
+      popularity: 37.2854,
       name: "Fight Club", year: "1999", score: 67, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/jSziioSwPVrOy9Yow3XhWIBDjq1.jpg",
@@ -4055,6 +4128,7 @@ theSubstance: {
       dataId: "avengers-infinity-war-2018",
       genres: ["Adventure","Action","Science Fiction"],
       overview: "As the Avengers and their allies have continued to protect the world from threats too large for any one hero to handle, a new danger has emerged from the cosmic shadows: Thanos. A despot of intergalactic infamy, his goal is to collect all six Infinity Stones, artifacts of unimaginable power, and use them to inflict his twisted will on all of reality. Everything the Avengers have fought for has led up to this moment - the fate of Earth and existence itself has never been more uncertain.",
+      popularity: 49.9794,
       name: "Avengers: Infinity War", year: "2018", score: 68, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/7WsyChQLEftFiDOVTGkv3hFpyyt.jpg",
@@ -4122,6 +4196,7 @@ theSubstance: {
       dataId: "the-shawshank-redemption-1994",
       genres: ["Drama","Crime"],
       overview: "Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.",
+      popularity: 93.5973,
       name: "The Shawshank Redemption", year: "1994", score: 82, ci: null, label: "Universal Acclaim",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/9cqNxx0GxF0bflZmeSMuL5tnGzr.jpg",
@@ -4180,6 +4255,7 @@ theSubstance: {
       dataId: "pulp-fiction-1994",
       genres: ["Thriller","Crime","Comedy"],
       overview: "A burger-loving hit man, his philosophical partner, a drug-addled gangster's moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip back and forth in time.",
+      popularity: 34.9425,
       name: "Pulp Fiction", year: "1994", score: 95, ci: null, label: "Universal Acclaim",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/vQWk5YBFWF4bZaofAbv0tShwBvQ.jpg",
@@ -4250,6 +4326,7 @@ theSubstance: {
       releaseDate: "2026-07-10",
       genres: ["Action","Drama","Romance"],
       overview: "Young, urban-raised Lenin's peaceful romance with Bharathi inadvertently sparks a violent, large-scale village conflict.",
+      popularity: 29.5818,
       name: "Lenin", year: "2026", score: null /* TODO: Metacritic score */, ci: null, label: null /* TODO */,
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/rAHQviBq8Fxi20hNtHPGLnr4L0f.jpg",
@@ -4284,6 +4361,7 @@ theSubstance: {
       releaseDate: "2026-07-23",
       genres: ["Action","Thriller","Crime"],
       overview: "In 1970s Detroit, John Miller falls for a local gangster's girl and lands in prison for a crime he didn't commit. With his life ruined, Miller plots revenge against the man who took his girl away.",
+      popularity: 19.8076,
       name: "Motor City", year: "2026", score: 55, ci: null, label: "Mixed or Average",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/lGovcOtxugJPhfJjFKud9EbWtOA.jpg",
@@ -4331,6 +4409,7 @@ theSubstance: {
       releaseDate: "2026-05-07",
       genres: ["Mystery","Drama"],
       overview: "Lucero’s life appears immaculate: a wealthy household, a devoted husband, and two children who embody the promise of a perfect family. Yet beneath this surface simmers a quiet dissatisfaction. When Matías, a young swimming coach hired by her husband, enters their lives, Lucero finds herself pulled into a risky and consuming relationship. As secrecy, desire, and jealousy tighten their grip, the boundaries within the family begin to collapse, placing mother and daughter in a dangerous emotional triangle that threatens to shatter everything Lucero has built.",
+      popularity: 308.5165,
       name: "Desire", year: "2026", score: null /* TODO: Metacritic score */, ci: null, label: null /* TODO */,
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/3bEqHqeaQlFykaLQ7N4gDkIvL5w.jpg",
@@ -4365,6 +4444,7 @@ theSubstance: {
       releaseDate: "2026-07-16",
       genres: ["Fantasy","Family","TV Movie"],
       overview: "Now that the Queen of Hearts is nice and Cinderella is safe, things seem perfect for Red and Chloe… But little do they know that changing the past created a new villain — Maddox Hatter. When Maddox captures the Queen of Hearts, Red and Chloe must work alongside Red’s new sister Pink, Luisa Madrigal’s son Luis, and Maddox’s son Max to save her and Wonderland.",
+      popularity: 167.2502,
       name: "Descendants: Wicked Wonderland", year: "2026", score: null /* TODO: Metacritic score */, ci: null, label: null /* TODO */,
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/xdhLAADGSse8KCrsDLBuM5b68Cg.jpg",
@@ -4399,6 +4479,7 @@ theSubstance: {
       releaseDate: "2026-05-06",
       genres: ["Action","Fantasy","Adventure"],
       overview: "The fan favorite champions—now joined by Johnny Cage himself—are pitted against one another in the ultimate, no-holds barred, gory battle to defeat the dark rule of Shao Kahn that threatens the very existence of the Earthrealm and its defenders.",
+      popularity: 109.3763,
       name: "Mortal Kombat II", year: "2026", score: 46, ci: null, label: "Mixed or Average",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
       poster: "/hwRdDFIhaEmpRgoki805YvyyjZf.jpg",
@@ -4792,6 +4873,48 @@ theSubstance: {
           </table>
         </details>
       </div>`;
+  }
+
+  // Streaming-only titles have no box office at all to show — this is the
+  // substitute "is anyone paying attention" signal for exactly those cases,
+  // but shown for every film since it's informative either way. Trailer
+  // stats (view/like/comment count) render automatically once present on
+  // the film — nothing else here needs to change when that data lands.
+  function audienceInterestHTML(f) {
+    const hasPopularity = typeof f.popularity === "number";
+    const t = f.trailer;
+    const hasTrailerStats = t && typeof t.viewCount === "number";
+    if (!hasPopularity && !hasTrailerStats) return "";
+
+    const statsHtml = [
+      hasPopularity
+        ? `<div class="interest-stat"><span class="num">${f.popularity.toFixed(1)}</span><span class="cap">TMDb popularity score</span></div>`
+        : "",
+      hasTrailerStats
+        ? `<div class="interest-stat"><span class="num">${formatCount(t.viewCount)}</span><span class="cap">Trailer views (YouTube)</span></div>`
+        : "",
+      hasTrailerStats && typeof t.likeCount === "number"
+        ? `<div class="interest-stat"><span class="num">${formatCount(t.likeCount)}</span><span class="cap">Trailer likes</span></div>`
+        : "",
+      hasTrailerStats && typeof t.commentCount === "number"
+        ? `<div class="interest-stat"><span class="num">${formatCount(t.commentCount)}</span><span class="cap">Trailer comments</span></div>`
+        : "",
+    ].filter(Boolean).join("");
+
+    return `
+      <div class="chart-block">
+        <div class="chart-head">
+          <span class="chart-title">Audience Interest</span>
+        </div>
+        <div class="interest-stats">${statsHtml}</div>
+        <p class="interest-note">Not viewership — TMDb's popularity score is an undisclosed internal composite (not a hard count), and trailer stats measure interest in the trailer itself, not confirmed viewers of the film. The closest free, public substitute for actual streaming viewership, which platforms don't publish.</p>
+      </div>`;
+  }
+
+  function formatCount(n) {
+    if (n >= 1e6) return (n / 1e6).toFixed(1).replace(/\.0$/, "") + "M";
+    if (n >= 1e3) return (n / 1e3).toFixed(1).replace(/\.0$/, "") + "K";
+    return String(n);
   }
 
   function streamingHTML(f) {
@@ -5312,6 +5435,7 @@ theSubstance: {
         ${dataTable(f)}` : streamingHTML(f)}
         ${econHTML(f)}
         ${f.econ.boxOffice != null ? legsHTML(f) : ""}
+        ${audienceInterestHTML(f)}
         ${creatorHTML(f, "director", "Director")}
         ${creatorHTML(f, "actor", "Lead Actor")}
         ${reviewHTML(f)}
