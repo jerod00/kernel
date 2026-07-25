@@ -1,10 +1,21 @@
 require("dotenv").config();
+const path = require("node:path");
 const express = require("express");
 const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const { ingest, getLatest, getHistory, listEntities, verifyChain } = require("./db");
 const { getSynopsis } = require("./synopsis");
-const { requireAdminToken, listOpenPRs, mergePR, closePR, adminPageHtml } = require("./admin");
+const {
+  requireAdminToken,
+  requireNotifyToken,
+  listOpenPRs,
+  mergePR,
+  closePR,
+  adminPageHtml,
+  adminManifestJson,
+  SERVICE_WORKER_JS,
+} = require("./admin");
+const { saveSubscription, sendPushNotification } = require("./push");
 
 const app = express();
 // Fly.io (and most hosts) put this behind a single reverse-proxy hop, so
@@ -130,7 +141,53 @@ app.get("/api/synopsis/:dataId", async (req, res) => {
 // main exactly like clicking "Merge" on github.com, which the existing
 // gh-pages deploy workflow already picks up automatically.
 app.get("/admin", adminLimiter, requireAdminToken, (req, res) => {
-  res.type("html").send(adminPageHtml());
+  const token = req.query.token || req.get("x-admin-token") || "";
+  res.type("html").send(adminPageHtml(token));
+});
+
+// PWA icons — public/static, no admin token needed (just app iconography,
+// nothing sensitive, and they must be fetchable before any auth context
+// exists). Registered after the exact "/admin" route above on purpose:
+// express.static redirects a request for its own mount path with no
+// remainder ("/admin") to "/admin/" looking for an index file, which would
+// otherwise hijack the real admin page before requireAdminToken ever runs.
+app.use("/admin", express.static(path.join(__dirname, "public")));
+
+// Gated like the page itself — see the comment on adminManifestJson in
+// admin.js for why this isn't a static file.
+app.get("/admin/manifest.webmanifest", adminLimiter, requireAdminToken, (req, res) => {
+  const token = req.query.token || req.get("x-admin-token") || "";
+  res.type("application/manifest+json").json(adminManifestJson(token));
+});
+
+// Public — generic push/notification-click logic, no secrets or user data.
+app.get("/admin/sw.js", (req, res) => {
+  res.type("application/javascript").send(SERVICE_WORKER_JS);
+});
+
+app.post("/admin/api/push-subscribe", adminLimiter, requireAdminToken, (req, res) => {
+  saveSubscription(req.body);
+  res.json({ ok: true });
+});
+
+// Called by the daily pipeline's GitHub Actions workflow right after it
+// opens a PR — a machine caller, so it authenticates with its own token
+// rather than the human ADMIN_TOKEN (see requireNotifyToken in admin.js).
+app.post("/admin/api/notify-pr", adminLimiter, requireNotifyToken, async (req, res) => {
+  const { title, url } = req.body || {};
+  if (typeof title !== "string" || !title || typeof url !== "string" || !url) {
+    return res.status(400).json({ error: "title and url are required strings." });
+  }
+  try {
+    const sent = await sendPushNotification({
+      title: `New PR: ${title}`,
+      body: "Tap to review, merge, or close.",
+      url,
+    });
+    res.json({ sent });
+  } catch (err) {
+    res.status(502).json({ error: err.message });
+  }
 });
 
 app.get("/admin/api/prs", adminLimiter, requireAdminToken, async (req, res) => {

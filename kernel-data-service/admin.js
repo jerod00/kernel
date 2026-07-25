@@ -1,4 +1,5 @@
 const crypto = require("node:crypto");
+const push = require("./push");
 
 // A small admin panel for reviewing/merging/closing the PRs the daily
 // catalog-review pipeline opens — reachable from a link in the daily email,
@@ -8,11 +9,24 @@ const crypto = require("node:crypto");
 // that bypasses anything) — it pushes to main exactly like clicking
 // "Merge" on github.com would, which in turn triggers the existing
 // gh-pages auto-deploy workflow.
+//
+// Also installable as a PWA with real push notifications (iOS 16.4+ Safari
+// supports Web Push for home-screen-installed PWAs) — see manifest/service
+// worker below. The manifest embeds the live admin token in start_url so
+// tapping the home-screen icon opens straight into the authenticated view,
+// exactly like the bookmarked link already works; it's gated by the same
+// requireAdminToken as everything else here rather than served from a
+// static, guessable path, so the token never sits in a public file.
 
 const GITHUB_REPO = "jerod00/kernel";
 const GITHUB_API = "https://api.github.com";
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 const GITHUB_ADMIN_TOKEN = process.env.GITHUB_ADMIN_TOKEN;
+// Separate from ADMIN_TOKEN on purpose: this one is held by the GitHub
+// Actions workflow (a machine caller, not a browser) to ping /admin/api/notify-pr
+// right after opening a PR — keeping it distinct means a leak of either
+// token doesn't also compromise the other.
+const PIPELINE_NOTIFY_TOKEN = process.env.PIPELINE_NOTIFY_TOKEN;
 
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(String(a));
@@ -28,6 +42,17 @@ function requireAdminToken(req, res, next) {
   const provided = req.query.token || req.get("x-admin-token");
   if (!provided || !timingSafeEqual(provided, ADMIN_TOKEN)) {
     return res.status(401).json({ error: "Missing or invalid admin token." });
+  }
+  next();
+}
+
+function requireNotifyToken(req, res, next) {
+  if (!PIPELINE_NOTIFY_TOKEN) {
+    return res.status(500).json({ error: "PIPELINE_NOTIFY_TOKEN not configured on the server." });
+  }
+  const provided = req.get("x-notify-token");
+  if (!provided || !timingSafeEqual(provided, PIPELINE_NOTIFY_TOKEN)) {
+    return res.status(401).json({ error: "Missing or invalid notify token." });
   }
   next();
 }
@@ -95,13 +120,69 @@ async function closePR(number) {
   });
 }
 
-function adminPageHtml() {
+function adminManifestJson(token) {
+  return {
+    name: "Kernel Admin",
+    short_name: "Kernel Admin",
+    // Embeds the live token so launching from the home-screen icon lands
+    // straight in the authenticated view — see the file-level comment above
+    // on why this route is gated rather than static.
+    start_url: `/admin?token=${encodeURIComponent(token)}`,
+    scope: "/admin",
+    display: "standalone",
+    background_color: "#201E1B",
+    theme_color: "#201E1B",
+    icons: [
+      { src: "/admin/icon-192.png", sizes: "192x192", type: "image/png" },
+      { src: "/admin/icon-512.png", sizes: "512x512", type: "image/png" },
+    ],
+  };
+}
+
+// Public (unauthenticated) — no secret or user data in here, and it needs to
+// be fetchable before any auth context exists (registration happens from
+// plain markup, not an authenticated fetch).
+const SERVICE_WORKER_JS = `
+self.addEventListener("push", (event) => {
+  let data = {};
+  try { data = event.data ? event.data.json() : {}; } catch (err) { /* non-JSON payload, use defaults */ }
+  const title = data.title || "Kernel Admin";
+  event.waitUntil(self.registration.showNotification(title, {
+    body: data.body || "A pull request needs your review.",
+    icon: "/admin/icon-192.png",
+    badge: "/admin/icon-192.png",
+    data: { url: data.url || "/admin" },
+  }));
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || "/admin";
+  const urlPath = url.split("?")[0];
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if (client.url.includes(urlPath) && "focus" in client) return client.focus();
+      }
+      if (clients.openWindow) return clients.openWindow(url);
+    })
+  );
+});
+`;
+
+function adminPageHtml(token) {
   return `<!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Kernel — Admin</title>
+<link rel="manifest" href="/admin/manifest.webmanifest?token=${encodeURIComponent(token)}">
+<link rel="apple-touch-icon" href="/admin/apple-touch-icon.png">
+<meta name="theme-color" content="#201E1B">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Kernel Admin">
 <style>
   :root{
     --ink:#201E1B; --paper:#EFEBE1; --gold:#B8863A; --teal:#2F6B64;
@@ -140,23 +221,104 @@ function adminPageHtml() {
   .status.ok{ color:var(--teal); }
   .status.err{ color:var(--neg); }
   .loading{ color:var(--muted); padding:2rem 0; }
+  .push-banner{
+    background:var(--card); border:1px solid var(--rule); padding:0.9rem 1.1rem;
+    margin-bottom:1.5rem; font-size:0.85rem; display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap;
+  }
+  .push-banner.ok{ color:var(--teal); }
+  .push-btn{
+    font-family:ui-monospace,Consolas,monospace; font-size:0.78rem; letter-spacing:0.03em; text-transform:uppercase;
+    padding:0.5rem 0.9rem; border:1px solid var(--gold); color:var(--gold); background:transparent; cursor:pointer; white-space:nowrap;
+  }
+  .push-btn:hover{ background:var(--gold); color:var(--ink); }
+  .push-btn:disabled{ opacity:0.4; cursor:default; }
 </style>
 </head>
 <body>
 <div class="doc">
   <h1>Kernel — Admin</h1>
   <p class="sub">Open pull requests from the daily catalog-review pipeline. Merging here pushes to <code>main</code> exactly like the GitHub "Merge" button — nothing skipped.</p>
+  <div id="pushBanner" class="push-banner" hidden></div>
   <div id="list" class="loading">Loading open PRs…</div>
 </div>
 <script>
   const token = new URLSearchParams(location.search).get("token") || "";
   const listEl = document.getElementById("list");
+  const VAPID_PUBLIC_KEY = ${JSON.stringify(push.VAPID_PUBLIC_KEY || "")};
 
   async function api(path, opts) {
     const res = await fetch(path + (path.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(token), opts);
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "Request failed");
     return data;
+  }
+
+  // iOS only grants the notification permission prompt when the page is
+  // running standalone (opened from the Home Screen icon, not a Safari
+  // tab) — the display-mode media query covers other platforms that
+  // support installed-PWA push the same way.
+  function isStandalone() {
+    return window.navigator.standalone === true || window.matchMedia("(display-mode: standalone)").matches;
+  }
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const raw = atob(base64);
+    return Uint8Array.from([...raw].map(c => c.charCodeAt(0)));
+  }
+
+  async function initPush() {
+    const banner = document.getElementById("pushBanner");
+    if (!VAPID_PUBLIC_KEY || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+      banner.hidden = true;
+      return;
+    }
+    banner.hidden = false;
+    const reg = await navigator.serviceWorker.register("/admin/sw.js", { scope: "/admin" });
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) {
+      banner.className = "push-banner ok";
+      banner.textContent = "Push notifications are enabled on this device.";
+      return;
+    }
+    if (!isStandalone()) {
+      banner.className = "push-banner";
+      banner.textContent = "Add this page to your Home Screen, then open it from there to enable push notifications.";
+      return;
+    }
+    banner.className = "push-banner";
+    banner.innerHTML = "";
+    const label = document.createElement("span");
+    label.textContent = "Get notified here when a new PR needs review.";
+    const btn = document.createElement("button");
+    btn.className = "push-btn";
+    btn.textContent = "Enable Notifications";
+    btn.addEventListener("click", async () => {
+      btn.disabled = true;
+      btn.textContent = "Requesting…";
+      try {
+        const perm = await Notification.requestPermission();
+        if (perm !== "granted") throw new Error("permission " + perm);
+        const sub = await reg.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY),
+        });
+        await api("/admin/api/push-subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(sub),
+        });
+        banner.className = "push-banner ok";
+        banner.textContent = "Push notifications are enabled on this device.";
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = "Enable Notifications";
+        label.textContent = "Couldn't enable notifications: " + err.message;
+      }
+    });
+    banner.appendChild(label);
+    banner.appendChild(btn);
   }
 
   function card(pr) {
@@ -203,6 +365,8 @@ function adminPageHtml() {
     return String(str).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
   }
 
+  initPush().catch(err => console.error("Push setup failed:", err));
+
   (async () => {
     try {
       const prs = await api("/admin/api/prs");
@@ -221,4 +385,13 @@ function adminPageHtml() {
 </html>`;
 }
 
-module.exports = { requireAdminToken, listOpenPRs, mergePR, closePR, adminPageHtml };
+module.exports = {
+  requireAdminToken,
+  requireNotifyToken,
+  listOpenPRs,
+  mergePR,
+  closePR,
+  adminPageHtml,
+  adminManifestJson,
+  SERVICE_WORKER_JS,
+};

@@ -127,6 +127,23 @@ jobs:
           echo "pr-number=${PR_URL##*/}" >> "$GITHUB_OUTPUT"
           git checkout main
 
+      # Pushes a real notification to the admin PWA on the phone (see
+      # kernel-data-service/push.js) so the PR doesn't just sit unnoticed
+      # until the next daily email. Non-fatal on purpose — a notification
+      # failure (no device subscribed yet, push service hiccup) shouldn't
+      # ever block the actual pipeline.
+      - name: Notify admin app of new PR
+        if: steps.open-pr.outputs.pr-number != ''
+        env:
+          NOTIFY_TOKEN: ${{ secrets.PIPELINE_NOTIFY_TOKEN }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          PR_TITLE: ${{ steps.draft.outputs.pr-title }}
+        run: |
+          PAYLOAD=$(jq -n --arg title "$PR_TITLE" --arg url "https://kernel-data-service-themoviekernel.fly.dev/admin?token=${ADMIN_TOKEN}" '{title:$title, url:$url}')
+          curl -sf -X POST "https://kernel-data-service-themoviekernel.fly.dev/admin/api/notify-pr" \
+            -H "x-notify-token: ${NOTIFY_TOKEN}" -H "Content-Type: application/json" -d "$PAYLOAD" \
+            || echo "Push notification failed (non-fatal) — continuing."
+
       # Fact-checks the same films draft-onboard.js just drafted (no
       # re-parsing the diff — reuses its exact output) and posts findings
       # as a comment on the PR just opened above. Two distinct kinds of
@@ -225,6 +242,18 @@ jobs:
           PR_URL=$(gh pr create --title "$PR_TITLE" --body-file /tmp/historical-pr-body.md --base main --head "$BRANCH")
           echo "pr-number=${PR_URL##*/}" >> "$GITHUB_OUTPUT"
           git checkout main
+
+      - name: Notify admin app of new PR
+        if: steps.open-historical-pr.outputs.pr-number != ''
+        env:
+          NOTIFY_TOKEN: ${{ secrets.PIPELINE_NOTIFY_TOKEN }}
+          ADMIN_TOKEN: ${{ secrets.ADMIN_TOKEN }}
+          PR_TITLE: ${{ steps.historical.outputs.historical-pr-title }}
+        run: |
+          PAYLOAD=$(jq -n --arg title "$PR_TITLE" --arg url "https://kernel-data-service-themoviekernel.fly.dev/admin?token=${ADMIN_TOKEN}" '{title:$title, url:$url}')
+          curl -sf -X POST "https://kernel-data-service-themoviekernel.fly.dev/admin/api/notify-pr" \
+            -H "x-notify-token: ${NOTIFY_TOKEN}" -H "Content-Type: application/json" -d "$PAYLOAD" \
+            || echo "Push notification failed (non-fatal) — continuing."
 
       - name: Fact-check historical backfill
         if: steps.open-historical-pr.outputs.pr-number != ''

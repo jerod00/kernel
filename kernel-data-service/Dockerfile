@@ -5,7 +5,8 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY server.js db.js synopsis.js admin.js ./
+COPY server.js db.js synopsis.js admin.js push.js ./
+COPY public ./public
 
 # kernel.db lives on a mounted Fly volume (see fly.toml), not in the image —
 # DB_PATH is set via [env] in fly.toml to point inside that mount, so the

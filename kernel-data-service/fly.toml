@@ -13,6 +13,7 @@ primary_region = "iad"
 
 [env]
   DB_PATH = "/data/kernel.db"
+  PUSH_SUBSCRIPTION_PATH = "/data/push-subscription.json"
   PORT = "3002"
 
 [[mounts]]
