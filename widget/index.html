@@ -156,6 +156,16 @@
   .genre-pill:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
   .top100-empty{ color:var(--muted); font-size:0.9rem; padding:1.2rem 0; }
 
+  .leaderboard-mode{ display:flex; flex-wrap:wrap; gap:0.6rem; margin:0.6rem 0 1rem; }
+  .mode-pill{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.78rem; letter-spacing:0.03em;
+    text-transform:uppercase; color:var(--muted); background:none; border:1px solid var(--rule);
+    padding:0.5rem 1rem; cursor:pointer; transition:border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+  }
+  .mode-pill:hover{ border-color:var(--teal); }
+  .mode-pill[aria-selected="true"]{ border-color:var(--teal); color:var(--card); background:var(--teal); }
+  .mode-pill:focus-visible{ outline:2px solid var(--teal); outline-offset:2px; }
+
   .rank-list{ display:flex; flex-direction:column; }
   .rank-row{
     display:flex; align-items:center; gap:1rem; width:100%; text-align:left;
@@ -327,6 +337,30 @@
   .interest-stat .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.3rem; color:var(--gold); display:block; }
   .interest-stat .cap{ font-size:0.74rem; color:var(--muted); max-width:24ch; }
   .interest-note{ font-size:0.78rem; color:var(--muted); margin-top:0.9rem; max-width:64ch; }
+  .critic-extras{ display:flex; gap:2rem; margin:0.9rem 0; flex-wrap:wrap; }
+  .awards-line{ font-size:0.85rem; color:var(--ink); margin:0.3rem 0 1rem; max-width:64ch; }
+
+  .watch-providers{ display:flex; flex-wrap:wrap; gap:0.6rem 1.6rem; margin:0 0 1rem; align-items:baseline; }
+  .watch-group{ display:flex; gap:0.4em; font-size:0.85rem; }
+  .watch-label{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.68rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--muted); }
+  .watch-names{ color:var(--ink); }
+  .watch-attribution{ width:100%; font-size:0.72rem; color:var(--muted); margin:0.2rem 0 0; }
+
+  .keyword-tags{ display:flex; flex-wrap:wrap; gap:0.5rem; margin:0 0 1.2rem; }
+  .keyword-tag{
+    font-size:0.74rem; color:var(--muted); border:1px solid var(--rule); padding:0.2rem 0.6rem;
+    border-radius:1rem; white-space:nowrap;
+  }
+
+  .collection-list{ margin-top:0.9rem; }
+  .collection-row{
+    display:flex; justify-content:space-between; gap:1rem; padding:0.55rem 0;
+    border-top:1px solid var(--rule); cursor:pointer; font-size:0.88rem;
+  }
+  .collection-row:hover{ color:var(--teal); }
+  .collection-row.current{ color:var(--gold); cursor:default; }
+  .collection-row .year{ color:var(--muted); font-weight:normal; }
+  .collection-score{ font-family:ui-monospace,"SF Mono",Consolas,monospace; }
 
   /* Creator (director / lead actor) track record */
   .creator-svg-wrap{ overflow-x:auto; margin-top:0.7rem; }
@@ -347,6 +381,9 @@
   .review-synopsis-meta{ font-size:0.76rem; color:var(--muted); margin:0; max-width:64ch; }
   .review-summary{ font-size:0.95rem; margin-bottom:1rem; min-height:1.4em; }
   .review-summary .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.6rem; color:var(--teal); margin-right:0.4rem; }
+  .score-trend{ margin:0 0 1rem; }
+  .score-trend-svg{ width:100%; max-width:320px; height:48px; display:block; }
+  .score-trend-cap{ font-size:0.76rem; color:var(--muted); }
   .review-form{ display:flex; flex-direction:column; gap:0.9rem; }
   .review-rating-row{ display:flex; align-items:center; gap:0.9rem; }
   .review-rating-row label{ font-size:0.82rem; color:var(--muted); white-space:nowrap; }
@@ -537,6 +574,11 @@
     <span aria-hidden="true">←</span> All films
   </button>
   <h2 class="top100-title">THE &ldquo;KERNEL&rsquo;S&rdquo; <strong>ALL-TIME</strong> RANKINGS</h2>
+  <div class="leaderboard-mode" id="leaderboardMode" role="tablist" aria-label="Ranking type">
+    <button class="mode-pill" data-mode="score" aria-selected="true">Kernel Score</button>
+    <button class="mode-pill" data-mode="budget-efficiency" aria-selected="false">Budget Efficiency</button>
+    <button class="mode-pill" data-mode="divisive" aria-selected="false">Most Divisive</button>
+  </div>
   <p class="top100-sub" id="top100Sub"></p>
   <div class="genre-filter" id="genreFilter" role="tablist" aria-label="Filter by genre"></div>
   <div class="rank-list" id="rankList"></div>
@@ -560,6 +602,12 @@
       trailer: { key: "t433PEQGErc", name: "Teaser Trailer" , viewCount: 87269855, likeCount: 1508101, commentCount: 123451},
       genres: ["Crime", "Drama", "Thriller"],
       overview: "During the 1980s, a failed stand-up comedian is driven insane and turns to a life of crime and chaos in Gotham City while becoming an infamous psychopathic crime figure.",
+      rottenTomatoes: 68,
+      awards: "Won 2 Oscars. 120 wins & 247 nominations total",
+      keywords: ["society","based on comic","social commentary","psychological thriller","criminal mastermind","mental illness","anarchy","character study","clown makeup","outsider"],
+      watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","Cinemax Amazon Channel","HBO Max","Cinemax Apple TV Channel"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 987044,
+      collectionName: "Joker Collection",
       popularity: 23.7283,
       name: "Joker", year: "2019", score: 59, ci: "± 4", label: "Mixed",
       spread: [55, 27, 18], n: 60,
@@ -620,6 +668,12 @@
       trailer: { key: "XpICoc65uh0", name: "official trailer" , viewCount: 22391019, likeCount: 69141, commentCount: 10278},
       genres: ["Drama", "Horror", "Mystery"],
       overview: "A couple's relationship is tested when uninvited guests arrive at their home, disrupting their tranquil existence.",
+      rottenTomatoes: 68,
+      awards: "9 wins & 54 nominations total",
+      keywords: ["husband wife relationship","nightmare","nihilism","chaos","pregnancy","bible","house","vandalism","cult","surrealism"],
+      watchProviders: {"flatrate":["fuboTV","MGM+ Amazon Channel","Philo","MGM Plus Roku Premium Channel","YouTube TV","MGM Plus"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 6.34,
       name: "mother!", year: "2017", score: 76, ci: "± 3", label: "Generally Positive",
       spread: [71, 27, 2], n: 51,
@@ -687,6 +741,12 @@
       trailer: { key: "Q0CbN8sfihY", name: "Official Trailer" , viewCount: 59286702, likeCount: 794349, commentCount: 85919},
       genres: ["Action", "Adventure", "Science Fiction"],
       overview: "Rey develops her newly discovered abilities with the guidance of Luke Skywalker, who is unsettled by the strength of her powers. Meanwhile, the Resistance prepares to do battle with the First Order.",
+      rottenTomatoes: 91,
+      awards: "Nominated for 4 Oscars. 26 wins & 100 nominations total",
+      keywords: ["bunker","space battle","defeat","failure","sequel","space opera","military operation","quest","tuwaderalit"],
+      watchProviders: {"flatrate":["Disney Plus","Hulu"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 10,
+      collectionName: "Star Wars Collection",
       popularity: 24.3573,
       name: "The Last Jedi", year: "2017", score: 84, ci: "± 2", label: "Widely Acclaimed",
       spread: [93, 7, 0], n: 56,
@@ -735,6 +795,12 @@
       trailer: { key: "wxN1T1uxQ2g", name: "Official Trailer" , viewCount: 35833274, likeCount: 425772, commentCount: 17760},
       genres: ["Action", "Science Fiction", "Comedy"],
       overview: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what's important to her by connecting with the lives she could have led in other universes.",
+      rottenTomatoes: 93,
+      awards: "Won 7 Oscars. 408 wins & 382 nominations total",
+      keywords: ["mother","martial arts","kung fu","nihilism","philosophy","generations conflict","chinese woman","surrealism","laundromat","chinese"],
+      watchProviders: {"flatrate":["Hulu","YouTube TV"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 24.8002,
       name: "Everything Everywhere All at Once", year: "2022", score: 81, ci: null, label: "Universal Acclaim",
       spread: [89, 11, 0], n: 55,
@@ -752,6 +818,12 @@
       trailer: { key: "1i-_CRKdh4Y", name: "Official Trailer" , viewCount: 4044680, likeCount: 10600, commentCount: 1116},
       genres: ["Drama"],
       overview: "A truffle hunter who lives alone in the Oregon wilderness must visit Portland to find the mysterious person who stole his beloved foraging pig.",
+      rottenTomatoes: 97,
+      awards: "38 wins & 75 nominations total",
+      keywords: ["expensive restaurant","pig","loss of loved one","portland, oregon","misanthrophy","grief","cabin in the woods","chef","loss of pet","loner"],
+      watchProviders: {"flatrate":[],"rent":["Apple TV Store","Google Play Movies","YouTube"],"buy":["Apple TV Store","Google Play Movies","YouTube"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 3.8503,
       name: "Pig", year: "2021", score: 82, ci: null, label: "Universal Acclaim",
       spread: [87, 13, 0], n: 39,
@@ -769,6 +841,12 @@
       trailer: { key: "VFOrGkAvjAE", name: "Official Trailer" , viewCount: 4406799, likeCount: 41727, commentCount: 2032},
       genres: ["Drama", "Music"],
       overview: "Metal drummer Ruben begins to lose his hearing. When a doctor tells him his condition will worsen, he thinks his career and life is over. His girlfriend Lou checks the former addict into a rehab for the deaf hoping it will prevent a relapse and help him adapt to his new life. After being welcomed and accepted just as he is, Ruben must choose between his new normal and the life he once knew.",
+      rottenTomatoes: 97,
+      awards: "Won 2 Oscars. 90 wins & 179 nominations total",
+      keywords: ["deaf","missouri","drums","heavy metal","addiction","sign languages","hearing impaired"],
+      watchProviders: {"flatrate":["Amazon Prime Video","Amazon Prime Video with Ads"],"rent":[],"buy":[]},
+      collectionId: null,
+      collectionName: null,
       popularity: 4.0679,
       name: "Sound of Metal", year: "2019", score: 82, ci: null, label: "Universal Acclaim",
       spread: [95, 5, 0], n: 37,
@@ -785,6 +863,12 @@
       trailer: { key: "D30r0CwtIKc", name: "Official Trailer" , viewCount: 10846594, likeCount: 101149, commentCount: 5754},
       genres: ["Drama"],
       overview: "A reclusive English teacher suffering from severe obesity attempts to reconnect with his estranged teenage daughter for one last chance at redemption.",
+      rottenTomatoes: 64,
+      awards: "Won 2 Oscars. 51 wins & 124 nominations total",
+      keywords: ["depression","nurse","missionary","idaho","bible","overweight man","based on play or musical","dying man","obesity","religion"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 13.9123,
       name: "The Whale", year: "2022", score: 60, ci: null, label: "Mixed or Average",
       spread: [46, 40, 14], n: 57,
@@ -819,6 +903,12 @@
       trailer: { key: "8zIf0XvoL9Y", name: "Teaser Trailer" , viewCount: 16027264, likeCount: 254179, commentCount: 11639},
       genres: ["Comedy", "Adventure", "Fantasy"],
       overview: "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land. However, when they get a chance to go to the real world, they soon discover the joys and perils of living among humans.",
+      rottenTomatoes: 88,
+      awards: "Won 1 Oscar. 215 wins & 436 nominations total",
+      keywords: ["feminism","satire","patriarchy","social satire","based on toy","female protagonist","fish out of water","womanhood","doll","reality vs fantasy"],
+      watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","HBO Max"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 20.4889,
       name: "Barbie", year: "2023", score: 80, ci: null, label: "Generally Favorable",
       spread: [91, 7, 1], n: 67,
@@ -839,6 +929,12 @@
       trailer: { key: "FtSd844cI7U", name: "Official Trailer" , viewCount: 18437037, likeCount: 140526, commentCount: 96178},
       genres: ["Fantasy", "Musical", "Comedy"],
       overview: "A tribe of cats called the Jellicles must decide yearly which one will ascend to the Heaviside Layer and come back to a new Jellicle life.",
+      rottenTomatoes: 19,
+      awards: "11 wins & 8 nominations total",
+      keywords: ["dance","cat","musical","based on play or musical","resurrection","based on song, poem or rhyme","vignette","so bad it’s good","bitter","baffled"],
+      watchProviders: {"flatrate":["Netflix","Netflix Standard with Ads"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","FlixFling"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 4.2813,
       name: "Cats", year: "2019", score: 32, ci: null, label: "Generally Unfavorable",
       spread: [12, 45, 43], n: 51,
@@ -859,6 +955,12 @@
       trailer: { key: "jLMBLuGJTsA", name: "Teaser Trailer" , viewCount: 22302231, likeCount: 357071, commentCount: 31158},
       genres: ["Action", "Science Fiction", "Horror"],
       overview: "Dangerously ill with a rare blood disorder, and determined to save others suffering his same fate, Dr. Michael Morbius attempts a desperate gamble. What at first appears to be a radical success soon reveals itself to be a remedy potentially worse than the disease.",
+      rottenTomatoes: 15,
+      awards: "3 wins & 4 nominations total",
+      keywords: ["vampire","superhero","based on comic","duringcreditsstinger","supervillain","frustrated"],
+      watchProviders: {"flatrate":["Disney Plus","fuboTV","YouTube TV"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 13.8501,
       name: "Morbius", year: "2022", score: 35, ci: null, label: "Generally Unfavorable",
       spread: [13, 45, 42], n: 55,
@@ -879,6 +981,12 @@
       trailer: { key: "xy8aJw1vYHo", name: "Official Teaser Trailer" , viewCount: 37959356, likeCount: 949822, commentCount: 44984},
       genres: ["Crime", "Drama", "Musical"],
       overview: "While struggling with his dual identity, Arthur Fleck not only stumbles upon true love, but also finds the music that's always been inside him.",
+      rottenTomatoes: 31,
+      awards: "7 wins & 19 nominations total",
+      keywords: ["based on comic","sequel","madness","mental health","super villain","1980s","prisoner abuse","dark romance","jukebox musical","corrupt officials"],
+      watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","HBO Max"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 987044,
+      collectionName: "Joker Collection",
       popularity: 9.9495,
       name: "Joker: Folie à Deux", year: "2024", score: 46, ci: null, label: "Mixed or Average",
       spread: [33, 42, 25], n: 64,
@@ -915,6 +1023,12 @@
       releaseDate: "2026-07-15",
       genres: ["Adventure","Action","Fantasy"],
       overview: "Odysseus, the legendary King of Ithaca, embarks on a long and perilous journey home following the Trojan War. Throughout his voyage, he is forced to confront the whims of gods, mythological monsters, and trials that stretch both his cunning and his humanity to the breaking point.",
+      rottenTomatoes: null,
+      awards: "2 wins total",
+      keywords: ["ship","trojan war","greek mythology","historical fiction","ancient world","period drama","based on song, poem or rhyme","greek history","voyage","peplum"],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 979.0823,
       name: "The Odyssey", year: "2026", score: 88, ci: null, label: "Universal Acclaim",
       spread: [92, 8, 0], n: 62,
@@ -989,6 +1103,12 @@
       releaseDate: "2026-07-08",
       genres: ["Family","Fantasy","Comedy","Adventure"],
       overview: "Teenage Moana answers the Ocean's call and, for the first time, voyages beyond the reef of her island of Motunui with infamous demigod Maui on an unforgettable journey to restore prosperity to her people.",
+      rottenTomatoes: 31,
+      awards: null,
+      keywords: ["sailboat","sea","friendship","ocean","leaving one's family","musical","remake","curse","explorer","based on movie"],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 515.4828,
       name: "Moana", year: "2026", score: 42, ci: null, label: "Mixed or Average",
       spread: [20, 50, 30], n: 40,
@@ -1010,6 +1130,12 @@
       releaseDate: "2026-05-27",
       genres: ["Horror","Mystery","Science Fiction"],
       overview: "A strange doorway appears in the basement of a furniture showroom.",
+      rottenTomatoes: null,
+      awards: "11 nominations total",
+      keywords: ["california","monster","therapist","surrealism","childhood trauma","alcoholism","found footage","1990s","other dimension","based on web series"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Fandango At Home","Plex"],"buy":["Amazon Video","Apple TV Store","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 385.4853,
       name: "Backrooms", year: "2026", score: 77, ci: null, label: "Generally Favorable",
       spread: [83, 17, 0], n: 46,
@@ -1071,6 +1197,12 @@
       releaseDate: "2026-06-24",
       genres: ["Action","Adventure","Science Fiction"],
       overview: "When an unexpected and ruthless adversary strikes too close to home, Kara Zor-El, aka Supergirl, reluctantly joins forces with an unlikely companion on an epic, interstellar journey of vengeance and justice.",
+      rottenTomatoes: 53,
+      awards: "2 nominations total",
+      keywords: ["galaxy","hero","superhero","villain","based on comic","space","female protagonist","dog","super power","heroine"],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 364.8746,
       name: "Supergirl", year: "2026", score: 50, ci: null, label: "Mixed or Average",
       spread: [30, 63, 7], n: 56,
@@ -1118,6 +1250,12 @@
       releaseDate: "2026-06-24",
       genres: ["Adventure","Animation","Comedy","Family","Fantasy"],
       overview: "This is the rambunctious, ridiculous and totally true story of how the Minions conquered Hollywood, became movie stars, lost everything, unleashed monsters onto the world and then banded together to try and save the planet from the mayhem they had just created.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["magic","sequel","alien","prequel","hollywood","spin off","henchman","filmmaking","silent film","nostalgic"],
+      watchProviders: null,
+      collectionId: 544669,
+      collectionName: "Minions Collection",
       popularity: 333.0288,
       name: "Minions & Monsters", year: "2026", score: 70, ci: null, label: "Generally Favorable",
       spread: [77, 20, 3], n: 30,
@@ -1165,6 +1303,12 @@
       releaseDate: "2026-06-17",
       genres: ["Animation","Family","Comedy","Adventure"],
       overview: "When Bonnie receives a Lilypad tablet as a gift and becomes obsessed, Buzz, Woody, Jessie and the rest of the gang's jobs become exponentially harder when they have to go head to head with the all-new threat to playtime.",
+      rottenTomatoes: 92,
+      awards: "4 nominations total",
+      keywords: ["farm","island","pig","horse","rescue mission","rivalry","sequel","love","stranded","wedding"],
+      watchProviders: null,
+      collectionId: 10194,
+      collectionName: "Toy Story Collection",
       popularity: 322.0636,
       name: "Toy Story 5", year: "2026", score: 73, ci: null, label: "Generally Favorable",
       spread: [80, 19, 2], n: 54,
@@ -1235,6 +1379,12 @@
       releaseDate: "2026-06-18",
       genres: ["Adventure","Drama","Thriller","Action"],
       overview: "Grappling with his past after a life of crime and murder, Robin Hood finds himself gravely injured after a battle he thought would be his last. In the hands of a mysterious woman, he is offered a chance at salvation.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["robin hood","based on myths, legends or folklore","grim","salvation","grimdark"],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 145.96,
       name: "The Death of Robin Hood", year: "2026", score: 60, ci: null, label: "Mixed or Average",
       spread: [51, 43, 6], n: 35,
@@ -1297,6 +1447,12 @@
       releaseDate: "2026-07-07",
       genres: ["Horror","Thriller"],
       overview: "After her husband's abrupt death, Alice seeks solace with his remaining family — descendants of a leading researcher on demonic possession. As her in-laws transform one by one into creatures that feed on fear, she comes to discover that the vows she took in life survive even in death.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["funeral","widow","supernatural","possession","dysfunctional family","sequel","grief","spirit","demon","spin off"],
+      watchProviders: null,
+      collectionId: 1725885,
+      collectionName: "Evil Dead Standalone Collection",
       popularity: 56.8987,
       name: "Evil Dead Burn", year: "2026", score: 54, ci: null, label: "Mixed or Average",
       spread: [42, 47, 11], n: 36,
@@ -1341,6 +1497,12 @@
       releaseDate: "2026-07-17",
       genres: ["Thriller"],
       overview: "Convinced they are our secret saviors, rogue U.S. operatives abduct Mexican gang members and seed them across major American cities, unleashing criminal chaos, swaying voters by playing on nativist prejudices, and forcing law enforcement into a race to expose the plot as the escalating carnage threatens democracy itself.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["mexico","washington dc, usa","government","immigration","conspiracy","virginia","illegal","political thriller","independent film","gang members"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 219.5783,
       name: "Borderline", year: "2026", score: null, ci: null, label: null,
       spread: null, n: null,
@@ -1376,6 +1538,12 @@
       releaseDate: "2026-06-19",
       genres: ["Thriller","Action"],
       overview: "A man takes justice into his own hands, hunting down criminals. His vigilante crusade makes him a social media star but puts him at odds with the local police chief.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["rape","corruption","police","immigration","rape victim","murder","vigilante","justice","news report","vigilantism"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 96.1332,
       name: "Citizen Vigilante", year: "2026", score: 10, ci: null, label: "Overwhelming Dislike",
       spread: [0, 0, 100], n: 2,
@@ -1435,6 +1603,12 @@
       releaseDate: "2026-07-24",
       genres: ["Animation","Action","Adventure","Fantasy"],
       overview: "Avatar Aang, the world's last Airbender, learns of an ancient power that could save his culture from extinction. With the help of his friends, he embarks on a global quest to find it before it falls into the wrong hands and threatens to upend the peace they sacrificed everything to achieve.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["martial arts","extinction","cultural identity","based on tv series"],
+      watchProviders: null,
+      collectionId: 1136366,
+      collectionName: "Avatar Aang: The Last Airbender Collection",
       popularity: 73.6858,
       name: "Avatar Aang: The Last Airbender", year: "2026", score: 68, ci: null, label: "Generally Favorable",
       spread: [70, 30, 0], n: 10,
@@ -1472,6 +1646,12 @@
       releaseDate: "2026-06-20",
       genres: ["Romance", "Comedy"],
       overview: "A young woman's hilariously confessional voicemails to her late sister are unknowingly redirected to a stranger, who begins to fall in love from afar.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["san francisco, california","romcom","voicemail","lighthearted","adoring"],
+      watchProviders: {"flatrate":["Netflix","Netflix Standard with Ads"],"rent":[],"buy":[]},
+      collectionId: null,
+      collectionName: null,
       popularity: 31.2632,
       name: "Voicemails for Isabelle", year: "2026", score: 62, ci: null, label: "Generally Favorable",
       spread: [67, 33, 0], n: 12,
@@ -1531,6 +1711,12 @@
       releaseDate: "2026-06-25",
       genres: ["Drama", "Comedy"],
       overview: "Joe and Angela's marriage is on thin ice. When they invite their enigmatic upstairs neighbors for a dinner party, the night spirals into unexpected places.",
+      rottenTomatoes: null,
+      awards: "2 wins & 5 nominations total",
+      keywords: ["husband wife relationship","san francisco, california","remake","firefighter","sexologist","neighbors"],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 31.0334,
       name: "The Invite", year: "2026", score: 82, ci: null, label: "Universal Acclaim",
       spread: [91, 9, 0], n: 47,
@@ -1591,6 +1777,12 @@
       releaseDate: "2026-06-18",
       genres: ["Action", "Thriller"],
       overview: "A nightclub owner is on the verge of leaving his dangerous past behind for retirement with his girlfriend. When masked gunmen rob him and he finds himself squeezed by ruthless cartels, a mysterious newcomer arrives with an interest in buying the business. With danger closing in from all sides, he must navigate a deadly web of deception, power, and survival  -  where escape may no longer be an option.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["based on novel or book","drug cartel"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Fandango At Home","Plex"],"buy":["Amazon Video","Apple TV Store","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 39.8043,
       name: "The Get Out", year: "2026", score: 49, ci: null, label: "Mixed or Average",
       spread: [17, 67, 17], n: 6,
@@ -1646,6 +1838,12 @@
       releaseDate: "2026-06-18",
       genres: ["Romance", "Drama"],
       overview: "Coley, 17, from rural Oregon, navigates intimacy after her mother's passing. Meeting Sonya sparks new feelings, but self-doubt hinders their connection. Sonya, unfamiliar with dating girls, is uncertain. They learn to embrace emotions.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["based on novel or book","coming of age","based on song, poem or rhyme","first love","lgbt","queer","lesbian","girls' love (gl)","sapphic"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 21.1132,
       name: "Girls Like Girls", year: "2026", score: 70, ci: null, label: "Generally Favorable",
       spread: [76, 24, 0], n: 17,
@@ -1684,6 +1882,12 @@
       releaseDate: "2026-06-19",
       genres: ["History", "Drama"],
       overview: "On 1949 October 1, the day of the founding ceremony of the People's Republic of China, Xiao Dali enters the city and is reorganized as the director of the public security police station. He finds that primary school teacher Feng Jingbo is full of doubts. With the high vigilance of a soldier and the sense of responsibility of a public security official, Dali insists on partnering with Feng and becomes his neighbor. He then spends his whole life carrying out a nearly four-decade pursuit without regrets.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["based on novel or book","1970s","period drama","historical drama","1940s","1980s","1950s","1960s","people's republic of china"],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 50.0118,
       name: "I Know Who You Are", year: "2026", score: null, ci: null, label: null,
       spread: null, n: null,
@@ -1726,6 +1930,12 @@
       releaseDate: "2026-06-18",
       genres: ["Action", "Thriller", "Drama"],
       overview: "Through both her moments of fear and bravery, a woman discovers that embracing her vulnerabilities is as vital to her inner strength as facing challenges head-on.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: [],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 41.3722,
       name: "Maa Inti Bangaram", year: "2026", score: null, ci: null, label: null,
       spread: null, n: null,
@@ -1764,6 +1974,12 @@
       releaseDate: "1997-07-19",
       genres: ["Animation", "Science Fiction", "Drama", "Fantasy", "Action"],
       overview: "SEELE orders an all-out attack on NERV, aiming to destroy the Evas before Gendo can advance his own plans for the Human Instrumentality Project. Shinji is pushed to the limits of his sanity as he is forced to decide the fate of humanity.",
+      rottenTomatoes: 92,
+      awards: "2 wins total",
+      keywords: ["philosophy","insanity","post-apocalyptic future","futuristic","end of the world","mecha","avant-garde","meaningless existence","rebirth","anime"],
+      watchProviders: {"flatrate":["Netflix","Netflix Standard with Ads"],"rent":[],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 96850,
+      collectionName: "Neon Genesis Evangelion Collection",
       popularity: 15.3284,
       name: "Neon Genesis Evangelion: The End of Evangelion", year: "1997", score: null, ci: null, label: null,
       spread: null, n: null,
@@ -1806,6 +2022,12 @@
       releaseDate: "2026-06-10",
       genres: ["Science Fiction", "Thriller"],
       overview: "A cybersecurity expert becomes a whistleblower after uncovering secrets about aliens, putting him on the run from a corporation. Meanwhile, a meteorologist experiencing strange phenomena joins forces with him to prove there's life beyond our understanding.",
+      rottenTomatoes: null,
+      awards: "2 wins & 6 nominations total",
+      keywords: ["new york city","childhood trauma","alien","on the run","kansas city","mind reading","alien invasion","meteorologist","whistleblower","conspiracy thriller"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 558.4583,
       name: "Disclosure Day", year: "2026", score: 74, ci: null, label: "Generally Favorable",
       spread: [79, 21, 0], n: 63,
@@ -1891,6 +2113,12 @@ obsession2026: {
   releaseDate: "2026-05-13",
   genres: ["Horror", "Thriller"],
   overview: "After breaking the mysterious \"One Wish Willow\" to win his crush's heart, a hopeless romantic finds himself getting exactly what he asked for but soon discovers that some desires come at a dark, sinister price.",
+  rottenTomatoes: 94,
+  awards: "7 wins & 11 nominations total",
+  keywords: ["obsession","supernatural","possession","wish","unrequited love","couple","absurdism","self-harm","supernatural horror","psychological"],
+  watchProviders: {"flatrate":["Peacock Premium","Peacock Premium Plus"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 407.6643,
   name: "Obsession", year: "2026", score: 77, ci: null, label: "Generally Favorable",
   spread: [89, 8, 3], n: 37,
@@ -1931,6 +2159,12 @@ scaryMovie2026: {
   releaseDate: "2026-06-03",
   genres: ["Comedy"],
   overview: "Twenty-six years after outrunning a suspiciously familiar masked killer, the Core Four are back in the killer's crosshairs and no horror movie IP is safe.",
+  rottenTomatoes: null,
+  awards: "2 nominations total",
+  keywords: ["parody","sequel","slapstick comedy","crude humor","spoof","animated scene","slasher","horror spoof","dildo","reboot"],
+  watchProviders: {"flatrate":[],"rent":["JustWatch TV","Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: 4246,
+  collectionName: "Scary Movie Collection",
   popularity: 314.886,
   name: "Scary Movie", year: "2026", score: 38, ci: null, label: "Generally Unfavorable",
   spread: [0, 74, 26], n: 27,
@@ -1992,6 +2226,12 @@ mastersOfTheUniverse2026: {
   releaseDate: "2026-06-05",
   genres: ["Action", "Fantasy", "Science Fiction"],
   overview: "After being separated for 15 years, the Sword of Power leads Prince Adam back to Eternia, where he discovers his home shattered under the fiendish rule of Skeletor. To save his family and his world, Adam must join forces with his closest allies, Teela and Duncan/Man-At-Arms, and embrace his true destiny as He-Man — the most powerful man in the universe.",
+  rottenTomatoes: null,
+  awards: "1 nomination total",
+  keywords: ["skeleton","superhero","nostalgia","alien planet","based on toy","super power","reboot","nostalgic","warrior","sword and planet"],
+  watchProviders: {"flatrate":["Amazon Prime Video","Amazon Prime Video with Ads"],"rent":[],"buy":[]},
+  collectionId: null,
+  collectionName: null,
   popularity: 359.8509,
   name: "Masters of the Universe", year: "2026", score: 52, ci: null, label: "Mixed or Average",
   spread: [41, 41, 18], n: 44,
@@ -2044,6 +2284,12 @@ mandalorianAndGrogu2026: {
   releaseDate: "2026-05-20",
   genres: ["Action", "Adventure", "Science Fiction"],
   overview: "The evil Empire has fallen, and Imperial warlords remain scattered throughout the galaxy. As the fledgling New Republic works to protect everything the Rebellion fought for, they have enlisted the help of legendary Mandalorian bounty hunter Din Djarin and his young apprentice Grogu.",
+  rottenTomatoes: 60,
+  awards: "3 nominations total",
+  keywords: ["galaxy","bounty hunter","spin off","space opera","nostalgic","space adventure","based on tv series","master apprentice relationship","bold"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 217.959,
   name: "The Mandalorian and Grogu", year: "2026", score: 53, ci: null, label: "Mixed or Average",
   spread: [30, 64, 6], n: 53,
@@ -2104,6 +2350,12 @@ devilWearsPrada2: {
   releaseDate: "2026-04-29",
   genres: ["Comedy", "Drama"],
   overview: "Andy Sachs returns to Runway as Miranda Priestly navigates a new media landscape and Runway's position within. The duo reconnect with former assistant Emily Charlton, now the head of a luxury brand that possesses funding which could ensure Runway's survival.",
+  rottenTomatoes: null,
+  awards: "2 wins & 4 nominations total",
+  keywords: ["new york city","based on novel or book","sequel","fashion","fashion magazine","dramedy","magazine editor","fashion industry","fashionista"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: 1314623,
+  collectionName: "The Devil Wears Prada Collection",
   popularity: 153.6012,
   name: "The Devil Wears Prada 2", year: "2026", score: 63, ci: null, label: "Generally Favorable",
   spread: [54, 44, 2], n: 57,
@@ -2175,6 +2427,12 @@ deepWater2026: {
   releaseDate: "2026-05-01",
   genres: ["Horror", "Thriller"],
   overview: "A group of international passengers on a flight from Los Angeles to Shanghai is forced to make an emergency landing in shark-infested waters. The terrified group is forced to work together and overcome their differences if they hope to escape their sinking plane and the frenzy of sharks drawn to the wreckage.",
+  rottenTomatoes: null,
+  awards: null,
+  keywords: ["deep sea","shark"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 146.807,
   name: "Deep Water", year: "2026", score: 53, ci: null, label: "Mixed or Average",
   spread: [25, 69, 6], n: 16,
@@ -2256,6 +2514,12 @@ passenger2026: {
   releaseDate: "2026-05-20",
   genres: ["Horror", "Thriller"],
   overview: "After a young couple witnesses a gruesome highway accident, they soon realize they did not leave the crash scene alone, as a demonic presence called the Passenger that won't stop until it claims them both turns their van life adventure into a nightmare.",
+  rottenTomatoes: null,
+  awards: null,
+  keywords: ["stalker","road trip","evil spirit","couple","frantic","demonic","supernatural horror","vanlife","baffled"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 122.5057,
   name: "Passenger", year: "2026", score: 52, ci: null, label: "Mixed or Average",
   spread: [29, 64, 7], n: 14,
@@ -2303,6 +2567,12 @@ theFurious: {
   releaseDate: "2026-06-10",
   genres: ["Action", "Crime", "Thriller"],
   overview: "After a criminal network kidnaps Wang Wei's daughter and the corrupt police refuse to assist him, Wei sets out on his own to locate her. Navin, a tenacious journalist whose wife has mysteriously vanished, is his only ally. In this explosive martial arts showdown, the unlikely duo fights the kidnappers ruthlessly driven by a furious vengeance.",
+  rottenTomatoes: 98,
+  awards: "1 win & 2 nominations total",
+  keywords: ["martial arts","kung fu","rescue mission","police corruption","child trafficking","child kidnapping","missing wife","child rescue","relentless vengeance","dynamic duo"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 122.6649,
   name: "The Furious", year: "2026", score: 85, ci: null, label: "Universal Acclaim",
   spread: [100, 0, 0], n: 21,
@@ -2342,6 +2612,12 @@ nineteenSeventeen: {
       trailer: { key: "UcmZN0Mbl04", name: "Official Trailer" , viewCount: 15948828, likeCount: 156930, commentCount: 9536},
   genres: ["War", "History", "Drama"],
   overview: "At the height of the First World War, two young British soldiers must cross enemy territory and deliver a message that will stop a deadly attack on hundreds of soldiers.",
+  rottenTomatoes: 88,
+  awards: "Won 3 Oscars. 137 wins & 202 nominations total",
+  keywords: ["race against time","world war i","british army","survival","soldier","period drama","real time","trenches","1910s","trench warfare"],
+  watchProviders: {"flatrate":["Netflix","Netflix Standard with Ads"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 12.2335,
   name: "1917", year: "2019", score: 78, ci: null, label: "Generally Favorable",
   spread: [86, 12, 2], n: 57,
@@ -2398,6 +2674,12 @@ anyoneButYou: {
       trailer: { key: "UtjH6Sk7Gxs", name: "Official Trailer" , viewCount: 11851826, likeCount: 60839, commentCount: 2027},
   genres: ["Romance", "Comedy"],
   overview: "After an amazing first date, Bea and Ben’s fiery attraction turns ice cold — until they find themselves unexpectedly reunited at a destination wedding in Australia. So they do what any two mature adults would do: pretend to be a couple.",
+  rottenTomatoes: 53,
+  awards: "1 win & 5 nominations total",
+  keywords: ["australia","hiking","romcom","based on play or musical","law school","aftercreditsstinger","duringcreditsstinger","fake dating","destination wedding","comforting"],
+  watchProviders: {"flatrate":["Hulu","fuboTV","YouTube TV"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 14.5215,
   name: "Anyone but You", year: "2023", score: 52, ci: null, label: "Mixed or Average",
   spread: [38, 58, 4], n: 26,
@@ -2448,6 +2730,12 @@ arrival2016: {
       trailer: { key: "tFMo3UJ4B4g", name: "Trailer" , viewCount: 27301679, likeCount: 146413, commentCount: 14365},
   genres: ["Drama", "Science Fiction", "Mystery"],
   overview: "Taking place after alien crafts land around the world, an expert linguist is recruited by the military to determine whether they come in peace or are a threat.",
+  rottenTomatoes: 94,
+  awards: "Won 1 Oscar. 71 wins & 268 nominations total",
+  keywords: ["spacecraft","extraterrestrial technology","loss","time","alien","language","female protagonist","scientist","heartbreak","based on short story"],
+  watchProviders: {"flatrate":["Paramount Plus Premium","Paramount+ Amazon Channel","Paramount+ Roku Premium Channel"],"rent":["JustWatch TV","Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","FlixFling","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 17.9662,
   name: "Arrival", year: "2016", score: 81, ci: null, label: "Universal Acclaim",
   spread: [90, 8, 2], n: 52,
@@ -2516,6 +2804,12 @@ bladeRunner2049: {
       trailer: { key: "gCcx85zbxz4", name: "Official Trailer" , viewCount: 39911417, likeCount: 282704, commentCount: 19442},
   genres: ["Science Fiction", "Drama"],
   overview: "Thirty years after the events of the first film, a new blade runner, LAPD Officer K, unearths a long-buried secret that has the potential to plunge what's left of society into chaos. K's discovery leads him on a quest to find Rick Deckard, a former LAPD blade runner who has been missing for 30 years.",
+  rottenTomatoes: 88,
+  awards: "Won 2 Oscars. 100 wins & 164 nominations total",
+  keywords: ["future","android","bounty hunter","artificial intelligence (a.i.)","dystopia","sequel","cyberpunk","transhumanism","los angeles, california","las vegas"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: 422837,
+  collectionName: "Blade Runner Collection",
   popularity: 24.9992,
   name: "Blade Runner 2049", year: "2017", score: 81, ci: null, label: "Universal Acclaim",
   spread: [87, 13, 0], n: 54,
@@ -2584,6 +2878,12 @@ dune2021: {
       trailer: { key: "n9xhJrPXop4", name: "Official Trailer" , viewCount: 48990245, likeCount: 697800, commentCount: 65117},
   genres: ["Science Fiction", "Adventure"],
   overview: "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people. As malevolent forces explode into conflict over the planet's exclusive supply of the most precious resource in existence - a commodity capable of unlocking humanity's greatest potential - only those who can conquer their fear will survive.",
+  rottenTomatoes: 83,
+  awards: "Won 6 Oscars. 178 wins & 299 nominations total",
+  keywords: ["empire","future","army","prophecy","dystopia","emperor","sand","spice","chosen one","hallucinogen"],
+  watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","HBO Max"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: 726871,
+  collectionName: "Dune Collection",
   popularity: 35.3254,
   name: "Dune", year: "2021", score: 74, ci: null, label: "Generally Favorable",
   spread: [79, 19, 1], n: 68,
@@ -2645,6 +2945,12 @@ getOut2017: {
       trailer: { key: "sRfnevzM9kQ", name: "Official Trailer" , viewCount: 18784629, likeCount: 60652, commentCount: 13657},
   genres: ["Mystery", "Thriller", "Horror"],
   overview: "Chris and his girlfriend Rose go upstate to visit her parents for the weekend. At first, Chris reads the family's overly accommodating behavior as nervous attempts to deal with their daughter's interracial relationship, but as the weekend progresses, a series of increasingly disturbing discoveries lead him to a truth that he never could have imagined.",
+  rottenTomatoes: 98,
+  awards: "Won 1 Oscar. 154 wins & 214 nominations total",
+  keywords: ["kidnapping","externally controlled action","manipulation","dark comedy","hypnosis","parents-in-law","satire","racist","revenge","interracial relationship"],
+  watchProviders: {"flatrate":["YouTube TV"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 16.4597,
   name: "Get Out", year: "2017", score: 85, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 48,
@@ -2693,6 +2999,12 @@ goneGirl2014: {
       trailer: { key: "JU9PdgB3rsk", name: "Teaser Trailer" , viewCount: 484432, likeCount: 1374, commentCount: 75},
   genres: ["Mystery", "Thriller", "Drama"],
   overview: "With his wife's disappearance having become the focus of an intense media circus, a man sees the spotlight turned on him when it's suspected that he may not be innocent.",
+  rottenTomatoes: 88,
+  awards: "Nominated for 1 Oscar. 64 wins & 189 nominations total",
+  keywords: ["infidelity","based on novel or book","wife","marriage crisis","investigation","disappearance","psychological thriller","whodunit","cynical","missing person"],
+  watchProviders: {"flatrate":["Netflix","Netflix Standard with Ads"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 18.4378,
   name: "Gone Girl", year: "2014", score: 79, ci: null, label: "Generally Favorable",
   spread: [80, 20, 0], n: 49,
@@ -2763,6 +3075,12 @@ hereditary2018: {
       trailer: { key: "V6wWKNij_1M", name: "Official Trailer" , viewCount: 35732112, likeCount: 193419, commentCount: 13110},
   genres: ["Horror", "Mystery", "Thriller"],
   overview: "Following the death of the Leigh family matriarch, Annie and her children uncover disturbing secrets about their heritage. Their daily lives are not only impacted, but they also become entangled in a chilling fate from which they cannot escape, driving them to the brink of madness.",
+  rottenTomatoes: 90,
+  awards: "52 wins & 112 nominations total",
+  keywords: ["daughter","funeral","parent child relationship","loss of loved one","ritual","supernatural","possession","dysfunctional family","sleeplessness","murder"],
+  watchProviders: {"flatrate":["HBO Max Amazon Channel","HBO Max"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 14.7417,
   name: "Hereditary", year: "2018", score: 87, ci: null, label: "Universal Acclaim",
   spread: [94, 4, 2], n: 49,
@@ -2823,6 +3141,12 @@ johnWick2014: {
       trailer: { key: "2AUmvWm5ZDQ", name: "Official Trailer" , viewCount: 14381201, likeCount: 41734, commentCount: 3471},
   genres: ["Action", "Thriller"],
   overview: "Ex-hitman John Wick comes out of retirement to track down the gangsters that took everything from him.",
+  rottenTomatoes: 87,
+  awards: "5 wins & 10 nominations total",
+  keywords: ["hitman","bratva (russian mafia)","gangster","secret organization","revenge","murder","dog","retired","widower"],
+  watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","HBO Max"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","Fandango At Home","FlixFling","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: 404609,
+  collectionName: "John Wick Collection",
   popularity: 13.6099,
   name: "John Wick", year: "2014", score: 68, ci: null, label: "Generally Favorable",
   spread: [77, 13, 10], n: 39,
@@ -2890,6 +3214,12 @@ laLaLand2016: {
       trailer: { key: "je0aAf2f8XQ", name: "Official Teaser Trailer – 'City Of Stars'" , viewCount: 4848492, likeCount: 20453, commentCount: 1003},
   genres: ["Comedy", "Drama", "Romance"],
   overview: "Mia, an aspiring actress, serves lattes to movie stars in between auditions and Sebastian, a jazz musician, scrapes by playing cocktail party gigs in dingy bars, but as success mounts they are faced with decisions that begin to fray the fragile fabric of their love affair, and the dreams they worked so hard to maintain in each other threaten to rip them apart.",
+  rottenTomatoes: 91,
+  awards: "Won 6 Oscars. 246 wins & 313 nominations total",
+  keywords: ["dancing","dance","jazz","melancholy","musical","ambition","casting","romcom","coffee shop","jazz club"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","FlixFling","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 20.4238,
   name: "La La Land", year: "2016", score: 94, ci: null, label: "Universal Acclaim",
   spread: [96, 4, 0], n: 54,
@@ -2953,6 +3283,12 @@ madMaxFuryRoad: {
       trailer: { key: "akX3Is3qBpw", name: "Comic-Con First Look" , viewCount: 17488758, likeCount: 52921, commentCount: 6549},
   genres: ["Action", "Adventure", "Science Fiction"],
   overview: "An apocalyptic story set in the furthest reaches of our planet, in a stark desert landscape where humanity is broken, and most everyone is crazed fighting for the necessities of life. Within this world exist two rebels on the run who just might be able to restore order.",
+  rottenTomatoes: 97,
+  awards: "Won 6 Oscars. 245 wins & 234 nominations total",
+  keywords: ["rescue","australia","dystopia","sandstorm","post-apocalyptic future","sequel","survival","on the run","peak oil","dark future"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: 8945,
+  collectionName: "Mad Max Collection",
   popularity: 26.1354,
   name: "Mad Max: Fury Road", year: "2015", score: 90, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 51,
@@ -3012,6 +3348,12 @@ noCountryForOldMen: {
       trailer: { key: "A0oNrgumrlE", name: "Official Trailer" , viewCount: 732526, likeCount: 3063, commentCount: 248},
   genres: ["Crime", "Thriller", "Western"],
   overview: "Llewelyn Moss stumbles upon dead bodies, $2 million and a hoard of heroin in a Texas desert, but methodical killer Anton Chigurh comes looking for it, with local sheriff Ed Tom Bell hot on his trail. The roles of prey and predator blur as the violent pursuit of money and justice collide.",
+  rottenTomatoes: 93,
+  awards: "Won 4 Oscars. 165 wins & 139 nominations total",
+  keywords: ["vietnam veteran","sheriff","trailer park","based on novel or book","hitman","psychopath","drug trafficking","texas","motel","usa–mexico border"],
+  watchProviders: {"flatrate":["fuboTV","Paramount Plus Premium","Paramount Plus Essential","Paramount+ Amazon Channel","YouTube TV"],"rent":["JustWatch TV","Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 20.017,
   name: "No Country for Old Men", year: "2007", score: 92, ci: null, label: "Universal Acclaim",
   spread: [95, 5, 0], n: 39,
@@ -3078,6 +3420,12 @@ oppenheimer2023: {
       trailer: { key: "bK6ldnjE3Y0", name: "Official Trailer" , viewCount: 48772349, likeCount: 431997, commentCount: 16379},
   genres: ["Drama", "History"],
   overview: "The story of J. Robert Oppenheimer's role in the development of the atomic bomb during World War II.",
+  rottenTomatoes: 93,
+  awards: "Won 7 Oscars. 370 wins & 378 nominations total",
+  keywords: ["husband wife relationship","based on novel or book","atomic bomb","patriotism","new mexico","world war ii","atomic bomb test","physics","biography","based on true story"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 43.6219,
   name: "Oppenheimer", year: "2023", score: 90, ci: null, label: "Universal Acclaim",
   spread: [97, 3, 0], n: 69,
@@ -3143,6 +3491,12 @@ parasite2019: {
       trailer: { key: "hb1iOVvkykY", name: "Official Int'l Main Trailer [Subtitled]" , viewCount: 515315, likeCount: 1760, commentCount: 75},
   genres: ["Comedy", "Thriller", "Drama"],
   overview: "All unemployed, Ki-taek's family takes peculiar interest in the wealthy and glamorous Parks for their livelihood until they get entangled in an unexpected incident.",
+  rottenTomatoes: 99,
+  awards: "Won 4 Oscars. 309 wins & 261 nominations total",
+  keywords: ["dark comedy","con artist","social commentary","working class","infiltration","psychological thriller","class differences","family","unemployed","domestic worker"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","FlixFling"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 34.9083,
   name: "Parasite", year: "2019", score: 97, ci: null, label: "Universal Acclaim",
   spread: [100, 0, 0], n: 56,
@@ -3198,6 +3552,12 @@ pastLives: {
       trailer: { key: "kA244xewjcI", name: "Official Trailer" , viewCount: 11539186, likeCount: 161400, commentCount: 4898},
   genres: ["Drama", "Romance"],
   overview: "After decades apart, childhood friends Nora and Hae Sung are reunited in New York for one fateful weekend as they confront notions of destiny, love, and the choices that make a life.",
+  rottenTomatoes: 95,
+  awards: "Nominated for 2 Oscars. 83 wins & 240 nominations total",
+  keywords: ["new york city","immigrant","friendship","nostalgia","woman between two men","interracial marriage","fate","playwright","married woman","childhood friends"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 10.4652,
   name: "Past Lives", year: "2023", score: 94, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 52,
@@ -3251,6 +3611,12 @@ poorThings: {
       trailer: { key: "RlbR5N6veqw", name: "Official Trailer" , viewCount: 17742073, likeCount: 81560, commentCount: 5487},
   genres: ["Science Fiction", "Romance", "Comedy"],
   overview: "Brought back to life by an unorthodox scientist, a young woman runs off with a lawyer on a whirlwind adventure across the continents. Free from the prejudices of her times, she grows steadfast in her purpose to stand for equality and liberation.",
+  rottenTomatoes: 92,
+  awards: "Won 4 Oscars. 121 wins & 427 nominations total",
+  keywords: ["ship","london, england","experiment","paris, france","based on novel or book","obsession","lisbon, portugal","crooked lawyer","love","domestic abuse"],
+  watchProviders: {"flatrate":["Netflix","Netflix Standard with Ads"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 13.3948,
   name: "Poor Things", year: "2023", score: 88, ci: null, label: "Universal Acclaim",
   spread: [92, 3, 5], n: 62,
@@ -3322,6 +3688,12 @@ spiderVerse2018: {
       trailer: { key: "ii3n7hYQOl4", name: "Official Teaser Trailer" , viewCount: 17402011, likeCount: 272526, commentCount: 0},
   genres: ["Animation", "Action", "Adventure", "Science Fiction"],
   overview: "Struggling to find his place in the world while juggling school and family, Brooklyn teenager Miles Morales is unexpectedly bitten by a radioactive spider and develops unfathomable powers just like the one and only Spider-Man. While wrestling with the implications of his new abilities, Miles discovers a super collider created by the madman Wilson \"Kingpin\" Fisk, causing others from across the Spider-Verse to be inadvertently transported to his dimension.",
+  rottenTomatoes: 97,
+  awards: "Won 1 Oscar. 85 wins & 60 nominations total",
+  keywords: ["superhero","based on comic","aftercreditsstinger","alternate universe"],
+  watchProviders: {"flatrate":["Netflix","Netflix Standard with Ads"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","FlixFling","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: 573436,
+  collectionName: "Spider-Man: Spider-Verse Collection",
   popularity: 34.9864,
   name: "Spider-Man: Into the Spider-Verse", year: "2018", score: 87, ci: null, label: "Universal Acclaim",
   spread: [98, 2, 0], n: 50,
@@ -3366,6 +3738,12 @@ talkToMe2023: {
       trailer: { key: "aLAKJu9aJys", name: "Official US Trailer" , viewCount: 22938464, likeCount: 132044, commentCount: 6776},
   genres: ["Horror"],
   overview: "When a group of friends discover how to conjure spirits using an embalmed hand, they become hooked on the new thrill, until one of them goes too far and unleashes terrifying supernatural forces.",
+  rottenTomatoes: null,
+  awards: "23 wins & 51 nominations total",
+  keywords: ["suicide","trauma","possession","female friendship","addiction","grief","female protagonist","death of mother","self mutilation","mental health"],
+  watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: 1162328,
+  collectionName: "Talk to Me Collection",
   popularity: 10.6898,
   name: "Talk to Me", year: "2023", score: 76, ci: null, label: "Generally Favorable",
   spread: [93, 7, 0], n: 44,
@@ -3403,6 +3781,12 @@ banshees: {
       trailer: { key: "uRu3zLOJN2c", name: "Official Trailer" , viewCount: 11591214, likeCount: 59966, commentCount: 3212},
   genres: ["Drama", "Comedy"],
   overview: "Two lifelong friends find themselves at an impasse when one abruptly ends their relationship, with alarming consequences for both of them.",
+  rottenTomatoes: 96,
+  awards: "Nominated for 9 Oscars. 150 wins & 375 nominations total",
+  keywords: ["friendship","island","donkey","dark comedy","irish civil war (1922-23)","church","ireland","drinking","former best friend","self mutilation"],
+  watchProviders: {"flatrate":["fuboTV","YouTube TV"],"rent":["Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 7.3096,
   name: "The Banshees of Inisherin", year: "2022", score: 87, ci: null, label: "Universal Acclaim",
   spread: [94, 6, 0], n: 62,
@@ -3466,6 +3850,12 @@ theBoyAndTheHeron: {
       trailer: { key: "t5khm-VjEu4", name: "Official English Trailer" , viewCount: 20065977, likeCount: 108120, commentCount: 3395},
   genres: ["Animation", "Fantasy", "Drama"],
   overview: "While the Second World War rages, the teenage Mahito, haunted by his mother's tragic death, is relocated from Tokyo to the serene rural home of his new stepmother Natsuko, a woman who bears a striking resemblance to the boy's mother.  As he tries to adjust, this strange new world grows even stranger following the appearance of a persistent gray heron, who perplexes and bedevils Mahito, dubbing him the \"long-awaited one.\"",
+  rottenTomatoes: 96,
+  awards: "Won 1 Oscar. 34 wins & 87 nominations total",
+  keywords: ["loss of loved one","world war ii","supernatural","education","coming of age","spirituality","poverty","teenage boy","parallel world","troubled childhood"],
+  watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","HBO Max"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 9.9114,
   name: "The Boy and the Heron", year: "2023", score: 91, ci: null, label: "Universal Acclaim",
   spread: [95, 5, 0], n: 55,
@@ -3511,6 +3901,12 @@ theMenu2022: {
       trailer: { key: "CAWZMssP3gM", name: "Official Teaser Trailer" , viewCount: 4869503, likeCount: 12951, commentCount: 871},
   genres: ["Comedy", "Horror"],
   overview: "A young couple travels to a remote island to eat at an exclusive restaurant where the chef has prepared a lavish menu, with some shocking surprises.",
+  rottenTomatoes: 88,
+  awards: "2 wins & 68 nominations total",
+  keywords: ["psychopath","obsession","mass murder","restaurant","dark comedy","revenge","food","mass suicide","dinner","chef"],
+  watchProviders: {"flatrate":["fuboTV","YouTube TV"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 15.1552,
   name: "The Menu", year: "2022", score: 71, ci: null, label: "Generally Favorable",
   spread: [80, 18, 2], n: 45,
@@ -3566,6 +3962,12 @@ shapeOfWater: {
       trailer: { key: "XFYWazblaUA", name: "Official Trailer" , viewCount: 28035314, likeCount: 144908, commentCount: 9730},
   genres: ["Drama", "Fantasy", "Romance"],
   overview: "An other-worldly story, set against the backdrop of Cold War era America circa 1962, where a mute janitor working at a lab falls in love with an amphibious man being held captive there and devises a plan to help him escape.",
+  rottenTomatoes: 92,
+  awards: "Won 4 Oscars. 138 wins & 350 nominations total",
+  keywords: ["government","fairy tale","cold war","supernatural","baltimore, usa","laboratory","orphan","scientist","magic realism","capture"],
+  watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","Cinemax Amazon Channel","HBO Max","Cinemax Apple TV Channel"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 10.8937,
   name: "The Shape of Water", year: "2017", score: 87, ci: null, label: "Universal Acclaim",
   spread: [92, 6, 2], n: 53,
@@ -3628,6 +4030,12 @@ theSubstance: {
       trailer: { key: "LNlrGhBpYjc", name: "Official Trailer" , viewCount: 17670315, likeCount: 76106, commentCount: 6011},
   genres: ["Horror", "Science Fiction", "Thriller"],
   overview: "A fading celebrity decides to use a black market drug, a cell-replicating substance that temporarily creates a younger, better version of herself.",
+  rottenTomatoes: 89,
+  awards: "Won 1 Oscar. 147 wins & 289 nominations total",
+  keywords: ["new year's eve","capitalism","birthday","black market","identity","dark comedy","beauty","satire","aging","celebrity"],
+  watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","MUBI","MUBI Amazon Channel","HBO Max"],"rent":["Amazon Video","Apple TV Store","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Fandango At Home"]},
+  collectionId: null,
+  collectionName: null,
   popularity: 26.5993,
   name: "The Substance", year: "2024", score: 78, ci: null, label: "Generally Favorable",
   spread: [86, 11, 4], n: 57,
@@ -3687,6 +4095,12 @@ theSubstance: {
       dataId: "interstellar-2014",
       genres: ["Adventure","Drama","Science Fiction"],
       overview: "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.",
+      rottenTomatoes: 73,
+      awards: "Won 1 Oscar. 45 wins & 148 nominations total",
+      keywords: ["spacecraft","race against time","artificial intelligence (a.i.)","nasa","time warp","dystopia","expedition","time travel","space travel","wormhole"],
+      watchProviders: {"flatrate":["Hulu","Paramount Plus Premium","Paramount Plus Essential","Paramount+ Amazon Channel","Paramount+ Roku Premium Channel"],"rent":["JustWatch TV","Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","FlixFling","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 72.6471,
       name: "Interstellar", year: "2014", score: 74, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -3751,6 +4165,12 @@ theSubstance: {
       dataId: "inception-2010",
       genres: ["Action","Science Fiction","Adventure"],
       overview: "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
+      rottenTomatoes: 87,
+      awards: "Won 4 Oscars. 160 wins & 220 nominations total",
+      keywords: ["mission","dreams","kidnapping","spy","allegory","intellectual","manipulation","heist","memory","dream world"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 57.0172,
       name: "Inception", year: "2010", score: 74, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -3818,6 +4238,12 @@ theSubstance: {
       dataId: "the-avengers-2012",
       genres: ["Science Fiction","Action","Adventure"],
       overview: "When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!",
+      rottenTomatoes: 91,
+      awards: "Nominated for 1 Oscar. 40 wins & 81 nominations total",
+      keywords: ["new york city","superhero","shield","based on comic","alien invasion","superhero team","aftercreditsstinger","duringcreditsstinger","marvel cinematic universe (mcu)"],
+      watchProviders: {"flatrate":["Disney Plus","Hulu"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 86311,
+      collectionName: "The Avengers Collection",
       popularity: 48.8139,
       name: "The Avengers", year: "2012", score: 69, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -3881,6 +4307,12 @@ theSubstance: {
       dataId: "the-dark-knight-2008",
       genres: ["Action","Crime","Thriller"],
       overview: "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.",
+      rottenTomatoes: 94,
+      awards: "Won 2 Oscars. 163 wins & 165 nominations total",
+      keywords: ["sadism","chaos","secret identity","crime fighter","superhero","anti hero","scarecrow","based on comic","vigilante","organized crime"],
+      watchProviders: {"flatrate":["HBO Max Amazon Channel","YouTube TV","HBO Max"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 263,
+      collectionName: "The Dark Knight Collection",
       popularity: 51.612,
       name: "The Dark Knight", year: "2008", score: 85, ci: null, label: "Universal Acclaim",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -3947,6 +4379,12 @@ theSubstance: {
       dataId: "avatar-2009",
       genres: ["Action","Science Fiction","Adventure"],
       overview: "In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization.",
+      rottenTomatoes: 81,
+      awards: "Won 3 Oscars. 91 wins & 131 nominations total",
+      keywords: ["paraplegic","attachment to nature","culture clash","indigenous","space travel","space colony","tribe","alien planet","distant future","marine"],
+      watchProviders: {"flatrate":["Disney Plus","Hulu"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 87096,
+      collectionName: "Avatar Collection",
       popularity: 34.3159,
       name: "Avatar", year: "2009", score: 83, ci: null, label: "Universal Acclaim",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4008,6 +4446,12 @@ theSubstance: {
       dataId: "deadpool-2016",
       genres: ["Action","Adventure","Comedy"],
       overview: "The origin story of former Special Forces operative turned mercenary Wade Wilson, who, after being subjected to a rogue experiment that leaves him with accelerated healing powers, adopts the alter ego Deadpool. Armed with his new abilities and a dark, twisted sense of humor, Deadpool hunts down the man who nearly destroyed his life.",
+      rottenTomatoes: 85,
+      awards: "29 wins & 78 nominations total",
+      keywords: ["superhero","anti hero","mercenary","based on comic","aftercreditsstinger","duringcreditsstinger"],
+      watchProviders: {"flatrate":["Disney Plus"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 448150,
+      collectionName: "Deadpool Collection",
       popularity: 21.369,
       name: "Deadpool", year: "2016", score: 65, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4062,6 +4506,12 @@ theSubstance: {
       dataId: "fight-club-1999",
       genres: ["Drama","Thriller"],
       overview: "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground \"fight clubs\" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion.",
+      rottenTomatoes: 81,
+      awards: "Nominated for 1 Oscar. 12 wins & 38 nominations total",
+      keywords: ["dual identity","rage and hate","based on novel or book","nihilism","fight","support group","dystopia","insomnia","alter ego","breaking the fourth wall"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 37.2854,
       name: "Fight Club", year: "1999", score: 67, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4128,6 +4578,12 @@ theSubstance: {
       dataId: "avengers-infinity-war-2018",
       genres: ["Adventure","Action","Science Fiction"],
       overview: "As the Avengers and their allies have continued to protect the world from threats too large for any one hero to handle, a new danger has emerged from the cosmic shadows: Thanos. A despot of intergalactic infamy, his goal is to collect all six Infinity Stones, artifacts of unimaginable power, and use them to inflict his twisted will on all of reality. Everything the Avengers have fought for has led up to this moment - the fate of Earth and existence itself has never been more uncertain.",
+      rottenTomatoes: 85,
+      awards: "Nominated for 1 Oscar. 48 wins & 80 nominations total",
+      keywords: ["sacrifice","magic","superhero","based on comic","space","battlefield","genocide","magical object","super power","superhero team"],
+      watchProviders: {"flatrate":["Disney Plus"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 86311,
+      collectionName: "The Avengers Collection",
       popularity: 49.9794,
       name: "Avengers: Infinity War", year: "2018", score: 68, ci: null, label: "Generally Favorable",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4196,6 +4652,12 @@ theSubstance: {
       dataId: "the-shawshank-redemption-1994",
       genres: ["Drama","Crime"],
       overview: "Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.",
+      rottenTomatoes: 89,
+      awards: "Nominated for 7 Oscars. 21 wins & 42 nominations total",
+      keywords: ["prison","friendship","police brutality","corruption","based on novel or book","freedom","hope","prison cell","delinquent","redemption"],
+      watchProviders: {"flatrate":[],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 93.5973,
       name: "The Shawshank Redemption", year: "1994", score: 82, ci: null, label: "Universal Acclaim",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4255,6 +4717,12 @@ theSubstance: {
       dataId: "pulp-fiction-1994",
       genres: ["Thriller","Crime","Comedy"],
       overview: "A burger-loving hit man, his philosophical partner, a drug-addled gangster's moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip back and forth in time.",
+      rottenTomatoes: 92,
+      awards: "Won 1 Oscar. 69 wins & 72 nominations total",
+      keywords: ["drug dealer","drug crime","gangster","dark comedy","stolen money","crime boss","redemption","los angeles, california","theft","couple"],
+      watchProviders: {"flatrate":["fuboTV","MGM+ Amazon Channel","Paramount Plus Premium","Paramount Plus Essential","Philo","Paramount+ Amazon Channel","YouTube TV","MGM Plus","Paramount+ Roku Premium Channel"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Spectrum On Demand","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: null,
+      collectionName: null,
       popularity: 34.9425,
       name: "Pulp Fiction", year: "1994", score: 95, ci: null, label: "Universal Acclaim",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4326,6 +4794,12 @@ theSubstance: {
       releaseDate: "2026-07-10",
       genres: ["Action","Drama","Romance"],
       overview: "Young, urban-raised Lenin's peaceful romance with Bharathi inadvertently sparks a violent, large-scale village conflict.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["biographical drama"],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 29.5818,
       name: "Lenin", year: "2026", score: null /* TODO: Metacritic score */, ci: null, label: null /* TODO */,
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4361,6 +4835,12 @@ theSubstance: {
       releaseDate: "2026-07-23",
       genres: ["Action","Thriller","Crime"],
       overview: "In 1970s Detroit, John Miller falls for a local gangster's girl and lands in prison for a crime he didn't commit. With his life ruined, Miller plots revenge against the man who took his girl away.",
+      rottenTomatoes: 72,
+      awards: "1 nomination total",
+      keywords: ["gangster","1970s","revenge","detroit, michigan"],
+      watchProviders: null,
+      collectionId: null,
+      collectionName: null,
       popularity: 19.8076,
       name: "Motor City", year: "2026", score: 55, ci: null, label: "Mixed or Average",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4409,6 +4889,12 @@ theSubstance: {
       releaseDate: "2026-05-07",
       genres: ["Mystery","Drama"],
       overview: "Lucero’s life appears immaculate: a wealthy household, a devoted husband, and two children who embody the promise of a perfect family. Yet beneath this surface simmers a quiet dissatisfaction. When Matías, a young swimming coach hired by her husband, enters their lives, Lucero finds herself pulled into a risky and consuming relationship. As secrecy, desire, and jealousy tighten their grip, the boundaries within the family begin to collapse, placing mother and daughter in a dangerous emotional triangle that threatens to shatter everything Lucero has built.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: [],
+      watchProviders: {"flatrate":["Netflix","Netflix Standard with Ads"],"rent":[],"buy":[]},
+      collectionId: null,
+      collectionName: null,
       popularity: 308.5165,
       name: "Desire", year: "2026", score: null /* TODO: Metacritic score */, ci: null, label: null /* TODO */,
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4444,6 +4930,12 @@ theSubstance: {
       releaseDate: "2026-07-16",
       genres: ["Fantasy","Family","TV Movie"],
       overview: "Now that the Queen of Hearts is nice and Cinderella is safe, things seem perfect for Red and Chloe… But little do they know that changing the past created a new villain — Maddox Hatter. When Maddox captures the Queen of Hearts, Red and Chloe must work alongside Red’s new sister Pink, Luisa Madrigal’s son Luis, and Maddox’s son Max to save her and Wonderland.",
+      rottenTomatoes: null,
+      awards: null,
+      keywords: ["musical","sequel","spin off","lighthearted","exuberant","wonderland"],
+      watchProviders: {"flatrate":["Disney Plus","fuboTV"],"rent":[],"buy":["Google Play Movies","YouTube"]},
+      collectionId: 466463,
+      collectionName: "Descendants Collection",
       popularity: 167.2502,
       name: "Descendants: Wicked Wonderland", year: "2026", score: null /* TODO: Metacritic score */, ci: null, label: null /* TODO */,
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4479,6 +4971,12 @@ theSubstance: {
       releaseDate: "2026-05-06",
       genres: ["Action","Fantasy","Adventure"],
       overview: "The fan favorite champions—now joined by Johnny Cage himself—are pitted against one another in the ultimate, no-holds barred, gory battle to defeat the dark rule of Shao Kahn that threatens the very existence of the Earthrealm and its defenders.",
+      rottenTomatoes: 64,
+      awards: null,
+      keywords: ["martial arts","magic","ninja fighter","gore","sequel","god","alternate dimension","ninja","fighting","based on video game"],
+      watchProviders: {"flatrate":["HBO Max Amazon Channel","HBO Max"],"rent":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home","Plex"],"buy":["Amazon Video","Apple TV Store","Google Play Movies","YouTube","Fandango At Home"]},
+      collectionId: 931431,
+      collectionName: "Mortal Kombat (Reboot) Collection",
       popularity: 109.3763,
       name: "Mortal Kombat II", year: "2026", score: 46, ci: null, label: "Mixed or Average",
       spread: null /* TODO: Metacritic critic spread [pos, mixed, neg] */, n: null /* TODO: Metacritic review count */,
@@ -4724,6 +5222,16 @@ theSubstance: {
     return "$" + Math.round(m) + "M";
   }
 
+  function criticExtrasHTML(f) {
+    if (f.rottenTomatoes == null && !f.awards) return "";
+    return `
+      ${f.rottenTomatoes != null ? `
+      <div class="critic-extras">
+        <div class="interest-stat"><span class="num">${f.rottenTomatoes}%</span><span class="cap">Rotten Tomatoes</span></div>
+      </div>` : ""}
+      ${f.awards ? `<p class="awards-line">${escapeHtml(f.awards)}</p>` : ""}`;
+  }
+
   function econHTML(f) {
     const e = f.econ;
     if (!e) return "";
@@ -4936,6 +5444,71 @@ theSubstance: {
       </div>`;
   }
 
+  // Streaming/rent/buy availability (US region only — no per-visitor
+  // location signal to do this properly). Data is JustWatch's via TMDb;
+  // their terms require this attribution wherever it's shown, same
+  // requirement as the TMDB logo already in the footer.
+  function watchProvidersHTML(f) {
+    const wp = f.watchProviders;
+    if (!wp) return "";
+    const groups = [
+      { label: "Stream", list: wp.flatrate },
+      { label: "Rent", list: wp.rent },
+      { label: "Buy", list: wp.buy },
+    ].filter(g => g.list && g.list.length);
+    if (!groups.length) return "";
+    return `
+      <div class="watch-providers">
+        ${groups.map(g => `
+          <div class="watch-group">
+            <span class="watch-label">${g.label}</span>
+            <span class="watch-names">${g.list.map(n => escapeHtml(n)).join(" · ")}</span>
+          </div>`).join("")}
+        <p class="watch-attribution">Streaming availability via JustWatch</p>
+      </div>`;
+  }
+
+  function keywordsHTML(f) {
+    if (!f.keywords || !f.keywords.length) return "";
+    return `
+      <div class="keyword-tags">
+        ${f.keywords.map(k => `<span class="keyword-tag">${escapeHtml(k)}</span>`).join("")}
+      </div>`;
+  }
+
+  // Franchise/collection stats are computed entirely from our own catalog
+  // (which films share this collectionId, per the widget's own FILMS data)
+  // rather than TMDb's collection endpoint — we can only meaningfully claim
+  // aggregate stats for films actually reviewed here, not everything TMDb
+  // says belongs to the series.
+  function collectionHTML(f, currentKey) {
+    if (!f.collectionId) return "";
+    const siblings = Object.entries(FILMS).filter(([, other]) => other.collectionId === f.collectionId);
+    if (siblings.length < 2) return ""; // just this film — nothing to compare against yet
+    const scored = siblings.filter(([, s]) => s.score != null);
+    const avgScore = scored.length ? Math.round(scored.reduce((sum, [, s]) => sum + s.score, 0) / scored.length) : null;
+    const totalBoxOffice = siblings.reduce((sum, [, s]) => sum + (s.econ && s.econ.boxOffice != null ? s.econ.boxOffice : 0), 0);
+    const rows = siblings
+      .slice()
+      .sort((a, b) => (a[1].year || 0) - (b[1].year || 0))
+      .map(([key, s]) => `
+        <div class="collection-row${key === currentKey ? " current" : ""}" data-film="${key}">
+          <span class="collection-title">${escapeHtml(s.name)} <span class="year">(${s.year})</span></span>
+          <span class="collection-score">${s.score != null ? s.score : "—"}</span>
+        </div>`).join("");
+    return `
+      <div class="chart-block">
+        <div class="chart-head">
+          <span class="chart-title">${escapeHtml(f.collectionName || "Collection")}</span>
+        </div>
+        <div class="interest-stats">
+          ${avgScore != null ? `<div class="interest-stat"><span class="num">${avgScore}</span><span class="cap">Average Kernel Score across ${scored.length} entries reviewed here</span></div>` : ""}
+          ${totalBoxOffice > 0 ? `<div class="interest-stat"><span class="num">${formatMoney(totalBoxOffice)}</span><span class="cap">Combined box office, ${siblings.length} entries reviewed here</span></div>` : ""}
+        </div>
+        <div class="collection-list">${rows}</div>
+      </div>`;
+  }
+
   function trailerHTML(f) {
     const t = f.trailer;
     if (!t || !t.key) return "";
@@ -5085,6 +5658,7 @@ theSubstance: {
         </div>
         <div class="review-synopsis" id="reviewSynopsis"></div>
         <div class="review-summary" id="reviewSummary">Loading reviews…</div>
+        <div id="scoreTrendWrap"></div>
         <div class="seed-block" id="seedBlock"></div>
         <form class="review-form" id="reviewForm">
           <div class="review-rating-row">
@@ -5118,6 +5692,37 @@ theSubstance: {
     return d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
   }
 
+  // Real, Kernel-only data — how the self-reported average moved as
+  // reviews actually came in. Not the critic score (that's only ever
+  // fetched once at onboarding, no repeated snapshots exist for it), and
+  // not meaningful until there's an actual sequence of reviews to trace.
+  function scoreTrendHTML(reviewsAscending) {
+    if (reviewsAscending.length < 3) return "";
+    const running = [];
+    let sum = 0;
+    reviewsAscending.forEach((r, i) => {
+      sum += Number(r.rating);
+      running.push(sum / (i + 1));
+    });
+    const W = 320, H = 64, PAD = 8;
+    const n = running.length;
+    const min = Math.min(...running), max = Math.max(...running);
+    const range = Math.max(max - min, 1);
+    const xAt = i => PAD + (i / (n - 1)) * (W - PAD * 2);
+    const yAt = v => H - PAD - ((v - min) / range) * (H - PAD * 2);
+    const points = running.map((v, i) => `${xAt(i).toFixed(1)},${yAt(v).toFixed(1)}`).join(" ");
+    const first = running[0], last = running[n - 1];
+    const delta = last - first;
+    return `
+      <div class="score-trend">
+        <svg viewBox="0 0 ${W} ${H}" class="score-trend-svg" preserveAspectRatio="none" aria-hidden="true">
+          <polyline points="${points}" fill="none" stroke="var(--teal)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="${xAt(n - 1).toFixed(1)}" cy="${yAt(last).toFixed(1)}" r="3" fill="var(--teal)"/>
+        </svg>
+        <span class="score-trend-cap">Running average as reviews came in — ${delta >= 0 ? "+" : ""}${delta.toFixed(1)} from the first review to now (n=${n})</span>
+      </div>`;
+  }
+
   async function loadReviews(dataId) {
     const summaryEl = widget.querySelector("#reviewSummary");
     const listEl = widget.querySelector("#reviewList");
@@ -5148,6 +5753,11 @@ theSubstance: {
       }
       const avg = reviews.reduce((a, r) => a + Number(r.rating), 0) / reviews.length;
       summaryEl.innerHTML = `<span class="num">${avg.toFixed(1)}</span>Demo Audience Score — self-reported, n=${reviews.length}`;
+      const trendEl = widget.querySelector("#scoreTrendWrap");
+      if (trendEl) {
+        const ascending = [...reviews].sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
+        trendEl.innerHTML = scoreTrendHTML(ascending);
+      }
       if (listEl) {
         listEl.innerHTML = reviews.map(r => `
           <div class="review-item">
@@ -5392,6 +6002,8 @@ theSubstance: {
         <span class="badge">${f.label || "Not yet reviewed"}</span>
       </div>
       ${f.overview ? `<p class="film-overview">${escapeHtml(f.overview)}</p>` : ""}
+      ${watchProvidersHTML(f)}
+      ${keywordsHTML(f)}
       <div class="score-row">
         <span class="score-num">${f.score != null ? f.score : "—"}</span>
         ${f.n != null ? `<span class="score-ci">${f.ci ? f.ci + " · " : ""}n=${f.n}</span>` : ""}
@@ -5418,6 +6030,7 @@ theSubstance: {
         <span class="neg-c">${f.spread[2]}% negative</span>
       </div>` : `
       <p class="spread-legend">Not enough critic coverage yet for a positive/mixed/negative breakdown.</p>`}
+      ${criticExtrasHTML(f)}
       <div class="divider"></div>
       <div class="charts-section">
         ${f.econ.boxOffice != null ? `
@@ -5436,6 +6049,7 @@ theSubstance: {
         ${econHTML(f)}
         ${f.econ.boxOffice != null ? legsHTML(f) : ""}
         ${audienceInterestHTML(f)}
+        ${collectionHTML(f, filmKey)}
         ${creatorHTML(f, "director", "Director")}
         ${creatorHTML(f, "actor", "Lead Actor")}
         ${reviewHTML(f)}
@@ -5445,6 +6059,9 @@ theSubstance: {
     if (f.poster) tryLiveArtwork(f, myToken);
     attachHover(widget, f);
     attachReviewForm(f);
+    widget.querySelectorAll(".collection-row").forEach(row => {
+      row.addEventListener("click", () => { location.hash = row.dataset.film; });
+    });
 
     tabs.forEach(t => t.setAttribute("aria-selected", t.dataset.film === filmKey ? "true" : "false"));
   }
@@ -5478,29 +6095,57 @@ theSubstance: {
     window.scrollTo(0, 0);
   }
 
-  function renderTopList(genre) {
-    const sub = document.getElementById("top100Sub");
-    const list = document.getElementById("rankList");
-    const ranked = Object.entries(FILMS)
+  let leaderboardMode = "score";
+  const LEADERBOARD_LABELS = { score: "Kernel Score", "budget-efficiency": "Budget Efficiency", divisive: "Most Divisive" };
+
+  function rankedForMode(mode, genre) {
+    const matchesGenre = f => !genre || (f.genres || []).includes(genre);
+    if (mode === "budget-efficiency") {
+      // Same multiple as the film page's own econHTML: worldwide box
+      // office over (budget + marketing), or budget alone when marketing
+      // wasn't disclosed — understates the true multiple in that case, but
+      // consistent with how the single-film view already caveats it.
+      return Object.entries(FILMS)
+        .filter(([, f]) => f.econ && f.econ.budget > 0 && f.econ.boxOffice != null && matchesGenre(f))
+        .map(([key, f]) => [key, f, f.econ.boxOffice / (f.econ.budget + (f.econ.marketing || 0))])
+        .sort((a, b) => b[2] - a[2]);
+    }
+    return Object.entries(FILMS)
       // A film with no score yet has nothing to rank — leaving it in would
       // also feed NaN into the sort comparator below.
-      .filter(([key, f]) => f.score != null && (!genre || (f.genres || []).includes(genre)))
+      .filter(([, f]) => f.score != null && matchesGenre(f))
       .sort((a, b) => {
         if (b[1].score !== a[1].score) return b[1].score - a[1].score;
         return (b[1].n || 0) - (a[1].n || 0);
-      });
+      })
+      .map(([key, f]) => [key, f, f.score]);
+  }
+
+  function formatRankValue(mode, value) {
+    return mode === "budget-efficiency" ? `${value.toFixed(1)}×` : value;
+  }
+
+  function renderTopList(genre) {
+    if (leaderboardMode === "divisive") { renderDivisiveList(genre); return; }
+    const sub = document.getElementById("top100Sub");
+    const list = document.getElementById("rankList");
+    const mode = leaderboardMode;
+    const ranked = rankedForMode(mode, genre);
+    const label = LEADERBOARD_LABELS[mode];
 
     if (genre && !ranked.length) {
-      sub.textContent = `No ${genre} films scored yet — this ranking starts as soon as one qualifies.`;
+      sub.textContent = `No ${genre} films qualify for ${label} yet — this ranking starts as soon as one does.`;
       list.innerHTML = `<p class="top100-empty">No films tagged ${escapeHtml(genre)} yet — check back as the catalog grows.</p>`;
       return;
     }
 
-    sub.textContent = genre
-      ? `Top ${ranked.length} of a growing ${genre} ranking, by Kernel Score. Too small a sample to call a real top 100 yet — every entry here is fully sourced, not a placeholder.`
-      : `Top ${ranked.length} of a growing all-time ranking, by Kernel Score. Not yet 100 films — every entry here is fully sourced, not a placeholder.`;
+    sub.textContent = mode === "budget-efficiency"
+      ? `Top ${ranked.length}${genre ? ` ${genre}` : ""} film(s) by worldwide box office ÷ (budget + marketing) — how many times over a film earned back what it cost, not a quality judgment.`
+      : genre
+        ? `Top ${ranked.length} of a growing ${genre} ranking, by Kernel Score. Too small a sample to call a real top 100 yet — every entry here is fully sourced, not a placeholder.`
+        : `Top ${ranked.length} of a growing all-time ranking, by Kernel Score. Not yet 100 films — every entry here is fully sourced, not a placeholder.`;
 
-    list.innerHTML = ranked.map(([key, f], i) => `
+    list.innerHTML = ranked.map(([key, f, value], i) => `
       <button class="rank-row" data-film="${key}">
         <span class="rank-num${i === 0 ? " rank-top" : ""}">#${i + 1}</span>
         <img class="rank-poster" src="https://image.tmdb.org/t/p/w92${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
@@ -5508,7 +6153,7 @@ theSubstance: {
           <span class="rank-title">${f.name}</span>
           <span class="rank-year">${f.year}</span>
         </span>
-        <span class="rank-score">${f.score}</span>
+        <span class="rank-score">${formatRankValue(mode, value)}</span>
       </button>
     `).join("");
     list.querySelectorAll(".rank-row").forEach(row => {
@@ -5516,10 +6161,64 @@ theSubstance: {
     });
   }
 
+  // Unlike the other two modes, this comes entirely from Kernel's own
+  // self-reported reviews rather than borrowed TMDb/OMDb data — the one
+  // ranking no other film site can show, since it's ours. Fetched (not
+  // computed from FILMS) because it's an aggregate over every film's
+  // review history, which only the server can cheaply compute.
+  async function renderDivisiveList(genre) {
+    const sub = document.getElementById("top100Sub");
+    const list = document.getElementById("rankList");
+    sub.textContent = "Loading…";
+    list.innerHTML = "";
+    try {
+      const res = await fetch(`${DATA_SERVICE_URL}/api/leaderboards/divisive`);
+      if (!res.ok) throw new Error(`Data service responded ${res.status}`);
+      const data = await res.json();
+      const byDataId = {};
+      Object.entries(FILMS).forEach(([key, f]) => { byDataId[f.dataId] = key; });
+      const matched = data
+        .map(d => ({ ...d, key: byDataId[d.dataId] }))
+        .filter(d => d.key && (!genre || (FILMS[d.key].genres || []).includes(genre)));
+
+      if (!matched.length) {
+        sub.textContent = "Not enough self-reported reviews yet on any single film (at least 3 needed) to compute a divisiveness ranking — entirely from Kernel's own reviews, not borrowed data, so it starts working the moment enough real reviews exist.";
+        list.innerHTML = `<p class="top100-empty">Check back as more reviews come in.</p>`;
+        return;
+      }
+
+      sub.textContent = "Ranked by standard deviation of self-reported Kernel ratings — the higher the number, the more split real reviewers were, independent of the average score.";
+      list.innerHTML = matched.map((d, i) => {
+        const f = FILMS[d.key];
+        return `
+          <button class="rank-row" data-film="${d.key}">
+            <span class="rank-num${i === 0 ? " rank-top" : ""}">#${i + 1}</span>
+            <img class="rank-poster" src="https://image.tmdb.org/t/p/w92${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
+            <span class="rank-meta">
+              <span class="rank-title">${f.name}</span>
+              <span class="rank-year">${f.year} · avg ${d.avg}, n=${d.n}</span>
+            </span>
+            <span class="rank-score">±${d.stddev}</span>
+          </button>`;
+      }).join("");
+      list.querySelectorAll(".rank-row").forEach(row => {
+        row.addEventListener("click", () => { location.hash = row.dataset.film; });
+      });
+    } catch (err) {
+      sub.textContent = "Couldn't load the divisiveness ranking right now.";
+      list.innerHTML = `<p class="top100-empty">${escapeHtml(err.message)}</p>`;
+    }
+  }
+
   // Genres shown even before any film carries them yet — kept separate from
   // the FILMS-derived set so the pill (and its honest empty state) exists
   // ahead of the data, rather than only appearing once something qualifies.
   const RESERVED_GENRES = ["Family"];
+
+  function currentGenreSelection() {
+    const selected = document.querySelector("#genreFilter .genre-pill[aria-selected=\"true\"]");
+    return selected ? selected.dataset.genre : "";
+  }
 
   function buildTopPage() {
     const filterEl = document.getElementById("genreFilter");
@@ -5535,6 +6234,17 @@ theSubstance: {
       pill.addEventListener("click", () => {
         filterEl.querySelectorAll(".genre-pill").forEach(p => p.setAttribute("aria-selected", p === pill ? "true" : "false"));
         renderTopList(pill.dataset.genre);
+      });
+    });
+
+    leaderboardMode = "score";
+    const modeEl = document.getElementById("leaderboardMode");
+    modeEl.querySelectorAll(".mode-pill").forEach(p => p.setAttribute("aria-selected", p.dataset.mode === "score" ? "true" : "false"));
+    modeEl.querySelectorAll(".mode-pill").forEach(pill => {
+      pill.addEventListener("click", () => {
+        leaderboardMode = pill.dataset.mode;
+        modeEl.querySelectorAll(".mode-pill").forEach(p => p.setAttribute("aria-selected", p === pill ? "true" : "false"));
+        renderTopList(currentGenreSelection());
       });
     });
 

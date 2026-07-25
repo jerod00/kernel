@@ -119,6 +119,30 @@ app.get("/api/entities", (req, res) => {
   res.json(listEntities());
 });
 
+// Computed server-side rather than the client fetching every film's
+// reviews individually (76+ requests) just to sort them — a cheap O(n) scan
+// today given how few real reviews exist yet, revisit with caching if that
+// changes. Public/unauthenticated: aggregated stats only, no reviewer
+// identity or comment text leaves this endpoint.
+const DIVISIVE_MIN_REVIEWS = 3;
+
+app.get("/api/leaderboards/divisive", (req, res) => {
+  const entities = listEntities().filter(e => e.entity_type === "audience_review");
+  const results = [];
+  for (const { entity_id } of entities) {
+    const rows = getLatest("audience_review", entity_id);
+    const ratings = rows
+      .map(r => { try { return JSON.parse(r.value).rating; } catch { return null; } })
+      .filter(r => typeof r === "number");
+    if (ratings.length < DIVISIVE_MIN_REVIEWS) continue;
+    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    const variance = ratings.reduce((sum, r) => sum + (r - avg) ** 2, 0) / ratings.length;
+    results.push({ dataId: entity_id, n: ratings.length, avg: +avg.toFixed(1), stddev: +Math.sqrt(variance).toFixed(2) });
+  }
+  results.sort((a, b) => b.stddev - a.stddev);
+  res.json(results.slice(0, 20));
+});
+
 app.get("/api/verify", (req, res) => {
   const result = verifyChain();
   res.status(result.valid ? 200 : 409).json(result);

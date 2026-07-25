@@ -44,6 +44,17 @@ function toMillions(n) {
   return n == null ? null : +(n / 1e6).toFixed(3);
 }
 
+// OMDb's Ratings array is a grab-bag of whatever sources it found for this
+// title (IMDb/RT/Metacritic, in no guaranteed order or completeness) — pull
+// out just the Rotten Tomatoes percentage if present.
+function extractRottenTomatoes(omdb) {
+  if (!omdb || !Array.isArray(omdb.Ratings)) return null;
+  const rt = omdb.Ratings.find(r => r.Source === "Rotten Tomatoes");
+  if (!rt || !rt.Value) return null;
+  const n = Number(rt.Value.replace("%", ""));
+  return Number.isFinite(n) ? n : null;
+}
+
 // Cuts at the last word boundary before maxLen and appends an ellipsis —
 // used for TMDb review text so only a short excerpt (never the full review)
 // ever enters the append-only log, regardless of what the widget renders.
@@ -214,6 +225,14 @@ async function buildPersonFilmography(personId, isDirector) {
       score: omdb && omdb.Metascore !== "N/A" ? Number(omdb.Metascore) : null,
       ci: null, label: null, spreadPositive: null, spreadMixed: null, spreadNegative: null, reviewCount: null,
     },
+    // A second critic-consensus data point alongside Metascore, when OMDb
+    // happens to have it — not every OMDb response includes a Rotten
+    // Tomatoes entry in its Ratings array.
+    rottenTomatoes: extractRottenTomatoes(omdb),
+    // Free text from OMDb, e.g. "Won 3 Oscars. 121 wins & 206 nominations
+    // total" — shown as-is, never parsed/restructured, since the format
+    // varies too much film-to-film to safely split into fields.
+    awards: omdb && omdb.Awards && omdb.Awards !== "N/A" ? omdb.Awards : null,
     econ: {
       budget: toMillions(details.budget) || null,
       marketing: null,
@@ -234,6 +253,14 @@ async function buildPersonFilmography(personId, isDirector) {
     seedScoreUrl: null,
     seedReviews: [],
     trailer: null,
+    keywords: [],
+    // US-region only — TMDb's watch/providers data doesn't cleanly
+    // generalize across regions without asking a visitor's location, and
+    // this site doesn't have that signal. Provided by JustWatch per TMDb's
+    // own terms, which require attribution wherever it's shown.
+    watchProviders: null,
+    collectionId: details.belongs_to_collection ? details.belongs_to_collection.id : null,
+    collectionName: details.belongs_to_collection ? details.belongs_to_collection.name : null,
     sources: {
       genres: tmdbUrl,
       overview: tmdbUrl,
@@ -241,11 +268,16 @@ async function buildPersonFilmography(personId, isDirector) {
       budget: tmdbUrl,
       boxOfficeWorldwide: tmdbUrl,
       critic: omdbUrl,
+      rottenTomatoes: omdbUrl,
+      awards: omdbUrl,
       domesticTotal: omdbUrl,
       marketing: null,
       weeklyGross: null,
       filmography: null,
       trailer: null,
+      keywords: tmdbUrl,
+      watchProviders: null,
+      collection: tmdbUrl,
     },
     mismatches,
   };
@@ -279,11 +311,38 @@ async function buildPersonFilmography(personId, isDirector) {
     console.warn(`  (TMDb videos fetch failed: ${err.message} — continuing without a trailer)`);
   }
 
+  try {
+    const keywordsRes = await tmdb(`/movie/${match.id}/keywords`);
+    draft.keywords = (keywordsRes.keywords || []).map(k => k.name).slice(0, 10);
+  } catch (err) {
+    console.warn(`  (TMDb keywords fetch failed: ${err.message} — continuing without keywords)`);
+  }
+
+  try {
+    const providersRes = await tmdb(`/movie/${match.id}/watch/providers`);
+    const us = providersRes.results && providersRes.results.US;
+    if (us) {
+      draft.watchProviders = {
+        flatrate: (us.flatrate || []).map(p => p.provider_name),
+        rent: (us.rent || []).map(p => p.provider_name),
+        buy: (us.buy || []).map(p => p.provider_name),
+      };
+      draft.sources.watchProviders = us.link || tmdbUrl;
+    }
+  } catch (err) {
+    console.warn(`  (TMDb watch providers fetch failed: ${err.message} — continuing without them)`);
+  }
+
   console.log("\n--- TIER 1 (auto-fetched, fill nothing here unless flagged) ---");
   console.log(`dataId: ${dataId}`);
   console.log(`genres: ${JSON.stringify(draft.genres)}   [TMDb]`);
   console.log(`overview: ${draft.overview ? `"${draft.overview.slice(0, 80)}${draft.overview.length > 80 ? "…" : ""}"` : "not available from TMDb"}`);
   console.log(`popularity (TMDb): ${draft.popularity != null ? draft.popularity : "not available from TMDb"}`);
+  console.log(`rottenTomatoes (OMDb): ${draft.rottenTomatoes != null ? draft.rottenTomatoes + "%" : "not available from OMDb"}`);
+  console.log(`awards (OMDb): ${draft.awards || "not available from OMDb"}`);
+  console.log(`keywords (TMDb): ${draft.keywords.length ? draft.keywords.join(", ") : "none found"}`);
+  console.log(`watchProviders (TMDb/JustWatch, US): ${draft.watchProviders ? JSON.stringify(draft.watchProviders) : "not available"}`);
+  console.log(`collection (TMDb): ${draft.collectionName || "not part of a collection"}`);
   console.log(`econ.budget: ${draft.econ.budget != null ? draft.econ.budget + "M" : "not disclosed by TMDb"}`);
   console.log(`econ.boxOfficeWorldwide: ${draft.econ.boxOfficeWorldwide != null ? draft.econ.boxOfficeWorldwide + "M" : "not disclosed by TMDb"}`);
   console.log(`critic.score (Metascore): ${draft.critic.score != null ? draft.critic.score : "not available from OMDb"}`);
