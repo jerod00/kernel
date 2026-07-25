@@ -261,6 +261,9 @@ async function buildPersonFilmography(personId, isDirector) {
     watchProviders: null,
     collectionId: details.belongs_to_collection ? details.belongs_to_collection.id : null,
     collectionName: details.belongs_to_collection ? details.belongs_to_collection.name : null,
+    originalLanguage: details.original_language || null,
+    productionCountries: (details.production_countries || []).map(c => c.name),
+    runtimeMinutes: typeof details.runtime === "number" && details.runtime > 0 ? details.runtime : null,
     sources: {
       genres: tmdbUrl,
       overview: tmdbUrl,
@@ -278,6 +281,9 @@ async function buildPersonFilmography(personId, isDirector) {
       keywords: tmdbUrl,
       watchProviders: null,
       collection: tmdbUrl,
+      originalLanguage: tmdbUrl,
+      productionCountries: tmdbUrl,
+      runtimeMinutes: tmdbUrl,
     },
     mismatches,
   };
@@ -343,6 +349,9 @@ async function buildPersonFilmography(personId, isDirector) {
   console.log(`keywords (TMDb): ${draft.keywords.length ? draft.keywords.join(", ") : "none found"}`);
   console.log(`watchProviders (TMDb/JustWatch, US): ${draft.watchProviders ? JSON.stringify(draft.watchProviders) : "not available"}`);
   console.log(`collection (TMDb): ${draft.collectionName || "not part of a collection"}`);
+  console.log(`originalLanguage (TMDb): ${draft.originalLanguage || "not available"}`);
+  console.log(`productionCountries (TMDb): ${draft.productionCountries.length ? draft.productionCountries.join(", ") : "not available"}`);
+  console.log(`runtimeMinutes (TMDb): ${draft.runtimeMinutes != null ? draft.runtimeMinutes + " min" : "not available"}`);
   console.log(`econ.budget: ${draft.econ.budget != null ? draft.econ.budget + "M" : "not disclosed by TMDb"}`);
   console.log(`econ.boxOfficeWorldwide: ${draft.econ.boxOfficeWorldwide != null ? draft.econ.boxOfficeWorldwide + "M" : "not disclosed by TMDb"}`);
   console.log(`critic.score (Metascore): ${draft.critic.score != null ? draft.critic.score : "not available from OMDb"}`);

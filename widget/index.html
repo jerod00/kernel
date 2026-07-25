@@ -301,6 +301,18 @@
   .econ-fill{ height:100%; }
   .econ-value{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.82rem; color:var(--ink); text-align:right; white-space:nowrap; font-variant-numeric:tabular-nums; }
   .econ-value.undisclosed{ color:var(--muted); font-style:italic; font-size:0.76rem; }
+
+  .stat-group-title{ font-family:Georgia,serif; font-size:1rem; margin:1.4rem 0 0.8rem; }
+  .stat-group-title:first-child{ margin-top:0; }
+  .stat-bar-row{ display:grid; grid-template-columns:120px 1fr auto; gap:0.7rem; align-items:center; margin-bottom:0.6rem; }
+  .stat-bar-label{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.78rem; color:var(--muted); }
+  .stat-bar-track{ height:10px; background:var(--rule); opacity:0.35; }
+  .stat-bar-fill{ height:100%; background:var(--teal); border-radius:2px; }
+  .stat-bar-value{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.82rem; color:var(--ink); text-align:right; white-space:nowrap; }
+  .stat-bar-n{ color:var(--muted); }
+  .runtime-extremes{ margin-top:1.2rem; display:flex; flex-direction:column; gap:0.5rem; }
+  .creator-leader-row{ display:flex; justify-content:space-between; gap:1rem; padding:0.5rem 0; border-top:1px solid var(--rule); font-size:0.88rem; }
+  .creator-leader-meta{ color:var(--muted); font-size:0.8rem; white-space:nowrap; }
   .econ-multiple{ margin-top:0.3rem; padding-top:0.9rem; border-top:1px solid var(--rule); display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:0.6rem; }
   .econ-multiple .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.4rem; color:var(--gold); }
   .econ-multiple .cap{ font-size:0.78rem; color:var(--muted); max-width:40ch; }
@@ -577,7 +589,12 @@
   <div class="leaderboard-mode" id="leaderboardMode" role="tablist" aria-label="Ranking type">
     <button class="mode-pill" data-mode="score" aria-selected="true">Kernel Score</button>
     <button class="mode-pill" data-mode="budget-efficiency" aria-selected="false">Budget Efficiency</button>
+    <button class="mode-pill" data-mode="bombs" aria-selected="false">Biggest Bombs</button>
     <button class="mode-pill" data-mode="divisive" aria-selected="false">Most Divisive</button>
+    <button class="mode-pill" data-mode="decade" aria-selected="false">By Decade</button>
+    <button class="mode-pill" data-mode="origins" aria-selected="false">Origins</button>
+    <button class="mode-pill" data-mode="runtime" aria-selected="false">Runtime</button>
+    <button class="mode-pill" data-mode="creators" aria-selected="false">Directors &amp; Actors</button>
   </div>
   <p class="top100-sub" id="top100Sub"></p>
   <div class="genre-filter" id="genreFilter" role="tablist" aria-label="Filter by genre"></div>
@@ -602,6 +619,9 @@
       trailer: { key: "t433PEQGErc", name: "Teaser Trailer" , viewCount: 87269855, likeCount: 1508101, commentCount: 123451},
       genres: ["Crime", "Drama", "Thriller"],
       overview: "During the 1980s, a failed stand-up comedian is driven insane and turns to a life of crime and chaos in Gotham City while becoming an infamous psychopathic crime figure.",
+      originalLanguage: "en",
+      productionCountries: ["Canada","United States of America"],
+      runtimeMinutes: 122,
       rottenTomatoes: 68,
       awards: "Won 2 Oscars. 120 wins & 247 nominations total",
       keywords: ["society","based on comic","social commentary","psychological thriller","criminal mastermind","mental illness","anarchy","character study","clown makeup","outsider"],
@@ -668,6 +688,9 @@
       trailer: { key: "XpICoc65uh0", name: "official trailer" , viewCount: 22391019, likeCount: 69141, commentCount: 10278},
       genres: ["Drama", "Horror", "Mystery"],
       overview: "A couple's relationship is tested when uninvited guests arrive at their home, disrupting their tranquil existence.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 121,
       rottenTomatoes: 68,
       awards: "9 wins & 54 nominations total",
       keywords: ["husband wife relationship","nightmare","nihilism","chaos","pregnancy","bible","house","vandalism","cult","surrealism"],
@@ -741,6 +764,9 @@
       trailer: { key: "Q0CbN8sfihY", name: "Official Trailer" , viewCount: 59286702, likeCount: 794349, commentCount: 85919},
       genres: ["Action", "Adventure", "Science Fiction"],
       overview: "Rey develops her newly discovered abilities with the guidance of Luke Skywalker, who is unsettled by the strength of her powers. Meanwhile, the Resistance prepares to do battle with the First Order.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 152,
       rottenTomatoes: 91,
       awards: "Nominated for 4 Oscars. 26 wins & 100 nominations total",
       keywords: ["bunker","space battle","defeat","failure","sequel","space opera","military operation","quest","tuwaderalit"],
@@ -795,6 +821,9 @@
       trailer: { key: "wxN1T1uxQ2g", name: "Official Trailer" , viewCount: 35833274, likeCount: 425772, commentCount: 17760},
       genres: ["Action", "Science Fiction", "Comedy"],
       overview: "An aging Chinese immigrant is swept up in an insane adventure, where she alone can save what's important to her by connecting with the lives she could have led in other universes.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 140,
       rottenTomatoes: 93,
       awards: "Won 7 Oscars. 408 wins & 382 nominations total",
       keywords: ["mother","martial arts","kung fu","nihilism","philosophy","generations conflict","chinese woman","surrealism","laundromat","chinese"],
@@ -818,6 +847,9 @@
       trailer: { key: "1i-_CRKdh4Y", name: "Official Trailer" , viewCount: 4044680, likeCount: 10600, commentCount: 1116},
       genres: ["Drama"],
       overview: "A truffle hunter who lives alone in the Oregon wilderness must visit Portland to find the mysterious person who stole his beloved foraging pig.",
+      originalLanguage: "en",
+      productionCountries: ["United Kingdom","United States of America"],
+      runtimeMinutes: 92,
       rottenTomatoes: 97,
       awards: "38 wins & 75 nominations total",
       keywords: ["expensive restaurant","pig","loss of loved one","portland, oregon","misanthrophy","grief","cabin in the woods","chef","loss of pet","loner"],
@@ -841,6 +873,9 @@
       trailer: { key: "VFOrGkAvjAE", name: "Official Trailer" , viewCount: 4406799, likeCount: 41727, commentCount: 2032},
       genres: ["Drama", "Music"],
       overview: "Metal drummer Ruben begins to lose his hearing. When a doctor tells him his condition will worsen, he thinks his career and life is over. His girlfriend Lou checks the former addict into a rehab for the deaf hoping it will prevent a relapse and help him adapt to his new life. After being welcomed and accepted just as he is, Ruben must choose between his new normal and the life he once knew.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 121,
       rottenTomatoes: 97,
       awards: "Won 2 Oscars. 90 wins & 179 nominations total",
       keywords: ["deaf","missouri","drums","heavy metal","addiction","sign languages","hearing impaired"],
@@ -863,6 +898,9 @@
       trailer: { key: "D30r0CwtIKc", name: "Official Trailer" , viewCount: 10846594, likeCount: 101149, commentCount: 5754},
       genres: ["Drama"],
       overview: "A reclusive English teacher suffering from severe obesity attempts to reconnect with his estranged teenage daughter for one last chance at redemption.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 117,
       rottenTomatoes: 64,
       awards: "Won 2 Oscars. 51 wins & 124 nominations total",
       keywords: ["depression","nurse","missionary","idaho","bible","overweight man","based on play or musical","dying man","obesity","religion"],
@@ -903,6 +941,9 @@
       trailer: { key: "8zIf0XvoL9Y", name: "Teaser Trailer" , viewCount: 16027264, likeCount: 254179, commentCount: 11639},
       genres: ["Comedy", "Adventure", "Fantasy"],
       overview: "Barbie and Ken are having the time of their lives in the colorful and seemingly perfect world of Barbie Land. However, when they get a chance to go to the real world, they soon discover the joys and perils of living among humans.",
+      originalLanguage: "en",
+      productionCountries: ["United Kingdom","United States of America"],
+      runtimeMinutes: 114,
       rottenTomatoes: 88,
       awards: "Won 1 Oscar. 215 wins & 436 nominations total",
       keywords: ["feminism","satire","patriarchy","social satire","based on toy","female protagonist","fish out of water","womanhood","doll","reality vs fantasy"],
@@ -929,6 +970,9 @@
       trailer: { key: "FtSd844cI7U", name: "Official Trailer" , viewCount: 18437037, likeCount: 140526, commentCount: 96178},
       genres: ["Fantasy", "Musical", "Comedy"],
       overview: "A tribe of cats called the Jellicles must decide yearly which one will ascend to the Heaviside Layer and come back to a new Jellicle life.",
+      originalLanguage: "en",
+      productionCountries: ["China","United Kingdom","United States of America"],
+      runtimeMinutes: 110,
       rottenTomatoes: 19,
       awards: "11 wins & 8 nominations total",
       keywords: ["dance","cat","musical","based on play or musical","resurrection","based on song, poem or rhyme","vignette","so bad it’s good","bitter","baffled"],
@@ -955,6 +999,9 @@
       trailer: { key: "jLMBLuGJTsA", name: "Teaser Trailer" , viewCount: 22302231, likeCount: 357071, commentCount: 31158},
       genres: ["Action", "Science Fiction", "Horror"],
       overview: "Dangerously ill with a rare blood disorder, and determined to save others suffering his same fate, Dr. Michael Morbius attempts a desperate gamble. What at first appears to be a radical success soon reveals itself to be a remedy potentially worse than the disease.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 105,
       rottenTomatoes: 15,
       awards: "3 wins & 4 nominations total",
       keywords: ["vampire","superhero","based on comic","duringcreditsstinger","supervillain","frustrated"],
@@ -981,6 +1028,9 @@
       trailer: { key: "xy8aJw1vYHo", name: "Official Teaser Trailer" , viewCount: 37959356, likeCount: 949822, commentCount: 44984},
       genres: ["Crime", "Drama", "Musical"],
       overview: "While struggling with his dual identity, Arthur Fleck not only stumbles upon true love, but also finds the music that's always been inside him.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 138,
       rottenTomatoes: 31,
       awards: "7 wins & 19 nominations total",
       keywords: ["based on comic","sequel","madness","mental health","super villain","1980s","prisoner abuse","dark romance","jukebox musical","corrupt officials"],
@@ -1023,6 +1073,9 @@
       releaseDate: "2026-07-15",
       genres: ["Adventure","Action","Fantasy"],
       overview: "Odysseus, the legendary King of Ithaca, embarks on a long and perilous journey home following the Trojan War. Throughout his voyage, he is forced to confront the whims of gods, mythological monsters, and trials that stretch both his cunning and his humanity to the breaking point.",
+      originalLanguage: "en",
+      productionCountries: ["United Kingdom","United States of America"],
+      runtimeMinutes: 173,
       rottenTomatoes: null,
       awards: "2 wins total",
       keywords: ["ship","trojan war","greek mythology","historical fiction","ancient world","period drama","based on song, poem or rhyme","greek history","voyage","peplum"],
@@ -1103,6 +1156,9 @@
       releaseDate: "2026-07-08",
       genres: ["Family","Fantasy","Comedy","Adventure"],
       overview: "Teenage Moana answers the Ocean's call and, for the first time, voyages beyond the reef of her island of Motunui with infamous demigod Maui on an unforgettable journey to restore prosperity to her people.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 115,
       rottenTomatoes: 31,
       awards: null,
       keywords: ["sailboat","sea","friendship","ocean","leaving one's family","musical","remake","curse","explorer","based on movie"],
@@ -1130,6 +1186,9 @@
       releaseDate: "2026-05-27",
       genres: ["Horror","Mystery","Science Fiction"],
       overview: "A strange doorway appears in the basement of a furniture showroom.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America","Canada"],
+      runtimeMinutes: 111,
       rottenTomatoes: null,
       awards: "11 nominations total",
       keywords: ["california","monster","therapist","surrealism","childhood trauma","alcoholism","found footage","1990s","other dimension","based on web series"],
@@ -1197,6 +1256,9 @@
       releaseDate: "2026-06-24",
       genres: ["Action","Adventure","Science Fiction"],
       overview: "When an unexpected and ruthless adversary strikes too close to home, Kara Zor-El, aka Supergirl, reluctantly joins forces with an unlikely companion on an epic, interstellar journey of vengeance and justice.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 108,
       rottenTomatoes: 53,
       awards: "2 nominations total",
       keywords: ["galaxy","hero","superhero","villain","based on comic","space","female protagonist","dog","super power","heroine"],
@@ -1250,6 +1312,9 @@
       releaseDate: "2026-06-24",
       genres: ["Adventure","Animation","Comedy","Family","Fantasy"],
       overview: "This is the rambunctious, ridiculous and totally true story of how the Minions conquered Hollywood, became movie stars, lost everything, unleashed monsters onto the world and then banded together to try and save the planet from the mayhem they had just created.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 90,
       rottenTomatoes: null,
       awards: null,
       keywords: ["magic","sequel","alien","prequel","hollywood","spin off","henchman","filmmaking","silent film","nostalgic"],
@@ -1303,6 +1368,9 @@
       releaseDate: "2026-06-17",
       genres: ["Animation","Family","Comedy","Adventure"],
       overview: "When Bonnie receives a Lilypad tablet as a gift and becomes obsessed, Buzz, Woody, Jessie and the rest of the gang's jobs become exponentially harder when they have to go head to head with the all-new threat to playtime.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 102,
       rottenTomatoes: 92,
       awards: "4 nominations total",
       keywords: ["farm","island","pig","horse","rescue mission","rivalry","sequel","love","stranded","wedding"],
@@ -1379,6 +1447,9 @@
       releaseDate: "2026-06-18",
       genres: ["Adventure","Drama","Thriller","Action"],
       overview: "Grappling with his past after a life of crime and murder, Robin Hood finds himself gravely injured after a battle he thought would be his last. In the hands of a mysterious woman, he is offered a chance at salvation.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 123,
       rottenTomatoes: null,
       awards: null,
       keywords: ["robin hood","based on myths, legends or folklore","grim","salvation","grimdark"],
@@ -1447,6 +1518,9 @@
       releaseDate: "2026-07-07",
       genres: ["Horror","Thriller"],
       overview: "After her husband's abrupt death, Alice seeks solace with his remaining family — descendants of a leading researcher on demonic possession. As her in-laws transform one by one into creatures that feed on fear, she comes to discover that the vows she took in life survive even in death.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 110,
       rottenTomatoes: null,
       awards: null,
       keywords: ["funeral","widow","supernatural","possession","dysfunctional family","sequel","grief","spirit","demon","spin off"],
@@ -1497,6 +1571,9 @@
       releaseDate: "2026-07-17",
       genres: ["Thriller"],
       overview: "Convinced they are our secret saviors, rogue U.S. operatives abduct Mexican gang members and seed them across major American cities, unleashing criminal chaos, swaying voters by playing on nativist prejudices, and forcing law enforcement into a race to expose the plot as the escalating carnage threatens democracy itself.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America","Mexico"],
+      runtimeMinutes: 94,
       rottenTomatoes: null,
       awards: null,
       keywords: ["mexico","washington dc, usa","government","immigration","conspiracy","virginia","illegal","political thriller","independent film","gang members"],
@@ -1538,6 +1615,9 @@
       releaseDate: "2026-06-19",
       genres: ["Thriller","Action"],
       overview: "A man takes justice into his own hands, hunting down criminals. His vigilante crusade makes him a social media star but puts him at odds with the local police chief.",
+      originalLanguage: "en",
+      productionCountries: ["Germany","Croatia","United States of America"],
+      runtimeMinutes: 89,
       rottenTomatoes: null,
       awards: null,
       keywords: ["rape","corruption","police","immigration","rape victim","murder","vigilante","justice","news report","vigilantism"],
@@ -1603,6 +1683,9 @@
       releaseDate: "2026-07-24",
       genres: ["Animation","Action","Adventure","Fantasy"],
       overview: "Avatar Aang, the world's last Airbender, learns of an ancient power that could save his culture from extinction. With the help of his friends, he embarks on a global quest to find it before it falls into the wrong hands and threatens to upend the peace they sacrificed everything to achieve.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America","South Korea","Australia"],
+      runtimeMinutes: 99,
       rottenTomatoes: null,
       awards: null,
       keywords: ["martial arts","extinction","cultural identity","based on tv series"],
@@ -1646,6 +1729,9 @@
       releaseDate: "2026-06-20",
       genres: ["Romance", "Comedy"],
       overview: "A young woman's hilariously confessional voicemails to her late sister are unknowingly redirected to a stranger, who begins to fall in love from afar.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 119,
       rottenTomatoes: null,
       awards: null,
       keywords: ["san francisco, california","romcom","voicemail","lighthearted","adoring"],
@@ -1711,6 +1797,9 @@
       releaseDate: "2026-06-25",
       genres: ["Drama", "Comedy"],
       overview: "Joe and Angela's marriage is on thin ice. When they invite their enigmatic upstairs neighbors for a dinner party, the night spirals into unexpected places.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 107,
       rottenTomatoes: null,
       awards: "2 wins & 5 nominations total",
       keywords: ["husband wife relationship","san francisco, california","remake","firefighter","sexologist","neighbors"],
@@ -1777,6 +1866,9 @@
       releaseDate: "2026-06-18",
       genres: ["Action", "Thriller"],
       overview: "A nightclub owner is on the verge of leaving his dangerous past behind for retirement with his girlfriend. When masked gunmen rob him and he finds himself squeezed by ruthless cartels, a mysterious newcomer arrives with an interest in buying the business. With danger closing in from all sides, he must navigate a deadly web of deception, power, and survival  -  where escape may no longer be an option.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America","Australia","United Kingdom"],
+      runtimeMinutes: 111,
       rottenTomatoes: null,
       awards: null,
       keywords: ["based on novel or book","drug cartel"],
@@ -1838,6 +1930,9 @@
       releaseDate: "2026-06-18",
       genres: ["Romance", "Drama"],
       overview: "Coley, 17, from rural Oregon, navigates intimacy after her mother's passing. Meeting Sonya sparks new feelings, but self-doubt hinders their connection. Sonya, unfamiliar with dating girls, is uncertain. They learn to embrace emotions.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America","Canada"],
+      runtimeMinutes: 95,
       rottenTomatoes: null,
       awards: null,
       keywords: ["based on novel or book","coming of age","based on song, poem or rhyme","first love","lgbt","queer","lesbian","girls' love (gl)","sapphic"],
@@ -1882,6 +1977,9 @@
       releaseDate: "2026-06-19",
       genres: ["History", "Drama"],
       overview: "On 1949 October 1, the day of the founding ceremony of the People's Republic of China, Xiao Dali enters the city and is reorganized as the director of the public security police station. He finds that primary school teacher Feng Jingbo is full of doubts. With the high vigilance of a soldier and the sense of responsibility of a public security official, Dali insists on partnering with Feng and becomes his neighbor. He then spends his whole life carrying out a nearly four-decade pursuit without regrets.",
+      originalLanguage: "zh",
+      productionCountries: ["China"],
+      runtimeMinutes: 142,
       rottenTomatoes: null,
       awards: null,
       keywords: ["based on novel or book","1970s","period drama","historical drama","1940s","1980s","1950s","1960s","people's republic of china"],
@@ -1930,6 +2028,9 @@
       releaseDate: "2026-06-18",
       genres: ["Action", "Thriller", "Drama"],
       overview: "Through both her moments of fear and bravery, a woman discovers that embracing her vulnerabilities is as vital to her inner strength as facing challenges head-on.",
+      originalLanguage: "te",
+      productionCountries: ["India"],
+      runtimeMinutes: 158,
       rottenTomatoes: null,
       awards: null,
       keywords: [],
@@ -1974,6 +2075,9 @@
       releaseDate: "1997-07-19",
       genres: ["Animation", "Science Fiction", "Drama", "Fantasy", "Action"],
       overview: "SEELE orders an all-out attack on NERV, aiming to destroy the Evas before Gendo can advance his own plans for the Human Instrumentality Project. Shinji is pushed to the limits of his sanity as he is forced to decide the fate of humanity.",
+      originalLanguage: "ja",
+      productionCountries: ["Japan"],
+      runtimeMinutes: 87,
       rottenTomatoes: 92,
       awards: "2 wins total",
       keywords: ["philosophy","insanity","post-apocalyptic future","futuristic","end of the world","mecha","avant-garde","meaningless existence","rebirth","anime"],
@@ -2022,6 +2126,9 @@
       releaseDate: "2026-06-10",
       genres: ["Science Fiction", "Thriller"],
       overview: "A cybersecurity expert becomes a whistleblower after uncovering secrets about aliens, putting him on the run from a corporation. Meanwhile, a meteorologist experiencing strange phenomena joins forces with him to prove there's life beyond our understanding.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 146,
       rottenTomatoes: null,
       awards: "2 wins & 6 nominations total",
       keywords: ["new york city","childhood trauma","alien","on the run","kansas city","mind reading","alien invasion","meteorologist","whistleblower","conspiracy thriller"],
@@ -2113,6 +2220,9 @@ obsession2026: {
   releaseDate: "2026-05-13",
   genres: ["Horror", "Thriller"],
   overview: "After breaking the mysterious \"One Wish Willow\" to win his crush's heart, a hopeless romantic finds himself getting exactly what he asked for but soon discovers that some desires come at a dark, sinister price.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America","United Kingdom"],
+  runtimeMinutes: 109,
   rottenTomatoes: 94,
   awards: "7 wins & 11 nominations total",
   keywords: ["obsession","supernatural","possession","wish","unrequited love","couple","absurdism","self-harm","supernatural horror","psychological"],
@@ -2159,6 +2269,9 @@ scaryMovie2026: {
   releaseDate: "2026-06-03",
   genres: ["Comedy"],
   overview: "Twenty-six years after outrunning a suspiciously familiar masked killer, the Core Four are back in the killer's crosshairs and no horror movie IP is safe.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 96,
   rottenTomatoes: null,
   awards: "2 nominations total",
   keywords: ["parody","sequel","slapstick comedy","crude humor","spoof","animated scene","slasher","horror spoof","dildo","reboot"],
@@ -2226,6 +2339,9 @@ mastersOfTheUniverse2026: {
   releaseDate: "2026-06-05",
   genres: ["Action", "Fantasy", "Science Fiction"],
   overview: "After being separated for 15 years, the Sword of Power leads Prince Adam back to Eternia, where he discovers his home shattered under the fiendish rule of Skeletor. To save his family and his world, Adam must join forces with his closest allies, Teela and Duncan/Man-At-Arms, and embrace his true destiny as He-Man — the most powerful man in the universe.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 141,
   rottenTomatoes: null,
   awards: "1 nomination total",
   keywords: ["skeleton","superhero","nostalgia","alien planet","based on toy","super power","reboot","nostalgic","warrior","sword and planet"],
@@ -2284,6 +2400,9 @@ mandalorianAndGrogu2026: {
   releaseDate: "2026-05-20",
   genres: ["Action", "Adventure", "Science Fiction"],
   overview: "The evil Empire has fallen, and Imperial warlords remain scattered throughout the galaxy. As the fledgling New Republic works to protect everything the Rebellion fought for, they have enlisted the help of legendary Mandalorian bounty hunter Din Djarin and his young apprentice Grogu.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 132,
   rottenTomatoes: 60,
   awards: "3 nominations total",
   keywords: ["galaxy","bounty hunter","spin off","space opera","nostalgic","space adventure","based on tv series","master apprentice relationship","bold"],
@@ -2350,6 +2469,9 @@ devilWearsPrada2: {
   releaseDate: "2026-04-29",
   genres: ["Comedy", "Drama"],
   overview: "Andy Sachs returns to Runway as Miranda Priestly navigates a new media landscape and Runway's position within. The duo reconnect with former assistant Emily Charlton, now the head of a luxury brand that possesses funding which could ensure Runway's survival.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 119,
   rottenTomatoes: null,
   awards: "2 wins & 4 nominations total",
   keywords: ["new york city","based on novel or book","sequel","fashion","fashion magazine","dramedy","magazine editor","fashion industry","fashionista"],
@@ -2427,6 +2549,9 @@ deepWater2026: {
   releaseDate: "2026-05-01",
   genres: ["Horror", "Thriller"],
   overview: "A group of international passengers on a flight from Los Angeles to Shanghai is forced to make an emergency landing in shark-infested waters. The terrified group is forced to work together and overcome their differences if they hope to escape their sinking plane and the frenzy of sharks drawn to the wreckage.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America","Spain","Australia","China","Ukraine"],
+  runtimeMinutes: 107,
   rottenTomatoes: null,
   awards: null,
   keywords: ["deep sea","shark"],
@@ -2514,6 +2639,9 @@ passenger2026: {
   releaseDate: "2026-05-20",
   genres: ["Horror", "Thriller"],
   overview: "After a young couple witnesses a gruesome highway accident, they soon realize they did not leave the crash scene alone, as a demonic presence called the Passenger that won't stop until it claims them both turns their van life adventure into a nightmare.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 94,
   rottenTomatoes: null,
   awards: null,
   keywords: ["stalker","road trip","evil spirit","couple","frantic","demonic","supernatural horror","vanlife","baffled"],
@@ -2567,6 +2695,9 @@ theFurious: {
   releaseDate: "2026-06-10",
   genres: ["Action", "Crime", "Thriller"],
   overview: "After a criminal network kidnaps Wang Wei's daughter and the corrupt police refuse to assist him, Wei sets out on his own to locate her. Navin, a tenacious journalist whose wife has mysteriously vanished, is his only ally. In this explosive martial arts showdown, the unlikely duo fights the kidnappers ruthlessly driven by a furious vengeance.",
+  originalLanguage: "zh",
+  productionCountries: ["Hong Kong","China"],
+  runtimeMinutes: 113,
   rottenTomatoes: 98,
   awards: "1 win & 2 nominations total",
   keywords: ["martial arts","kung fu","rescue mission","police corruption","child trafficking","child kidnapping","missing wife","child rescue","relentless vengeance","dynamic duo"],
@@ -2612,6 +2743,9 @@ nineteenSeventeen: {
       trailer: { key: "UcmZN0Mbl04", name: "Official Trailer" , viewCount: 15948828, likeCount: 156930, commentCount: 9536},
   genres: ["War", "History", "Drama"],
   overview: "At the height of the First World War, two young British soldiers must cross enemy territory and deliver a message that will stop a deadly attack on hundreds of soldiers.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America","United Kingdom","Spain","India"],
+  runtimeMinutes: 119,
   rottenTomatoes: 88,
   awards: "Won 3 Oscars. 137 wins & 202 nominations total",
   keywords: ["race against time","world war i","british army","survival","soldier","period drama","real time","trenches","1910s","trench warfare"],
@@ -2674,6 +2808,9 @@ anyoneButYou: {
       trailer: { key: "UtjH6Sk7Gxs", name: "Official Trailer" , viewCount: 11851826, likeCount: 60839, commentCount: 2027},
   genres: ["Romance", "Comedy"],
   overview: "After an amazing first date, Bea and Ben’s fiery attraction turns ice cold — until they find themselves unexpectedly reunited at a destination wedding in Australia. So they do what any two mature adults would do: pretend to be a couple.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 103,
   rottenTomatoes: 53,
   awards: "1 win & 5 nominations total",
   keywords: ["australia","hiking","romcom","based on play or musical","law school","aftercreditsstinger","duringcreditsstinger","fake dating","destination wedding","comforting"],
@@ -2730,6 +2867,9 @@ arrival2016: {
       trailer: { key: "tFMo3UJ4B4g", name: "Trailer" , viewCount: 27301679, likeCount: 146413, commentCount: 14365},
   genres: ["Drama", "Science Fiction", "Mystery"],
   overview: "Taking place after alien crafts land around the world, an expert linguist is recruited by the military to determine whether they come in peace or are a threat.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 116,
   rottenTomatoes: 94,
   awards: "Won 1 Oscar. 71 wins & 268 nominations total",
   keywords: ["spacecraft","extraterrestrial technology","loss","time","alien","language","female protagonist","scientist","heartbreak","based on short story"],
@@ -2804,6 +2944,9 @@ bladeRunner2049: {
       trailer: { key: "gCcx85zbxz4", name: "Official Trailer" , viewCount: 39911417, likeCount: 282704, commentCount: 19442},
   genres: ["Science Fiction", "Drama"],
   overview: "Thirty years after the events of the first film, a new blade runner, LAPD Officer K, unearths a long-buried secret that has the potential to plunge what's left of society into chaos. K's discovery leads him on a quest to find Rick Deckard, a former LAPD blade runner who has been missing for 30 years.",
+  originalLanguage: "en",
+  productionCountries: ["Canada","United Kingdom","United States of America"],
+  runtimeMinutes: 164,
   rottenTomatoes: 88,
   awards: "Won 2 Oscars. 100 wins & 164 nominations total",
   keywords: ["future","android","bounty hunter","artificial intelligence (a.i.)","dystopia","sequel","cyberpunk","transhumanism","los angeles, california","las vegas"],
@@ -2878,6 +3021,9 @@ dune2021: {
       trailer: { key: "n9xhJrPXop4", name: "Official Trailer" , viewCount: 48990245, likeCount: 697800, commentCount: 65117},
   genres: ["Science Fiction", "Adventure"],
   overview: "Paul Atreides, a brilliant and gifted young man born into a great destiny beyond his understanding, must travel to the most dangerous planet in the universe to ensure the future of his family and his people. As malevolent forces explode into conflict over the planet's exclusive supply of the most precious resource in existence - a commodity capable of unlocking humanity's greatest potential - only those who can conquer their fear will survive.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 155,
   rottenTomatoes: 83,
   awards: "Won 6 Oscars. 178 wins & 299 nominations total",
   keywords: ["empire","future","army","prophecy","dystopia","emperor","sand","spice","chosen one","hallucinogen"],
@@ -2945,6 +3091,9 @@ getOut2017: {
       trailer: { key: "sRfnevzM9kQ", name: "Official Trailer" , viewCount: 18784629, likeCount: 60652, commentCount: 13657},
   genres: ["Mystery", "Thriller", "Horror"],
   overview: "Chris and his girlfriend Rose go upstate to visit her parents for the weekend. At first, Chris reads the family's overly accommodating behavior as nervous attempts to deal with their daughter's interracial relationship, but as the weekend progresses, a series of increasingly disturbing discoveries lead him to a truth that he never could have imagined.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 104,
   rottenTomatoes: 98,
   awards: "Won 1 Oscar. 154 wins & 214 nominations total",
   keywords: ["kidnapping","externally controlled action","manipulation","dark comedy","hypnosis","parents-in-law","satire","racist","revenge","interracial relationship"],
@@ -2999,6 +3148,9 @@ goneGirl2014: {
       trailer: { key: "JU9PdgB3rsk", name: "Teaser Trailer" , viewCount: 484432, likeCount: 1374, commentCount: 75},
   genres: ["Mystery", "Thriller", "Drama"],
   overview: "With his wife's disappearance having become the focus of an intense media circus, a man sees the spotlight turned on him when it's suspected that he may not be innocent.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 149,
   rottenTomatoes: 88,
   awards: "Nominated for 1 Oscar. 64 wins & 189 nominations total",
   keywords: ["infidelity","based on novel or book","wife","marriage crisis","investigation","disappearance","psychological thriller","whodunit","cynical","missing person"],
@@ -3075,6 +3227,9 @@ hereditary2018: {
       trailer: { key: "V6wWKNij_1M", name: "Official Trailer" , viewCount: 35732112, likeCount: 193419, commentCount: 13110},
   genres: ["Horror", "Mystery", "Thriller"],
   overview: "Following the death of the Leigh family matriarch, Annie and her children uncover disturbing secrets about their heritage. Their daily lives are not only impacted, but they also become entangled in a chilling fate from which they cannot escape, driving them to the brink of madness.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America","United Kingdom"],
+  runtimeMinutes: 128,
   rottenTomatoes: 90,
   awards: "52 wins & 112 nominations total",
   keywords: ["daughter","funeral","parent child relationship","loss of loved one","ritual","supernatural","possession","dysfunctional family","sleeplessness","murder"],
@@ -3141,6 +3296,9 @@ johnWick2014: {
       trailer: { key: "2AUmvWm5ZDQ", name: "Official Trailer" , viewCount: 14381201, likeCount: 41734, commentCount: 3471},
   genres: ["Action", "Thriller"],
   overview: "Ex-hitman John Wick comes out of retirement to track down the gangsters that took everything from him.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 101,
   rottenTomatoes: 87,
   awards: "5 wins & 10 nominations total",
   keywords: ["hitman","bratva (russian mafia)","gangster","secret organization","revenge","murder","dog","retired","widower"],
@@ -3214,6 +3372,9 @@ laLaLand2016: {
       trailer: { key: "je0aAf2f8XQ", name: "Official Teaser Trailer – 'City Of Stars'" , viewCount: 4848492, likeCount: 20453, commentCount: 1003},
   genres: ["Comedy", "Drama", "Romance"],
   overview: "Mia, an aspiring actress, serves lattes to movie stars in between auditions and Sebastian, a jazz musician, scrapes by playing cocktail party gigs in dingy bars, but as success mounts they are faced with decisions that begin to fray the fragile fabric of their love affair, and the dreams they worked so hard to maintain in each other threaten to rip them apart.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 129,
   rottenTomatoes: 91,
   awards: "Won 6 Oscars. 246 wins & 313 nominations total",
   keywords: ["dancing","dance","jazz","melancholy","musical","ambition","casting","romcom","coffee shop","jazz club"],
@@ -3283,6 +3444,9 @@ madMaxFuryRoad: {
       trailer: { key: "akX3Is3qBpw", name: "Comic-Con First Look" , viewCount: 17488758, likeCount: 52921, commentCount: 6549},
   genres: ["Action", "Adventure", "Science Fiction"],
   overview: "An apocalyptic story set in the furthest reaches of our planet, in a stark desert landscape where humanity is broken, and most everyone is crazed fighting for the necessities of life. Within this world exist two rebels on the run who just might be able to restore order.",
+  originalLanguage: "en",
+  productionCountries: ["Australia","United States of America"],
+  runtimeMinutes: 121,
   rottenTomatoes: 97,
   awards: "Won 6 Oscars. 245 wins & 234 nominations total",
   keywords: ["rescue","australia","dystopia","sandstorm","post-apocalyptic future","sequel","survival","on the run","peak oil","dark future"],
@@ -3348,6 +3512,9 @@ noCountryForOldMen: {
       trailer: { key: "A0oNrgumrlE", name: "Official Trailer" , viewCount: 732526, likeCount: 3063, commentCount: 248},
   genres: ["Crime", "Thriller", "Western"],
   overview: "Llewelyn Moss stumbles upon dead bodies, $2 million and a hoard of heroin in a Texas desert, but methodical killer Anton Chigurh comes looking for it, with local sheriff Ed Tom Bell hot on his trail. The roles of prey and predator blur as the violent pursuit of money and justice collide.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 122,
   rottenTomatoes: 93,
   awards: "Won 4 Oscars. 165 wins & 139 nominations total",
   keywords: ["vietnam veteran","sheriff","trailer park","based on novel or book","hitman","psychopath","drug trafficking","texas","motel","usa–mexico border"],
@@ -3420,6 +3587,9 @@ oppenheimer2023: {
       trailer: { key: "bK6ldnjE3Y0", name: "Official Trailer" , viewCount: 48772349, likeCount: 431997, commentCount: 16379},
   genres: ["Drama", "History"],
   overview: "The story of J. Robert Oppenheimer's role in the development of the atomic bomb during World War II.",
+  originalLanguage: "en",
+  productionCountries: ["United Kingdom","United States of America"],
+  runtimeMinutes: 181,
   rottenTomatoes: 93,
   awards: "Won 7 Oscars. 370 wins & 378 nominations total",
   keywords: ["husband wife relationship","based on novel or book","atomic bomb","patriotism","new mexico","world war ii","atomic bomb test","physics","biography","based on true story"],
@@ -3491,6 +3661,9 @@ parasite2019: {
       trailer: { key: "hb1iOVvkykY", name: "Official Int'l Main Trailer [Subtitled]" , viewCount: 515315, likeCount: 1760, commentCount: 75},
   genres: ["Comedy", "Thriller", "Drama"],
   overview: "All unemployed, Ki-taek's family takes peculiar interest in the wealthy and glamorous Parks for their livelihood until they get entangled in an unexpected incident.",
+  originalLanguage: "ko",
+  productionCountries: ["South Korea"],
+  runtimeMinutes: 133,
   rottenTomatoes: 99,
   awards: "Won 4 Oscars. 309 wins & 261 nominations total",
   keywords: ["dark comedy","con artist","social commentary","working class","infiltration","psychological thriller","class differences","family","unemployed","domestic worker"],
@@ -3552,6 +3725,9 @@ pastLives: {
       trailer: { key: "kA244xewjcI", name: "Official Trailer" , viewCount: 11539186, likeCount: 161400, commentCount: 4898},
   genres: ["Drama", "Romance"],
   overview: "After decades apart, childhood friends Nora and Hae Sung are reunited in New York for one fateful weekend as they confront notions of destiny, love, and the choices that make a life.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America","South Korea"],
+  runtimeMinutes: 106,
   rottenTomatoes: 95,
   awards: "Nominated for 2 Oscars. 83 wins & 240 nominations total",
   keywords: ["new york city","immigrant","friendship","nostalgia","woman between two men","interracial marriage","fate","playwright","married woman","childhood friends"],
@@ -3611,6 +3787,9 @@ poorThings: {
       trailer: { key: "RlbR5N6veqw", name: "Official Trailer" , viewCount: 17742073, likeCount: 81560, commentCount: 5487},
   genres: ["Science Fiction", "Romance", "Comedy"],
   overview: "Brought back to life by an unorthodox scientist, a young woman runs off with a lawyer on a whirlwind adventure across the continents. Free from the prejudices of her times, she grows steadfast in her purpose to stand for equality and liberation.",
+  originalLanguage: "en",
+  productionCountries: ["Ireland","United Kingdom","United States of America"],
+  runtimeMinutes: 141,
   rottenTomatoes: 92,
   awards: "Won 4 Oscars. 121 wins & 427 nominations total",
   keywords: ["ship","london, england","experiment","paris, france","based on novel or book","obsession","lisbon, portugal","crooked lawyer","love","domestic abuse"],
@@ -3688,6 +3867,9 @@ spiderVerse2018: {
       trailer: { key: "ii3n7hYQOl4", name: "Official Teaser Trailer" , viewCount: 17402011, likeCount: 272526, commentCount: 0},
   genres: ["Animation", "Action", "Adventure", "Science Fiction"],
   overview: "Struggling to find his place in the world while juggling school and family, Brooklyn teenager Miles Morales is unexpectedly bitten by a radioactive spider and develops unfathomable powers just like the one and only Spider-Man. While wrestling with the implications of his new abilities, Miles discovers a super collider created by the madman Wilson \"Kingpin\" Fisk, causing others from across the Spider-Verse to be inadvertently transported to his dimension.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 117,
   rottenTomatoes: 97,
   awards: "Won 1 Oscar. 85 wins & 60 nominations total",
   keywords: ["superhero","based on comic","aftercreditsstinger","alternate universe"],
@@ -3738,6 +3920,9 @@ talkToMe2023: {
       trailer: { key: "aLAKJu9aJys", name: "Official US Trailer" , viewCount: 22938464, likeCount: 132044, commentCount: 6776},
   genres: ["Horror"],
   overview: "When a group of friends discover how to conjure spirits using an embalmed hand, they become hooked on the new thrill, until one of them goes too far and unleashes terrifying supernatural forces.",
+  originalLanguage: "en",
+  productionCountries: ["Australia","United Kingdom"],
+  runtimeMinutes: 95,
   rottenTomatoes: null,
   awards: "23 wins & 51 nominations total",
   keywords: ["suicide","trauma","possession","female friendship","addiction","grief","female protagonist","death of mother","self mutilation","mental health"],
@@ -3781,6 +3966,9 @@ banshees: {
       trailer: { key: "uRu3zLOJN2c", name: "Official Trailer" , viewCount: 11591214, likeCount: 59966, commentCount: 3212},
   genres: ["Drama", "Comedy"],
   overview: "Two lifelong friends find themselves at an impasse when one abruptly ends their relationship, with alarming consequences for both of them.",
+  originalLanguage: "en",
+  productionCountries: ["United Kingdom","United States of America"],
+  runtimeMinutes: 114,
   rottenTomatoes: 96,
   awards: "Nominated for 9 Oscars. 150 wins & 375 nominations total",
   keywords: ["friendship","island","donkey","dark comedy","irish civil war (1922-23)","church","ireland","drinking","former best friend","self mutilation"],
@@ -3850,6 +4038,9 @@ theBoyAndTheHeron: {
       trailer: { key: "t5khm-VjEu4", name: "Official English Trailer" , viewCount: 20065977, likeCount: 108120, commentCount: 3395},
   genres: ["Animation", "Fantasy", "Drama"],
   overview: "While the Second World War rages, the teenage Mahito, haunted by his mother's tragic death, is relocated from Tokyo to the serene rural home of his new stepmother Natsuko, a woman who bears a striking resemblance to the boy's mother.  As he tries to adjust, this strange new world grows even stranger following the appearance of a persistent gray heron, who perplexes and bedevils Mahito, dubbing him the \"long-awaited one.\"",
+  originalLanguage: "ja",
+  productionCountries: ["Japan"],
+  runtimeMinutes: 124,
   rottenTomatoes: 96,
   awards: "Won 1 Oscar. 34 wins & 87 nominations total",
   keywords: ["loss of loved one","world war ii","supernatural","education","coming of age","spirituality","poverty","teenage boy","parallel world","troubled childhood"],
@@ -3901,6 +4092,9 @@ theMenu2022: {
       trailer: { key: "CAWZMssP3gM", name: "Official Teaser Trailer" , viewCount: 4869503, likeCount: 12951, commentCount: 871},
   genres: ["Comedy", "Horror"],
   overview: "A young couple travels to a remote island to eat at an exclusive restaurant where the chef has prepared a lavish menu, with some shocking surprises.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 107,
   rottenTomatoes: 88,
   awards: "2 wins & 68 nominations total",
   keywords: ["psychopath","obsession","mass murder","restaurant","dark comedy","revenge","food","mass suicide","dinner","chef"],
@@ -3962,6 +4156,9 @@ shapeOfWater: {
       trailer: { key: "XFYWazblaUA", name: "Official Trailer" , viewCount: 28035314, likeCount: 144908, commentCount: 9730},
   genres: ["Drama", "Fantasy", "Romance"],
   overview: "An other-worldly story, set against the backdrop of Cold War era America circa 1962, where a mute janitor working at a lab falls in love with an amphibious man being held captive there and devises a plan to help him escape.",
+  originalLanguage: "en",
+  productionCountries: ["United States of America"],
+  runtimeMinutes: 123,
   rottenTomatoes: 92,
   awards: "Won 4 Oscars. 138 wins & 350 nominations total",
   keywords: ["government","fairy tale","cold war","supernatural","baltimore, usa","laboratory","orphan","scientist","magic realism","capture"],
@@ -4030,6 +4227,9 @@ theSubstance: {
       trailer: { key: "LNlrGhBpYjc", name: "Official Trailer" , viewCount: 17670315, likeCount: 76106, commentCount: 6011},
   genres: ["Horror", "Science Fiction", "Thriller"],
   overview: "A fading celebrity decides to use a black market drug, a cell-replicating substance that temporarily creates a younger, better version of herself.",
+  originalLanguage: "en",
+  productionCountries: ["France","United Kingdom","United States of America"],
+  runtimeMinutes: 141,
   rottenTomatoes: 89,
   awards: "Won 1 Oscar. 147 wins & 289 nominations total",
   keywords: ["new year's eve","capitalism","birthday","black market","identity","dark comedy","beauty","satire","aging","celebrity"],
@@ -4095,6 +4295,9 @@ theSubstance: {
       dataId: "interstellar-2014",
       genres: ["Adventure","Drama","Science Fiction"],
       overview: "The adventures of a group of explorers who make use of a newly discovered wormhole to surpass the limitations on human space travel and conquer the vast distances involved in an interstellar voyage.",
+      originalLanguage: "en",
+      productionCountries: ["United Kingdom","United States of America"],
+      runtimeMinutes: 169,
       rottenTomatoes: 73,
       awards: "Won 1 Oscar. 45 wins & 148 nominations total",
       keywords: ["spacecraft","race against time","artificial intelligence (a.i.)","nasa","time warp","dystopia","expedition","time travel","space travel","wormhole"],
@@ -4165,6 +4368,9 @@ theSubstance: {
       dataId: "inception-2010",
       genres: ["Action","Science Fiction","Adventure"],
       overview: "Cobb, a skilled thief who commits corporate espionage by infiltrating the subconscious of his targets is offered a chance to regain his old life as payment for a task considered to be impossible: \"inception\", the implantation of another person's idea into a target's subconscious.",
+      originalLanguage: "en",
+      productionCountries: ["United Kingdom","United States of America"],
+      runtimeMinutes: 148,
       rottenTomatoes: 87,
       awards: "Won 4 Oscars. 160 wins & 220 nominations total",
       keywords: ["mission","dreams","kidnapping","spy","allegory","intellectual","manipulation","heist","memory","dream world"],
@@ -4238,6 +4444,9 @@ theSubstance: {
       dataId: "the-avengers-2012",
       genres: ["Science Fiction","Action","Adventure"],
       overview: "When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 143,
       rottenTomatoes: 91,
       awards: "Nominated for 1 Oscar. 40 wins & 81 nominations total",
       keywords: ["new york city","superhero","shield","based on comic","alien invasion","superhero team","aftercreditsstinger","duringcreditsstinger","marvel cinematic universe (mcu)"],
@@ -4307,6 +4516,9 @@ theSubstance: {
       dataId: "the-dark-knight-2008",
       genres: ["Action","Crime","Thriller"],
       overview: "Batman raises the stakes in his war on crime. With the help of Lt. Jim Gordon and District Attorney Harvey Dent, Batman sets out to dismantle the remaining criminal organizations that plague the streets. The partnership proves to be effective, but they soon find themselves prey to a reign of chaos unleashed by a rising criminal mastermind known to the terrified citizens of Gotham as the Joker.",
+      originalLanguage: "en",
+      productionCountries: ["United Kingdom","United States of America"],
+      runtimeMinutes: 152,
       rottenTomatoes: 94,
       awards: "Won 2 Oscars. 163 wins & 165 nominations total",
       keywords: ["sadism","chaos","secret identity","crime fighter","superhero","anti hero","scarecrow","based on comic","vigilante","organized crime"],
@@ -4379,6 +4591,9 @@ theSubstance: {
       dataId: "avatar-2009",
       genres: ["Action","Science Fiction","Adventure"],
       overview: "In the 22nd century, a paraplegic Marine is dispatched to the moon Pandora on a unique mission, but becomes torn between following orders and protecting an alien civilization.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America","United Kingdom"],
+      runtimeMinutes: 162,
       rottenTomatoes: 81,
       awards: "Won 3 Oscars. 91 wins & 131 nominations total",
       keywords: ["paraplegic","attachment to nature","culture clash","indigenous","space travel","space colony","tribe","alien planet","distant future","marine"],
@@ -4446,6 +4661,9 @@ theSubstance: {
       dataId: "deadpool-2016",
       genres: ["Action","Adventure","Comedy"],
       overview: "The origin story of former Special Forces operative turned mercenary Wade Wilson, who, after being subjected to a rogue experiment that leaves him with accelerated healing powers, adopts the alter ego Deadpool. Armed with his new abilities and a dark, twisted sense of humor, Deadpool hunts down the man who nearly destroyed his life.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 108,
       rottenTomatoes: 85,
       awards: "29 wins & 78 nominations total",
       keywords: ["superhero","anti hero","mercenary","based on comic","aftercreditsstinger","duringcreditsstinger"],
@@ -4506,6 +4724,9 @@ theSubstance: {
       dataId: "fight-club-1999",
       genres: ["Drama","Thriller"],
       overview: "A ticking-time-bomb insomniac and a slippery soap salesman channel primal male aggression into a shocking new form of therapy. Their concept catches on, with underground \"fight clubs\" forming in every town, until an eccentric gets in the way and ignites an out-of-control spiral toward oblivion.",
+      originalLanguage: "en",
+      productionCountries: ["Germany","United States of America"],
+      runtimeMinutes: 139,
       rottenTomatoes: 81,
       awards: "Nominated for 1 Oscar. 12 wins & 38 nominations total",
       keywords: ["dual identity","rage and hate","based on novel or book","nihilism","fight","support group","dystopia","insomnia","alter ego","breaking the fourth wall"],
@@ -4578,6 +4799,9 @@ theSubstance: {
       dataId: "avengers-infinity-war-2018",
       genres: ["Adventure","Action","Science Fiction"],
       overview: "As the Avengers and their allies have continued to protect the world from threats too large for any one hero to handle, a new danger has emerged from the cosmic shadows: Thanos. A despot of intergalactic infamy, his goal is to collect all six Infinity Stones, artifacts of unimaginable power, and use them to inflict his twisted will on all of reality. Everything the Avengers have fought for has led up to this moment - the fate of Earth and existence itself has never been more uncertain.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 149,
       rottenTomatoes: 85,
       awards: "Nominated for 1 Oscar. 48 wins & 80 nominations total",
       keywords: ["sacrifice","magic","superhero","based on comic","space","battlefield","genocide","magical object","super power","superhero team"],
@@ -4652,6 +4876,9 @@ theSubstance: {
       dataId: "the-shawshank-redemption-1994",
       genres: ["Drama","Crime"],
       overview: "Imprisoned in the 1940s for the double murder of his wife and her lover, upstanding banker Andy Dufresne begins a new life at the Shawshank prison, where he puts his accounting skills to work for an amoral warden. During his long stretch in prison, Dufresne comes to be admired by the other inmates -- including an older prisoner named Red -- for his integrity and unquenchable sense of hope.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 142,
       rottenTomatoes: 89,
       awards: "Nominated for 7 Oscars. 21 wins & 42 nominations total",
       keywords: ["prison","friendship","police brutality","corruption","based on novel or book","freedom","hope","prison cell","delinquent","redemption"],
@@ -4717,6 +4944,9 @@ theSubstance: {
       dataId: "pulp-fiction-1994",
       genres: ["Thriller","Crime","Comedy"],
       overview: "A burger-loving hit man, his philosophical partner, a drug-addled gangster's moll and a washed-up boxer converge in this sprawling, comedic crime caper. Their adventures unfurl in three stories that ingeniously trip back and forth in time.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 154,
       rottenTomatoes: 92,
       awards: "Won 1 Oscar. 69 wins & 72 nominations total",
       keywords: ["drug dealer","drug crime","gangster","dark comedy","stolen money","crime boss","redemption","los angeles, california","theft","couple"],
@@ -4794,6 +5024,9 @@ theSubstance: {
       releaseDate: "2026-07-10",
       genres: ["Action","Drama","Romance"],
       overview: "Young, urban-raised Lenin's peaceful romance with Bharathi inadvertently sparks a violent, large-scale village conflict.",
+      originalLanguage: "te",
+      productionCountries: ["India"],
+      runtimeMinutes: 156,
       rottenTomatoes: null,
       awards: null,
       keywords: ["biographical drama"],
@@ -4835,6 +5068,9 @@ theSubstance: {
       releaseDate: "2026-07-23",
       genres: ["Action","Thriller","Crime"],
       overview: "In 1970s Detroit, John Miller falls for a local gangster's girl and lands in prison for a crime he didn't commit. With his life ruined, Miller plots revenge against the man who took his girl away.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 103,
       rottenTomatoes: 72,
       awards: "1 nomination total",
       keywords: ["gangster","1970s","revenge","detroit, michigan"],
@@ -4889,6 +5125,9 @@ theSubstance: {
       releaseDate: "2026-05-07",
       genres: ["Mystery","Drama"],
       overview: "Lucero’s life appears immaculate: a wealthy household, a devoted husband, and two children who embody the promise of a perfect family. Yet beneath this surface simmers a quiet dissatisfaction. When Matías, a young swimming coach hired by her husband, enters their lives, Lucero finds herself pulled into a risky and consuming relationship. As secrecy, desire, and jealousy tighten their grip, the boundaries within the family begin to collapse, placing mother and daughter in a dangerous emotional triangle that threatens to shatter everything Lucero has built.",
+      originalLanguage: "es",
+      productionCountries: ["Mexico"],
+      runtimeMinutes: 97,
       rottenTomatoes: null,
       awards: null,
       keywords: [],
@@ -4930,6 +5169,9 @@ theSubstance: {
       releaseDate: "2026-07-16",
       genres: ["Fantasy","Family","TV Movie"],
       overview: "Now that the Queen of Hearts is nice and Cinderella is safe, things seem perfect for Red and Chloe… But little do they know that changing the past created a new villain — Maddox Hatter. When Maddox captures the Queen of Hearts, Red and Chloe must work alongside Red’s new sister Pink, Luisa Madrigal’s son Luis, and Maddox’s son Max to save her and Wonderland.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 98,
       rottenTomatoes: null,
       awards: null,
       keywords: ["musical","sequel","spin off","lighthearted","exuberant","wonderland"],
@@ -4971,6 +5213,9 @@ theSubstance: {
       releaseDate: "2026-05-06",
       genres: ["Action","Fantasy","Adventure"],
       overview: "The fan favorite champions—now joined by Johnny Cage himself—are pitted against one another in the ultimate, no-holds barred, gory battle to defeat the dark rule of Shao Kahn that threatens the very existence of the Earthrealm and its defenders.",
+      originalLanguage: "en",
+      productionCountries: ["United States of America"],
+      runtimeMinutes: 116,
       rottenTomatoes: 64,
       awards: null,
       keywords: ["martial arts","magic","ninja fighter","gore","sequel","god","alternate dimension","ninja","fighting","based on video game"],
@@ -6096,19 +6341,22 @@ theSubstance: {
   }
 
   let leaderboardMode = "score";
-  const LEADERBOARD_LABELS = { score: "Kernel Score", "budget-efficiency": "Budget Efficiency", divisive: "Most Divisive" };
+  const LEADERBOARD_LABELS = {
+    score: "Kernel Score", "budget-efficiency": "Budget Efficiency", bombs: "Biggest Bombs", divisive: "Most Divisive",
+    decade: "By Decade", origins: "Origins", runtime: "Runtime", creators: "Directors & Actors",
+  };
 
   function rankedForMode(mode, genre) {
     const matchesGenre = f => !genre || (f.genres || []).includes(genre);
-    if (mode === "budget-efficiency") {
+    if (mode === "budget-efficiency" || mode === "bombs") {
       // Same multiple as the film page's own econHTML: worldwide box
       // office over (budget + marketing), or budget alone when marketing
       // wasn't disclosed — understates the true multiple in that case, but
       // consistent with how the single-film view already caveats it.
-      return Object.entries(FILMS)
+      const list = Object.entries(FILMS)
         .filter(([, f]) => f.econ && f.econ.budget > 0 && f.econ.boxOffice != null && matchesGenre(f))
-        .map(([key, f]) => [key, f, f.econ.boxOffice / (f.econ.budget + (f.econ.marketing || 0))])
-        .sort((a, b) => b[2] - a[2]);
+        .map(([key, f]) => [key, f, f.econ.boxOffice / (f.econ.budget + (f.econ.marketing || 0))]);
+      return mode === "bombs" ? list.sort((a, b) => a[2] - b[2]) : list.sort((a, b) => b[2] - a[2]);
     }
     return Object.entries(FILMS)
       // A film with no score yet has nothing to rank — leaving it in would
@@ -6122,11 +6370,17 @@ theSubstance: {
   }
 
   function formatRankValue(mode, value) {
-    return mode === "budget-efficiency" ? `${value.toFixed(1)}×` : value;
+    return mode === "budget-efficiency" || mode === "bombs" ? `${value.toFixed(1)}×` : value;
   }
+
+  const AGGREGATE_MODES = ["decade", "origins", "runtime", "creators"];
 
   function renderTopList(genre) {
     if (leaderboardMode === "divisive") { renderDivisiveList(genre); return; }
+    if (leaderboardMode === "decade") { renderDecadeStats(genre); return; }
+    if (leaderboardMode === "origins") { renderOriginsStats(genre); return; }
+    if (leaderboardMode === "runtime") { renderRuntimeStats(genre); return; }
+    if (leaderboardMode === "creators") { renderCreatorsLeaderboard(genre); return; }
     const sub = document.getElementById("top100Sub");
     const list = document.getElementById("rankList");
     const mode = leaderboardMode;
@@ -6139,11 +6393,13 @@ theSubstance: {
       return;
     }
 
-    sub.textContent = mode === "budget-efficiency"
-      ? `Top ${ranked.length}${genre ? ` ${genre}` : ""} film(s) by worldwide box office ÷ (budget + marketing) — how many times over a film earned back what it cost, not a quality judgment.`
-      : genre
-        ? `Top ${ranked.length} of a growing ${genre} ranking, by Kernel Score. Too small a sample to call a real top 100 yet — every entry here is fully sourced, not a placeholder.`
-        : `Top ${ranked.length} of a growing all-time ranking, by Kernel Score. Not yet 100 films — every entry here is fully sourced, not a placeholder.`;
+    sub.textContent = mode === "bombs"
+      ? `Bottom ${ranked.length}${genre ? ` ${genre}` : ""} film(s) by worldwide box office ÷ (budget + marketing) — lowest multiple first. Not a quality judgment, just a return on cost.`
+      : mode === "budget-efficiency"
+        ? `Top ${ranked.length}${genre ? ` ${genre}` : ""} film(s) by worldwide box office ÷ (budget + marketing) — how many times over a film earned back what it cost, not a quality judgment.`
+        : genre
+          ? `Top ${ranked.length} of a growing ${genre} ranking, by Kernel Score. Too small a sample to call a real top 100 yet — every entry here is fully sourced, not a placeholder.`
+          : `Top ${ranked.length} of a growing all-time ranking, by Kernel Score. Not yet 100 films — every entry here is fully sourced, not a placeholder.`;
 
     list.innerHTML = ranked.map(([key, f, value], i) => `
       <button class="rank-row" data-film="${key}">
@@ -6208,6 +6464,171 @@ theSubstance: {
       sub.textContent = "Couldn't load the divisiveness ranking right now.";
       list.innerHTML = `<p class="top100-empty">${escapeHtml(err.message)}</p>`;
     }
+  }
+
+  function renderDecadeStats(genre) {
+    const sub = document.getElementById("top100Sub");
+    const list = document.getElementById("rankList");
+    const matchesGenre = f => !genre || (f.genres || []).includes(genre);
+    const buckets = {};
+    Object.values(FILMS).filter(f => f.score != null && f.year && matchesGenre(f)).forEach(f => {
+      const decade = Math.floor(Number(f.year) / 10) * 10;
+      (buckets[decade] || (buckets[decade] = [])).push(f.score);
+    });
+    const decades = Object.keys(buckets).map(Number).sort((a, b) => b - a);
+    if (!decades.length) {
+      sub.textContent = `No ${genre ? genre + " " : ""}films scored yet to break down by decade.`;
+      list.innerHTML = `<p class="top100-empty">Check back as the catalog grows.</p>`;
+      return;
+    }
+    const totalCount = decades.reduce((s, d) => s + buckets[d].length, 0);
+    sub.textContent = `Average Kernel Score by release decade${genre ? ` for ${genre} films` : ""}, across ${totalCount} scored film(s).`;
+    const avgOf = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
+    const maxAvg = Math.max(...decades.map(d => avgOf(buckets[d])));
+    list.innerHTML = decades.map(d => {
+      const avg = avgOf(buckets[d]);
+      const pct = Math.max((avg / maxAvg) * 100, 4);
+      return `
+        <div class="stat-bar-row">
+          <span class="stat-bar-label">${d}s</span>
+          <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
+          <span class="stat-bar-value">${avg.toFixed(1)} <span class="stat-bar-n">(n=${buckets[d].length})</span></span>
+        </div>`;
+    }).join("");
+  }
+
+  // Not exhaustive — just enough to turn the common ISO 639-1 codes actually
+  // in this catalog into a readable label; anything unmapped falls back to
+  // showing the raw code rather than guessing.
+  const LANGUAGE_NAMES = {
+    en: "English", ko: "Korean", ja: "Japanese", fr: "French", es: "Spanish", de: "German",
+    zh: "Chinese", hi: "Hindi", it: "Italian", pt: "Portuguese", te: "Telugu", ta: "Tamil", ru: "Russian",
+  };
+
+  function renderOriginsStats(genre) {
+    const sub = document.getElementById("top100Sub");
+    const list = document.getElementById("rankList");
+    const matchesGenre = f => !genre || (f.genres || []).includes(genre);
+    const films = Object.values(FILMS).filter(f => matchesGenre(f) && (f.originalLanguage || (f.productionCountries || []).length));
+    if (!films.length) {
+      sub.textContent = `No origin data yet${genre ? ` for ${genre} films` : ""}.`;
+      list.innerHTML = `<p class="top100-empty">Check back as the catalog grows.</p>`;
+      return;
+    }
+    const langCounts = {};
+    films.forEach(f => { if (f.originalLanguage) langCounts[f.originalLanguage] = (langCounts[f.originalLanguage] || 0) + 1; });
+    const countryCounts = {};
+    films.forEach(f => (f.productionCountries || []).forEach(c => { countryCounts[c] = (countryCounts[c] || 0) + 1; }));
+
+    const langRows = Object.entries(langCounts).sort((a, b) => b[1] - a[1]);
+    const countryRows = Object.entries(countryCounts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+    const maxLang = Math.max(...langRows.map(r => r[1]), 1);
+    const maxCountry = Math.max(...countryRows.map(r => r[1]), 1);
+
+    sub.textContent = `Original language and production country breakdown${genre ? ` for ${genre} films` : ""}, across ${films.length} film(s) with this data.`;
+    const barsHtml = (rows, max, labelFor) => rows.map(([key, n]) => `
+      <div class="stat-bar-row">
+        <span class="stat-bar-label">${escapeHtml(labelFor(key))}</span>
+        <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.max((n / max) * 100, 4)}%"></div></div>
+        <span class="stat-bar-value">${n}</span>
+      </div>`).join("");
+    list.innerHTML = `
+      <h3 class="stat-group-title">By original language</h3>
+      ${barsHtml(langRows, maxLang, code => LANGUAGE_NAMES[code] || code)}
+      <h3 class="stat-group-title">By production country</h3>
+      ${barsHtml(countryRows, maxCountry, name => name)}`;
+  }
+
+  function renderRuntimeStats(genre) {
+    const sub = document.getElementById("top100Sub");
+    const list = document.getElementById("rankList");
+    const matchesGenre = f => !genre || (f.genres || []).includes(genre);
+    const films = Object.entries(FILMS).filter(([, f]) => f.runtimeMinutes != null && matchesGenre(f));
+    if (!films.length) {
+      sub.textContent = `No runtime data yet${genre ? ` for ${genre} films` : ""}.`;
+      list.innerHTML = `<p class="top100-empty">Check back as the catalog grows.</p>`;
+      return;
+    }
+    const bucketDefs = [
+      { label: "Under 100 min", test: m => m < 100 },
+      { label: "100–140 min", test: m => m >= 100 && m <= 140 },
+      { label: "Over 140 min", test: m => m > 140 },
+    ];
+    const buckets = bucketDefs.map(b => {
+      const inBucket = films.filter(([, f]) => b.test(f.runtimeMinutes) && f.score != null);
+      const avg = inBucket.length ? inBucket.reduce((s, [, f]) => s + f.score, 0) / inBucket.length : null;
+      return { ...b, count: inBucket.length, avg };
+    });
+    const maxAvg = Math.max(...buckets.filter(b => b.avg != null).map(b => b.avg), 1);
+    const sorted = films.slice().sort((a, b) => a[1].runtimeMinutes - b[1].runtimeMinutes);
+    const shortest = sorted[0], longest = sorted[sorted.length - 1];
+
+    sub.textContent = `Average Kernel Score by runtime length${genre ? ` for ${genre} films` : ""}, across ${films.length} film(s) with runtime data.`;
+    list.innerHTML = `
+      ${buckets.map(b => `
+        <div class="stat-bar-row">
+          <span class="stat-bar-label">${b.label}</span>
+          <div class="stat-bar-track">${b.avg != null ? `<div class="stat-bar-fill" style="width:${Math.max((b.avg / maxAvg) * 100, 4)}%"></div>` : ""}</div>
+          <span class="stat-bar-value">${b.avg != null ? b.avg.toFixed(1) : "—"} <span class="stat-bar-n">(n=${b.count})</span></span>
+        </div>`).join("")}
+      <div class="runtime-extremes">
+        <button class="rank-row" data-film="${shortest[0]}">
+          <span class="rank-meta"><span class="rank-title">Shortest: ${escapeHtml(shortest[1].name)}</span><span class="rank-year">${shortest[1].runtimeMinutes} min</span></span>
+        </button>
+        <button class="rank-row" data-film="${longest[0]}">
+          <span class="rank-meta"><span class="rank-title">Longest: ${escapeHtml(longest[1].name)}</span><span class="rank-year">${longest[1].runtimeMinutes} min</span></span>
+        </button>
+      </div>`;
+    list.querySelectorAll(".rank-row").forEach(row => {
+      row.addEventListener("click", () => { location.hash = row.dataset.film; });
+    });
+  }
+
+  // Rolls up each person's appearances in Kernel's OWN catalog, not their
+  // broader career filmography (that's what the per-film director/actor
+  // track-record chart already shows) — this is "who keeps showing up on
+  // Kernel specifically."
+  function renderCreatorsLeaderboard(genre) {
+    const sub = document.getElementById("top100Sub");
+    const list = document.getElementById("rankList");
+    const matchesGenre = f => !genre || (f.genres || []).includes(genre);
+    const films = Object.entries(FILMS).filter(([, f]) => matchesGenre(f));
+
+    function tally(role) {
+      const map = {};
+      films.forEach(([key, f]) => {
+        const person = f[role];
+        if (!person || !person.displayName) return;
+        (map[person.displayName] || (map[person.displayName] = [])).push([key, f]);
+      });
+      return Object.entries(map)
+        .filter(([, entries]) => entries.length >= 2)
+        .map(([name, entries]) => {
+          const scored = entries.filter(([, f]) => f.score != null);
+          const avg = scored.length ? scored.reduce((s, [, f]) => s + f.score, 0) / scored.length : null;
+          return { name, count: entries.length, avg };
+        })
+        .sort((a, b) => b.count - a.count || (b.avg || 0) - (a.avg || 0));
+    }
+
+    const directors = tally("director");
+    const actors = tally("actor");
+
+    if (!directors.length && !actors.length) {
+      sub.textContent = `No director or lead actor appears in 2+ films${genre ? ` tagged ${genre}` : ""} yet in this catalog.`;
+      list.innerHTML = `<p class="top100-empty">Check back as the catalog grows.</p>`;
+      return;
+    }
+
+    sub.textContent = `Directors and lead actors with 2+ films in Kernel's own catalog${genre ? ` (${genre})` : ""}, ranked by appearance count.`;
+    const groupHtml = (title, rows) => !rows.length ? "" : `
+      <h3 class="stat-group-title">${title}</h3>
+      ${rows.slice(0, 10).map(r => `
+        <div class="creator-leader-row">
+          <span class="creator-leader-name">${escapeHtml(r.name)}</span>
+          <span class="creator-leader-meta">${r.count} films in catalog${r.avg != null ? ` · avg ${r.avg.toFixed(1)}` : ""}</span>
+        </div>`).join("")}`;
+    list.innerHTML = groupHtml("Directors", directors) + groupHtml("Lead actors", actors);
   }
 
   // Genres shown even before any film carries them yet — kept separate from
