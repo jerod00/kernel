@@ -6,6 +6,7 @@ const {
   runTier1,
   readDraftWithRetry,
   saveAiTextToDraft,
+  ingestSeedContent,
   draftInsightText,
   buildFilmsEntryText,
   pickEntryKey,
@@ -130,6 +131,7 @@ async function findCandidates(beforeDate, onboardedIds, onboardedTitles, limit) 
       const dataId = slugify(c.title, String(c.year));
       const draftPath = path.join(DRAFTS_DIR, `${dataId}.json`);
       const data = readDraftWithRetry(draftPath);
+      await ingestSeedContent(data);
 
       const key = pickEntryKey(data.dataId, keys);
       keys.push(key);

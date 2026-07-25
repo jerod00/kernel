@@ -16,6 +16,8 @@ const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANTHROPIC_MODEL = "claude-haiku-4-5-20251001"; // same model synopsis.js already uses in production
 const WIDGET_PATH = path.join(__dirname, "..", "widget", "index.html");
 const DRAFTS_DIR = path.join(__dirname, "drafts");
+const DATA_SERVICE_URL = process.env.DATA_SERVICE_URL || "https://kernel-data-service-themoviekernel.fly.dev";
+const PIPELINE_INGEST_TOKEN = process.env.PIPELINE_INGEST_TOKEN;
 
 function runTier1(title, year) {
   execFileSync(process.execPath, ["--experimental-sqlite", "onboard-film.js", title, String(year)], {
@@ -51,6 +53,41 @@ function saveAiTextToDraft(draftPath, data, aiText) {
   data.directorInsight = aiText.directorInsight;
   data.actorInsight = aiText.actorInsight;
   fs.writeFileSync(draftPath, JSON.stringify(data, null, 2));
+}
+
+// onboard-film.js always fetches cold-start seed content (a starting score +
+// up to 3 excerpted TMDb reviews), but this pipeline runs in a GitHub Actions
+// runner with no access to the Fly volume kernel.db actually lives on — the
+// only other ingestion path (ingest-film.js) writes to that file directly
+// and simply doesn't work from here. This bridges it over HTTPS instead.
+// Non-fatal on failure: seed content is a nice-to-have for new films, not
+// something that should ever block a draft over a network hiccup.
+async function ingestSeedContent(data) {
+  if (data.seedScore == null && (!data.seedReviews || !data.seedReviews.length)) return;
+  if (!PIPELINE_INGEST_TOKEN) {
+    console.warn("  (PIPELINE_INGEST_TOKEN not set — skipping seed-content ingestion)");
+    return;
+  }
+  try {
+    const res = await fetch(`${DATA_SERVICE_URL}/admin/api/ingest-seed-content`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-ingest-token": PIPELINE_INGEST_TOKEN },
+      body: JSON.stringify({
+        filmId: data.dataId,
+        seedScore: data.seedScore,
+        seedScoreUrl: data.seedScoreUrl,
+        seedReviews: data.seedReviews,
+      }),
+    });
+    if (!res.ok) {
+      console.warn(`  (Seed-content ingest failed: ${res.status} ${await res.text()} — continuing without it)`);
+      return;
+    }
+    const result = await res.json();
+    console.log(`  Ingested ${result.ingested} seed-content fact(s) for ${data.dataId}`);
+  } catch (err) {
+    console.warn(`  (Seed-content ingest request failed: ${err.message} — continuing without it)`);
+  }
 }
 
 async function callAnthropic(system, userPrompt, maxTokens) {
@@ -261,6 +298,7 @@ module.exports = {
   runTier1,
   readDraftWithRetry,
   saveAiTextToDraft,
+  ingestSeedContent,
   draftInsightText,
   buildFilmsEntryText,
   pickEntryKey,

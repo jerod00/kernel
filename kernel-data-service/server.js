@@ -8,6 +8,7 @@ const { getSynopsis } = require("./synopsis");
 const {
   requireAdminToken,
   requireNotifyToken,
+  requireIngestToken,
   listOpenPRs,
   mergePR,
   closePR,
@@ -187,6 +188,52 @@ app.post("/admin/api/notify-pr", adminLimiter, requireNotifyToken, async (req, r
     res.json({ sent });
   } catch (err) {
     res.status(502).json({ error: err.message });
+  }
+});
+
+// Called by the daily pipeline right after Tier 1 fetch, so an auto-drafted
+// film's cold-start seed content (see the "seed_content" entity type)
+// actually reaches the production log — ingest-film.js already does this
+// exact thing for manually-onboarded films, but it writes to db.js's
+// ingest() directly, which only works against a local kernel.db. The
+// GitHub Actions runner has no access to the Fly volume the real database
+// lives on, so this is the bridge: same entity shape, reachable over HTTPS.
+app.post("/admin/api/ingest-seed-content", adminLimiter, requireIngestToken, (req, res) => {
+  const { filmId, seedScore, seedScoreUrl, seedReviews } = req.body || {};
+  if (typeof filmId !== "string" || !filmId) {
+    return res.status(400).json({ error: "filmId is required." });
+  }
+  let count = 0;
+  try {
+    if (seedScore != null) {
+      if (typeof seedScore !== "number") {
+        return res.status(400).json({ error: "seedScore must be a number." });
+      }
+      ingest({
+        entityType: "seed_content",
+        entityId: filmId,
+        field: "score",
+        value: seedScore,
+        source: seedScoreUrl || "SOURCE MISSING — fix before trusting this fact",
+      });
+      count++;
+    }
+    if (Array.isArray(seedReviews)) {
+      seedReviews.slice(0, 3).forEach((r, i) => {
+        if (!r || typeof r.content !== "string") return;
+        ingest({
+          entityType: "seed_content",
+          entityId: filmId,
+          field: `review_${i}`,
+          value: { author: r.author || null, content: r.content, url: r.url || null },
+          source: r.url || "SOURCE MISSING — fix before trusting this fact",
+        });
+        count++;
+      });
+    }
+    res.json({ ingested: count });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 });
 

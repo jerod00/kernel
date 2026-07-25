@@ -27,6 +27,11 @@ const GITHUB_ADMIN_TOKEN = process.env.GITHUB_ADMIN_TOKEN;
 // right after opening a PR — keeping it distinct means a leak of either
 // token doesn't also compromise the other.
 const PIPELINE_NOTIFY_TOKEN = process.env.PIPELINE_NOTIFY_TOKEN;
+// Separate again from both of the above: this one writes real facts into the
+// permanent hash-chained log (seed_content), not just a notification or a
+// read-only PR list — a smaller, differently-scoped blast radius deserves
+// its own token rather than reusing PIPELINE_NOTIFY_TOKEN.
+const PIPELINE_INGEST_TOKEN = process.env.PIPELINE_INGEST_TOKEN;
 
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(String(a));
@@ -53,6 +58,17 @@ function requireNotifyToken(req, res, next) {
   const provided = req.get("x-notify-token");
   if (!provided || !timingSafeEqual(provided, PIPELINE_NOTIFY_TOKEN)) {
     return res.status(401).json({ error: "Missing or invalid notify token." });
+  }
+  next();
+}
+
+function requireIngestToken(req, res, next) {
+  if (!PIPELINE_INGEST_TOKEN) {
+    return res.status(500).json({ error: "PIPELINE_INGEST_TOKEN not configured on the server." });
+  }
+  const provided = req.get("x-ingest-token");
+  if (!provided || !timingSafeEqual(provided, PIPELINE_INGEST_TOKEN)) {
+    return res.status(401).json({ error: "Missing or invalid ingest token." });
   }
   next();
 }
@@ -399,6 +415,7 @@ function adminPageHtml(token) {
 module.exports = {
   requireAdminToken,
   requireNotifyToken,
+  requireIngestToken,
   listOpenPRs,
   mergePR,
   closePR,

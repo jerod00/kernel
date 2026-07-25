@@ -90,6 +90,7 @@ jobs:
           TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
           OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PIPELINE_INGEST_TOKEN: ${{ secrets.PIPELINE_INGEST_TOKEN }}
           FILMS_JSON: ${{ steps.refresh.outputs.new-films-json }}
         run: node --experimental-sqlite draft-onboard.js
 
@@ -178,6 +179,7 @@ jobs:
           TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
           OMDB_API_KEY: ${{ secrets.OMDB_API_KEY }}
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PIPELINE_INGEST_TOKEN: ${{ secrets.PIPELINE_INGEST_TOKEN }}
         run: node --experimental-sqlite historical-backfill.js
 
       # The cursor advances every run regardless of whether the drafted

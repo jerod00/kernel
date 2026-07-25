@@ -5,6 +5,7 @@ const {
   runTier1,
   readDraftWithRetry,
   saveAiTextToDraft,
+  ingestSeedContent,
   draftInsightText,
   buildFilmsEntryText,
   pickEntryKey,
@@ -60,6 +61,7 @@ const filmsToProcess = JSON.parse(filmsArg);
       const dataId = slugify(title, String(year));
       const draftPath = path.join(DRAFTS_DIR, `${dataId}.json`);
       const data = readDraftWithRetry(draftPath);
+      await ingestSeedContent(data);
 
       const key = pickEntryKey(data.dataId, keys);
       keys.push(key);
