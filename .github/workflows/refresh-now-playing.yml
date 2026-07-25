@@ -44,12 +44,20 @@ jobs:
         if: steps.refresh.outputs.removed != ''
         env:
           REMOVED: ${{ steps.refresh.outputs.removed }}
+        # Retries with rebase on a push rejection — this job's checkout can go
+        # stale if anything else pushes to main while it's mid-run (several
+        # steps here take minutes), and a bare `git push` failing here used
+        # to just fail the whole job outright.
         run: |
           git config user.name "kernel-bot"
           git config user.email "actions@github.com"
           git add widget/index.html
           git commit -m "Auto-update: remove $REMOVED from Now Playing [skip ci]"
-          git push
+          for i in 1 2 3; do
+            git push && break
+            echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
+            git pull --rebase --autostash origin main
+          done
 
       # Refreshes Tier-1 (TMDb) budget/box-office numbers for films still
       # playing whose Tier 2 research hasn't happened yet — never touches a
@@ -67,6 +75,7 @@ jobs:
         if: steps.econ-refresh.outputs.econ-updated != ''
         env:
           ECON_UPDATED: ${{ steps.econ-refresh.outputs.econ-updated }}
+        # Same retry-with-rebase reasoning as "Commit removals" above.
         run: |
           git config user.name "kernel-bot"
           git config user.email "actions@github.com"
@@ -74,7 +83,11 @@ jobs:
           git commit -m "Auto-update: refresh Tier-1 box office numbers [skip ci]
 
           $ECON_UPDATED"
-          git push
+          for i in 1 2 3; do
+            git push && break
+            echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
+            git pull --rebase --autostash origin main
+          done
 
       # Auto-drafts a small number of new releases (capped in
       # refresh-now-playing.js, separately for theatrical vs. recent) using
@@ -184,44 +197,6 @@ jobs:
           PIPELINE_INGEST_TOKEN: ${{ secrets.PIPELINE_INGEST_TOKEN }}
         run: node --experimental-sqlite historical-backfill.js
 
-      # The cursor advances every run regardless of whether the drafted
-      # FILMS entries below ever get merged — it's purely mechanical
-      # bookkeeping ("which films has the backfill already looked at"), not
-      # an editorial decision, so it goes straight to main immediately.
-      # Critically, this must NOT wait for the PR below to merge: if it did,
-      # an unreviewed PR sitting open for a few days would cause every
-      # subsequent run to rediscover the exact same films and open duplicate
-      # PRs for them. Only historical-cursor.json is staged here — widget/
-      # index.html's new entries are left uncommitted for the PR step next.
-      - name: Commit cursor advancement
-        # `git diff --quiet` (as opposed to `git diff --cached --quiet` after
-        # staging) never detects a brand-new untracked file — it only
-        # compares tracked files against the index. The very first real run
-        # of this pipeline hit exactly that: historical-cursor.json didn't
-        # exist on main yet, so this step silently logged "no change" and
-        # skipped committing it entirely, even though the file existed
-        # (uncommitted) in the runner's working directory. Left unfixed,
-        # every subsequent run would have rediscovered the same 10 films and
-        # opened a duplicate PR for them — the exact failure mode this
-        # direct-to-main commit exists to prevent. Staging first with `git
-        # add`, then checking `--cached`, correctly covers new AND modified
-        # files alike.
-        if: always()
-        run: |
-          git config user.name "kernel-bot"
-          git config user.email "actions@github.com"
-          if [ -f kernel-data-service/historical-cursor.json ]; then
-            git add kernel-data-service/historical-cursor.json
-            if git diff --cached --quiet -- kernel-data-service/historical-cursor.json; then
-              echo "No cursor change to commit."
-            else
-              git commit -m "Historical backfill: advance cursor [skip ci]"
-              git push
-            fi
-          else
-            echo "No cursor file to commit (historical-backfill.js found no candidates today)."
-          fi
-
       - name: Open PR for historical backfill
         id: open-historical-pr
         if: steps.historical.outputs.historical-drafted != '' && steps.historical.outputs.historical-drafted != '[]'
@@ -269,6 +244,55 @@ jobs:
           DRAFTED_JSON: ${{ steps.historical.outputs.historical-drafted }}
           PR_NUMBER: ${{ steps.open-historical-pr.outputs.pr-number }}
         run: node review-draft-pr.js
+
+      # The cursor advances every run regardless of whether the drafted
+      # FILMS entries above ever get merged — it's purely mechanical
+      # bookkeeping ("which films has the backfill already looked at"), not
+      # an editorial decision. Deliberately placed AFTER the PR-open/notify/
+      # fact-check steps above (it used to run first, with `if: always()`) —
+      # a real production run hit exactly the failure mode that ordering
+      # invited: this step's `git push` lost a race against unrelated
+      # commits landing on main from elsewhere during the job's ~2-minute
+      # runtime, and because it sat before the PR-open step with no
+      # `if: always()` there, GitHub Actions skipped every step after this
+      # failure by default — silently dropping 10 fully Tier-1-fetched,
+      # AI-drafted films with no PR ever opened and no record except the
+      # job log. Running the cursor commit last means that failure mode can
+      # only ever cost a redundant cursor-advance (harmless, retried
+      # tomorrow), never the actual drafted content.
+      - name: Commit cursor advancement
+        # `git diff --quiet` (as opposed to `git diff --cached --quiet` after
+        # staging) never detects a brand-new untracked file — it only
+        # compares tracked files against the index. The very first real run
+        # of this pipeline hit exactly that: historical-cursor.json didn't
+        # exist on main yet, so this step silently logged "no change" and
+        # skipped committing it entirely, even though the file existed
+        # (uncommitted) in the runner's working directory. Left unfixed,
+        # every subsequent run would have rediscovered the same 10 films and
+        # opened a duplicate PR for them — the exact failure mode this
+        # direct-to-main commit exists to prevent. Staging first with `git
+        # add`, then checking `--cached`, correctly covers new AND modified
+        # files alike.
+        if: always()
+        run: |
+          git config user.name "kernel-bot"
+          git config user.email "actions@github.com"
+          git checkout main
+          if [ -f kernel-data-service/historical-cursor.json ]; then
+            git add kernel-data-service/historical-cursor.json
+            if git diff --cached --quiet -- kernel-data-service/historical-cursor.json; then
+              echo "No cursor change to commit."
+            else
+              git commit -m "Historical backfill: advance cursor [skip ci]"
+              for i in 1 2 3; do
+                git push && break
+                echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
+                git pull --rebase --autostash origin main
+              done
+            fi
+          else
+            echo "No cursor file to commit (historical-backfill.js found no candidates today)."
+          fi
 
       # Whatever's left over (beyond the auto-draft cap, or films
       # draft-onboard.js skipped) still needs a human for Tier 2 research —
