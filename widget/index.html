@@ -238,6 +238,11 @@
     display:flex; align-items:center; gap:0.6em; font-size:0.78rem; color:var(--muted);
     margin-top:2.6rem; padding-top:1.2rem; border-top:1px solid var(--rule);
   }
+  /* Always visible regardless of which page is showing (landing/film/top100)
+     so a screenshot of any of them carries the site's name — the film and
+     leaderboard pages otherwise show no branding at all on screen. */
+  .site-brand-footer{ font-size:0.8rem; color:var(--muted); margin-top:2.2rem; letter-spacing:0.02em; }
+  .site-brand-footer strong{ color:var(--gold); font-weight:normal; font-family:Georgia,serif; }
   .tmdb-logo{ height:1em; width:auto; flex-shrink:0; }
   .badge{
     font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.68rem;
@@ -245,6 +250,15 @@
     padding:0.25rem 0.55rem;
   }
   .film-overview{ font-size:0.95rem; color:var(--ink); opacity:0.85; margin:0 0 1.2rem; max-width:64ch; line-height:1.55; }
+
+  .share-row{ display:flex; align-items:center; gap:0.8rem; margin:0 0 1rem; }
+  .share-btn{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.76rem; letter-spacing:0.03em;
+    text-transform:uppercase; color:var(--teal); background:none; border:1px solid var(--teal);
+    padding:0.4rem 0.85rem; cursor:pointer;
+  }
+  .share-btn:hover{ background:var(--teal); color:var(--card); }
+  .share-status{ font-size:0.8rem; color:var(--muted); }
 
   .score-row{ display:flex; align-items:baseline; gap:1rem; margin-bottom:0.3rem; flex-wrap:wrap; }
   .score-num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:3rem; color:var(--gold); line-height:1; }
@@ -602,6 +616,10 @@
     <span aria-hidden="true">←</span> All films
   </button>
   <h2 class="top100-title">THE &ldquo;KERNEL&rsquo;S&rdquo; <strong>ALL-TIME</strong> RANKINGS</h2>
+  <div class="share-row">
+    <button class="share-btn" id="shareTopBtn">Share this ranking</button>
+    <span class="share-status" id="shareTopStatus"></span>
+  </div>
   <div class="leaderboard-mode" id="leaderboardMode" role="tablist" aria-label="Ranking type">
     <button class="mode-pill" data-mode="score" aria-selected="true">Kernel Score</button>
     <button class="mode-pill" data-mode="budget-efficiency" aria-selected="false">Budget Efficiency</button>
@@ -617,6 +635,7 @@
   <div class="rank-list" id="rankList"></div>
 </div>
 
+<div class="site-brand-footer"><strong>The Kernel</strong> · themoviekernel.com</div>
 <div class="tmdb-attribution" id="tmdbAttribution"></div>
 </div>
 
@@ -5947,6 +5966,36 @@ theSubstance: {
     }[ch]));
   }
 
+  // Matches scripts/build-seo-pages.js's own filmSlug() exactly — that
+  // script builds the real static per-film page (themoviekernel.com/film/
+  // <slug>/) with a proper title, description, and OG image, so sharing
+  // that URL gives a real link preview. Sharing the raw hash URL instead
+  // would only ever show the generic homepage preview, since a bot
+  // unfurling a link doesn't execute JS to see which hash is active.
+  function filmSlug(key) {
+    return key.replace(/([a-z0-9])([A-Z])/g, "$1-$2").toLowerCase();
+  }
+
+  async function shareLink(url, title, statusEl) {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, url });
+        return;
+      } catch (err) {
+        if (err && err.name === "AbortError") return; // user cancelled — not a failure
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(url);
+      if (statusEl) {
+        statusEl.textContent = "Link copied!";
+        setTimeout(() => { statusEl.textContent = ""; }, 2000);
+      }
+    } catch (err) {
+      if (statusEl) statusEl.textContent = url;
+    }
+  }
+
   function formatReviewDate(iso) {
     const d = new Date(iso);
     if (isNaN(d)) return "";
@@ -6262,6 +6311,10 @@ theSubstance: {
         </div>
         <span class="badge">${f.label || "Not yet reviewed"}</span>
       </div>
+      <div class="share-row">
+        <button class="share-btn" id="shareFilmBtn">Share this film</button>
+        <span class="share-status" id="shareFilmStatus"></span>
+      </div>
       ${f.overview ? `<p class="film-overview">${escapeHtml(f.overview)}</p>` : ""}
       ${watchProvidersHTML(f)}
       ${keywordsHTML(f)}
@@ -6323,6 +6376,13 @@ theSubstance: {
     widget.querySelectorAll(".collection-row").forEach(row => {
       row.addEventListener("click", () => { location.hash = row.dataset.film; });
     });
+    const shareBtn = widget.querySelector("#shareFilmBtn");
+    if (shareBtn) {
+      shareBtn.addEventListener("click", () => {
+        const url = `https://themoviekernel.com/film/${filmSlug(filmKey)}/`;
+        shareLink(url, `${f.name} (${f.year}) on The Kernel`, widget.querySelector("#shareFilmStatus"));
+      });
+    }
 
     tabs.forEach(t => t.setAttribute("aria-selected", t.dataset.film === filmKey ? "true" : "false"));
   }
@@ -6348,8 +6408,8 @@ theSubstance: {
     window.scrollTo(0, 0);
   }
 
-  function showTopPage() {
-    buildTopPage();
+  function showTopPage(mode, genre) {
+    buildTopPage(mode, genre);
     landingPage.hidden = true;
     filmPage.hidden = true;
     topPage.hidden = false;
@@ -6727,41 +6787,58 @@ theSubstance: {
     return selected ? selected.dataset.genre : "";
   }
 
-  function buildTopPage() {
+  // Keeps the current mode/genre in the URL without triggering a full
+  // re-route (that's what location.hash = ... would do, via hashchange) —
+  // replaceState just updates what's shareable/bookmarkable/copy-pasteable,
+  // with no page-rebuild or scroll-jump side effect while someone's
+  // actively clicking between tabs.
+  function updateTopHash(mode, genre) {
+    const parts = ["top100", mode];
+    if (genre) parts.push(encodeURIComponent(genre));
+    history.replaceState(null, "", "#" + parts.join("/"));
+  }
+
+  function buildTopPage(initialMode, initialGenre) {
     const filterEl = document.getElementById("genreFilter");
     const allGenres = Array.from(new Set([
       ...Object.values(FILMS).flatMap(f => f.genres || []),
       ...RESERVED_GENRES,
     ])).sort();
+    const genre = initialGenre && allGenres.includes(initialGenre) ? initialGenre : "";
 
     filterEl.innerHTML = ["", ...allGenres].map(g => `
-      <button class="genre-pill" role="tab" data-genre="${g}" aria-selected="${g === "" ? "true" : "false"}">${g || "All genres"}</button>
+      <button class="genre-pill" role="tab" data-genre="${g}" aria-selected="${g === genre ? "true" : "false"}">${g || "All genres"}</button>
     `).join("");
     filterEl.querySelectorAll(".genre-pill").forEach(pill => {
       pill.addEventListener("click", () => {
         filterEl.querySelectorAll(".genre-pill").forEach(p => p.setAttribute("aria-selected", p === pill ? "true" : "false"));
         renderTopList(pill.dataset.genre);
+        updateTopHash(leaderboardMode, pill.dataset.genre);
       });
     });
 
-    leaderboardMode = "score";
+    leaderboardMode = initialMode && LEADERBOARD_LABELS[initialMode] ? initialMode : "score";
     const modeEl = document.getElementById("leaderboardMode");
-    modeEl.querySelectorAll(".mode-pill").forEach(p => p.setAttribute("aria-selected", p.dataset.mode === "score" ? "true" : "false"));
+    modeEl.querySelectorAll(".mode-pill").forEach(p => p.setAttribute("aria-selected", p.dataset.mode === leaderboardMode ? "true" : "false"));
     modeEl.querySelectorAll(".mode-pill").forEach(pill => {
       pill.addEventListener("click", () => {
         leaderboardMode = pill.dataset.mode;
         modeEl.querySelectorAll(".mode-pill").forEach(p => p.setAttribute("aria-selected", p === pill ? "true" : "false"));
-        renderTopList(currentGenreSelection());
+        const currentGenre = currentGenreSelection();
+        renderTopList(currentGenre);
+        updateTopHash(leaderboardMode, currentGenre);
       });
     });
 
-    renderTopList("");
+    renderTopList(genre);
+    updateTopHash(leaderboardMode, genre);
   }
 
   function routeFromHash() {
     const key = location.hash.slice(1);
-    if (key === "top100") {
-      showTopPage();
+    if (key === "top100" || key.startsWith("top100/")) {
+      const [, mode, encodedGenre] = key.split("/");
+      showTopPage(mode, encodedGenre ? decodeURIComponent(encodedGenre) : "");
     } else if (FILMS[key]) {
       showFilmPage(key);
     } else {
@@ -6785,6 +6862,11 @@ theSubstance: {
   function goToLanding() { location.hash = ""; }
   backLink.addEventListener("click", goToLanding);
   backLinkTop.addEventListener("click", goToLanding);
+  document.getElementById("shareTopBtn").addEventListener("click", () => {
+    // Reads location.href at click time, not page-load time — updateTopHash()
+    // keeps it in sync with whichever mode/genre tab is currently active.
+    shareLink(location.href, "Film rankings on The Kernel", document.getElementById("shareTopStatus"));
+  });
   window.addEventListener("hashchange", routeFromHash);
 
   routeFromHash();
