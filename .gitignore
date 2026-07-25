@@ -4,3 +4,4 @@ node_modules/
 **/backups/
 **/drafts/
 *.tmp
+seo-build/
