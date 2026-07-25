@@ -182,7 +182,21 @@
   }
   .rank-num.rank-top{ color:var(--gold); }
   .rank-poster{ width:40px; height:60px; object-fit:cover; border:1px solid var(--rule); flex-shrink:0; background:var(--rule); }
-  .rank-poster-lg{ width:80px; height:120px; }
+  .rank-poster-lg{ width:80px; height:120px; cursor:zoom-in; }
+
+  .poster-lightbox{
+    position:fixed; inset:0; z-index:100; display:flex; align-items:center; justify-content:center;
+    background:rgba(0,0,0,0.82); cursor:zoom-out; padding:2rem; box-sizing:border-box;
+  }
+  .poster-lightbox[hidden]{ display:none; }
+  .poster-lightbox img{
+    max-width:min(90vw, 500px); max-height:90vh; width:auto; height:auto;
+    object-fit:contain; border:1px solid var(--rule); box-shadow:0 10px 40px rgba(0,0,0,0.5);
+  }
+  @media (prefers-reduced-motion: no-preference){
+    .poster-lightbox img{ animation:posterLightboxIn 0.15s ease-out; }
+  }
+  @keyframes posterLightboxIn{ from{ transform:scale(0.92); opacity:0; } to{ transform:scale(1); opacity:1; } }
   .rank-meta{ flex:1; min-width:0; }
   .rank-title{ display:block; font-family:Georgia,serif; font-size:1rem; text-wrap:balance; }
   .rank-year{ color:var(--muted); font-size:0.85rem; }
@@ -648,6 +662,10 @@
 
 <div class="site-brand-footer"><strong>The Kernel</strong> · themoviekernel.com · <a href="/privacy.html">Privacy</a> · <a href="/terms.html">Terms</a></div>
 <div class="tmdb-attribution" id="tmdbAttribution"></div>
+</div>
+
+<div class="poster-lightbox" id="posterLightbox" hidden>
+  <img id="posterLightboxImg" src="" alt="">
 </div>
 
 <script>
@@ -6583,6 +6601,30 @@ theSubstance: {
     }
   }
 
+  // Click-to-zoom on drill-down poster tiles — opens a larger version in an
+  // overlay rather than navigating, since the poster and the rest of the row
+  // have different click intents (zoom vs. go to film). Wired once here;
+  // closing on a click anywhere in the overlay (backdrop OR the image
+  // itself) and on Escape covers every way a user might expect to dismiss it.
+  const posterLightbox = document.getElementById("posterLightbox");
+  const posterLightboxImg = document.getElementById("posterLightboxImg");
+
+  function openPosterLightbox(posterPath, altText) {
+    posterLightboxImg.src = `https://image.tmdb.org/t/p/w500${posterPath}`;
+    posterLightboxImg.alt = altText;
+    posterLightbox.hidden = false;
+  }
+
+  function closePosterLightbox() {
+    posterLightbox.hidden = true;
+    posterLightboxImg.src = "";
+  }
+
+  posterLightbox.addEventListener("click", closePosterLightbox);
+  document.addEventListener("keydown", e => {
+    if (e.key === "Escape" && !posterLightbox.hidden) closePosterLightbox();
+  });
+
   // Shared drill-down view for the four aggregate breakdowns below (By
   // Decade, Origins, Runtime, Directors & Actors) — clicking any bar/row in
   // those shows the actual films behind the number here, with a way back
@@ -6602,7 +6644,7 @@ theSubstance: {
         <button class="back-to-breakdown" id="backToBreakdown">&larr; Back</button>
         ${entries.map(([key, f]) => `
           <button class="rank-row" data-film="${key}">
-            <img class="rank-poster rank-poster-lg" src="https://image.tmdb.org/t/p/w154${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
+            <img class="rank-poster rank-poster-lg" data-poster="${f.poster}" data-name="${escapeHtml(f.name)}" src="https://image.tmdb.org/t/p/w154${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
             <span class="rank-meta">
               <span class="rank-title">${escapeHtml(f.name)}</span>
               <span class="rank-year">${f.year}</span>
@@ -6611,6 +6653,14 @@ theSubstance: {
           </button>`).join("")}`;
       list.querySelectorAll(".rank-row").forEach(row => {
         row.addEventListener("click", () => { location.hash = row.dataset.film; });
+      });
+      // Poster click zooms instead of navigating — stopPropagation keeps the
+      // row's own "go to film" click from also firing.
+      list.querySelectorAll(".rank-poster-lg").forEach(img => {
+        img.addEventListener("click", e => {
+          e.stopPropagation();
+          openPosterLightbox(img.dataset.poster, img.dataset.name);
+        });
       });
     }
     document.getElementById("backToBreakdown").addEventListener("click", () => renderTopList(genre));
