@@ -6035,6 +6035,22 @@ theSubstance: {
     }
   }
 
+  // Always copies, skipping the native share-sheet branch shareLink() tries
+  // first on mobile — for a button whose whole job is "get this link on my
+  // clipboard," a share-sheet detour (pick an app, maybe cancel) is friction
+  // the ask was explicitly to remove.
+  async function copyLink(url, statusEl) {
+    try {
+      await navigator.clipboard.writeText(url);
+      if (statusEl) {
+        statusEl.textContent = "Link copied!";
+        setTimeout(() => { statusEl.textContent = ""; }, 2000);
+      }
+    } catch (err) {
+      if (statusEl) statusEl.textContent = url;
+    }
+  }
+
   // Desktop-focused complement to the Share button above (which mostly only
   // gets a real native share sheet on mobile — desktop browsers largely
   // don't implement navigator.share, so without this the only desktop
@@ -6445,7 +6461,7 @@ theSubstance: {
     if (shareBtn) {
       shareBtn.addEventListener("click", () => {
         const url = `https://themoviekernel.com/film/${filmSlug(filmKey)}/`;
-        shareLink(url, `${f.name} (${f.year}) on The Kernel`, widget.querySelector("#shareFilmStatus"));
+        copyLink(url, widget.querySelector("#shareFilmStatus"));
       });
     }
 
