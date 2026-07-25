@@ -270,21 +270,32 @@ function adminPageHtml(token) {
 
   async function initPush() {
     const banner = document.getElementById("pushBanner");
-    if (!VAPID_PUBLIC_KEY || !("serviceWorker" in navigator) || !("PushManager" in window)) {
+    // VAPID misconfigured server-side, or a browser too old to ever support
+    // this — genuinely nothing to show. Everything else below still shows
+    // *some* banner, since iOS deliberately doesn't expose PushManager on
+    // window at all until the page is running standalone — checking for it
+    // before checking isStandalone() would silently hide the "add to home
+    // screen" hint on exactly the visit where it's most needed.
+    if (!VAPID_PUBLIC_KEY || !("serviceWorker" in navigator)) {
       banner.hidden = true;
       return;
     }
     banner.hidden = false;
     const reg = await navigator.serviceWorker.register("/admin/sw.js", { scope: "/admin" });
+    if (!isStandalone()) {
+      banner.className = "push-banner";
+      banner.textContent = "Add this page to your Home Screen, then open it from there to enable push notifications.";
+      return;
+    }
+    if (!("PushManager" in window)) {
+      banner.className = "push-banner";
+      banner.textContent = "This device/browser doesn't support push notifications.";
+      return;
+    }
     const existing = await reg.pushManager.getSubscription();
     if (existing) {
       banner.className = "push-banner ok";
       banner.textContent = "Push notifications are enabled on this device.";
-      return;
-    }
-    if (!isStandalone()) {
-      banner.className = "push-banner";
-      banner.textContent = "Add this page to your Home Screen, then open it from there to enable push notifications.";
       return;
     }
     banner.className = "push-banner";
