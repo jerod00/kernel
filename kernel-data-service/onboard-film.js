@@ -14,8 +14,10 @@ const { slugify } = require("./slugify");
 
 const TMDB_ACCESS_TOKEN = process.env.TMDB_ACCESS_TOKEN;
 const OMDB_API_KEY = process.env.OMDB_API_KEY;
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY;
 const TMDB_BASE = "https://api.themoviedb.org/3";
 const OMDB_BASE = "https://www.omdbapi.com";
+const YOUTUBE_BASE = "https://www.googleapis.com/youtube/v3";
 const PERSON_CREDIT_CAP = 30; // keep OMDb calls/person bounded
 
 if (!TMDB_ACCESS_TOKEN) {
@@ -72,6 +74,35 @@ function pickBestVideo(results) {
   const rank = v => (v.type === "Trailer" && v.official ? 0 : v.type === "Trailer" ? 1 : v.type === "Teaser" && v.official ? 2 : v.type === "Teaser" ? 3 : 9);
   yt.sort((a, b) => rank(a) - rank(b) || new Date(a.published_at) - new Date(b.published_at));
   return yt.find(v => rank(v) < 9) || null;
+}
+
+// Real, freely-accessible interest signal for streaming-only titles that
+// have no box office at all — measures interest in the trailer itself, not
+// confirmed film viewers, but it's the closest substitute available since
+// no streaming platform publishes actual viewership numbers for free.
+async function fetchYoutubeStats(videoId) {
+  if (!YOUTUBE_API_KEY) return null;
+  try {
+    const res = await fetch(`${YOUTUBE_BASE}/videos?part=statistics&id=${videoId}&key=${YOUTUBE_API_KEY}`);
+    if (!res.ok) {
+      console.warn(`  (YouTube stats fetch failed: ${res.status} — continuing without them)`);
+      return null;
+    }
+    const data = await res.json();
+    const stats = data.items && data.items[0] && data.items[0].statistics;
+    if (!stats) return null;
+    // Creators can hide like count / disable comments per-video — each
+    // stat is independently optional, never assume all three are present
+    // just because one is.
+    return {
+      viewCount: stats.viewCount != null ? Number(stats.viewCount) : null,
+      likeCount: stats.likeCount != null ? Number(stats.likeCount) : null,
+      commentCount: stats.commentCount != null ? Number(stats.commentCount) : null,
+    };
+  } catch (err) {
+    console.warn(`  (YouTube stats fetch failed: ${err.message} — continuing without them)`);
+    return null;
+  }
 }
 
 let omdbDisabled = false; // set once a 401 proves the key itself is bad — stops hammering it 30x in the filmography loop
@@ -241,6 +272,8 @@ async function buildPersonFilmography(personId, isDirector) {
     if (best) {
       draft.trailer = { key: best.key, name: best.name, type: best.type, official: !!best.official };
       draft.sources.trailer = tmdbUrl;
+      const ytStats = await fetchYoutubeStats(best.key);
+      if (ytStats) Object.assign(draft.trailer, ytStats);
     }
   } catch (err) {
     console.warn(`  (TMDb videos fetch failed: ${err.message} — continuing without a trailer)`);
@@ -260,6 +293,7 @@ async function buildPersonFilmography(personId, isDirector) {
   console.log(`seedScore (IMDb rating x10): ${draft.seedScore != null ? draft.seedScore : "not available from OMDb"}`);
   console.log(`seedReviews (TMDb, excerpted, capped at 3): ${draft.seedReviews.length} found`);
   console.log(`trailer (TMDb videos): ${draft.trailer ? `${draft.trailer.type}${draft.trailer.official ? " (official)" : ""} "${draft.trailer.name}" [${draft.trailer.key}]` : "not found"}`);
+  console.log(`trailer stats (YouTube): ${draft.trailer && draft.trailer.viewCount != null ? `${draft.trailer.viewCount} views, ${draft.trailer.likeCount ?? "n/a"} likes, ${draft.trailer.commentCount ?? "n/a"} comments` : "not available"}`);
 
   if (mismatches.length) {
     console.log("\n--- MISMATCH WARNINGS ---");
