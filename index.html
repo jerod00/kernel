@@ -251,7 +251,7 @@
   }
   .film-overview{ font-size:0.95rem; color:var(--ink); opacity:0.85; margin:0 0 1.2rem; max-width:64ch; line-height:1.55; }
 
-  .share-row{ display:flex; align-items:center; gap:0.8rem; margin:0 0 1rem; }
+  .share-row{ display:flex; align-items:center; gap:0.8rem; flex-wrap:wrap; margin:0 0 1rem; }
   .share-btn{
     font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.76rem; letter-spacing:0.03em;
     text-transform:uppercase; color:var(--teal); background:none; border:1px solid var(--teal);
@@ -259,6 +259,12 @@
   }
   .share-btn:hover{ background:var(--teal); color:var(--card); }
   .share-status{ font-size:0.8rem; color:var(--muted); }
+  .share-link{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.76rem; letter-spacing:0.03em;
+    text-transform:uppercase; color:var(--muted); text-decoration:none; border-bottom:1px solid var(--rule);
+    padding:0.4rem 0;
+  }
+  .share-link:hover{ color:var(--teal); border-color:var(--teal); }
 
   .score-row{ display:flex; align-items:baseline; gap:1rem; margin-bottom:0.3rem; flex-wrap:wrap; }
   .score-num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:3rem; color:var(--gold); line-height:1; }
@@ -618,6 +624,8 @@
   <h2 class="top100-title">THE &ldquo;KERNEL&rsquo;S&rdquo; <strong>ALL-TIME</strong> RANKINGS</h2>
   <div class="share-row">
     <button class="share-btn" id="shareTopBtn">Share this ranking</button>
+    <a class="share-link" id="shareTopX" href="#" target="_blank" rel="noopener noreferrer">Share to X</a>
+    <a class="share-link" id="shareTopReddit" href="#" target="_blank" rel="noopener noreferrer">Share to Reddit</a>
     <span class="share-status" id="shareTopStatus"></span>
   </div>
   <div class="leaderboard-mode" id="leaderboardMode" role="tablist" aria-label="Ranking type">
@@ -5996,6 +6004,25 @@ theSubstance: {
     }
   }
 
+  // Desktop-focused complement to the Share button above (which mostly only
+  // gets a real native share sheet on mobile — desktop browsers largely
+  // don't implement navigator.share, so without this the only desktop
+  // option is copy-link). Real <a> tags, not click handlers: right-click
+  // "copy link" still works, and there's a real href even without JS.
+  function shareIntentLinksHTML(url, text) {
+    const xUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`;
+    const redditUrl = `https://www.reddit.com/submit?url=${encodeURIComponent(url)}&title=${encodeURIComponent(text)}`;
+    return `
+      <a class="share-link" href="${xUrl}" target="_blank" rel="noopener noreferrer">Share to X</a>
+      <a class="share-link" href="${redditUrl}" target="_blank" rel="noopener noreferrer">Share to Reddit</a>`;
+  }
+
+  function filmShareLinksHTML(f, filmKey) {
+    const url = `https://themoviekernel.com/film/${filmSlug(filmKey)}/`;
+    const text = `${f.name} (${f.year}) — ${f.score != null ? f.score + "/100 Kernel Score" : "not yet reviewed"} on The Kernel`;
+    return shareIntentLinksHTML(url, text);
+  }
+
   function formatReviewDate(iso) {
     const d = new Date(iso);
     if (isNaN(d)) return "";
@@ -6313,6 +6340,7 @@ theSubstance: {
       </div>
       <div class="share-row">
         <button class="share-btn" id="shareFilmBtn">Share this film</button>
+        ${filmShareLinksHTML(f, filmKey)}
         <span class="share-status" id="shareFilmStatus"></span>
       </div>
       ${f.overview ? `<p class="film-overview">${escapeHtml(f.overview)}</p>` : ""}
@@ -6796,6 +6824,15 @@ theSubstance: {
     const parts = ["top100", mode];
     if (genre) parts.push(encodeURIComponent(genre));
     history.replaceState(null, "", "#" + parts.join("/"));
+    // Refresh the X/Reddit intent links too — they're static <a> tags (not
+    // rebuilt by renderTopList), so their href needs updating explicitly
+    // whenever the shareable URL changes.
+    const label = (LEADERBOARD_LABELS[mode] || "Kernel Score") + (genre ? ` (${genre})` : "");
+    const text = `${label} — film rankings on The Kernel`;
+    document.getElementById("shareTopX").href =
+      `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(location.href)}`;
+    document.getElementById("shareTopReddit").href =
+      `https://www.reddit.com/submit?url=${encodeURIComponent(location.href)}&title=${encodeURIComponent(text)}`;
   }
 
   function buildTopPage(initialMode, initialGenre) {
