@@ -7,6 +7,7 @@ const rateLimit = require("express-rate-limit");
 const {
   ingest, getLatest, getHistory, listEntities, verifyChain,
   logPageview, getPageviewSummary, logError, getRecentErrors,
+  saveRedditOpportunity, getKnownRedditPostIds, getRedditOpportunities, setRedditOpportunityStatus,
 } = require("./db");
 const { looksLikeSpam } = require("./spam-filter");
 const { getSynopsis } = require("./synopsis");
@@ -14,6 +15,7 @@ const {
   requireAdminToken,
   requireNotifyToken,
   requireIngestToken,
+  requireRedditToken,
   listOpenPRs,
   mergePR,
   closePR,
@@ -317,6 +319,54 @@ app.get("/admin/api/analytics/summary", adminLimiter, requireAdminToken, (req, r
 
 app.get("/admin/api/errors", adminLimiter, requireAdminToken, (req, res) => {
   res.json(getRecentErrors(50));
+});
+
+// Called by the daily reddit-listening pipeline before it drafts anything —
+// letting it skip posts it's already surfaced avoids wasting an Anthropic
+// call drafting a reply for a post already sitting in the queue. Read-only,
+// gated by its own token (see requireRedditToken in admin.js) rather than
+// PIPELINE_INGEST_TOKEN, since it has nothing to do with the hash-chained log.
+app.get("/admin/api/reddit-opportunities/known-ids", adminLimiter, requireRedditToken, (req, res) => {
+  res.json(getKnownRedditPostIds());
+});
+
+// Draft-and-approve only — this never posts to Reddit itself, it just stores
+// a suggestion for a human to review in the admin panel. INSERT OR IGNORE in
+// saveRedditOpportunity() means a duplicate postId is a harmless no-op.
+app.post("/admin/api/reddit-opportunities/ingest", adminLimiter, requireRedditToken, (req, res) => {
+  const { filmKey, filmName, subreddit, postId, postTitle, postUrl, postExcerpt, draftedReply } = req.body || {};
+  const requiredStrings = { filmKey, filmName, subreddit, postId, postTitle, postUrl, draftedReply };
+  for (const [key, value] of Object.entries(requiredStrings)) {
+    if (typeof value !== "string" || !value) {
+      return res.status(400).json({ error: `${key} must be a non-empty string.` });
+    }
+  }
+  try {
+    const inserted = saveRedditOpportunity({
+      filmKey, filmName, subreddit, postId, postTitle, postUrl,
+      postExcerpt: postExcerpt != null ? String(postExcerpt) : null,
+      draftedReply,
+    });
+    res.json({ inserted });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+});
+
+app.get("/admin/api/reddit-opportunities", adminLimiter, requireAdminToken, (req, res) => {
+  res.json(getRedditOpportunities(req.query.status || "new"));
+});
+
+app.post("/admin/api/reddit-opportunities/:id/dismiss", adminLimiter, requireAdminToken, (req, res) => {
+  const found = setRedditOpportunityStatus(Number(req.params.id), "dismissed");
+  if (!found) return res.status(404).json({ error: "No opportunity with that id." });
+  res.json({ ok: true });
+});
+
+app.post("/admin/api/reddit-opportunities/:id/mark-posted", adminLimiter, requireAdminToken, (req, res) => {
+  const found = setRedditOpportunityStatus(Number(req.params.id), "posted");
+  if (!found) return res.status(404).json({ error: "No opportunity with that id." });
+  res.json({ ok: true });
 });
 
 app.get("/admin/api/prs", adminLimiter, requireAdminToken, async (req, res) => {

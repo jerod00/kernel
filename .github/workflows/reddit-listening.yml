@@ -1,0 +1,35 @@
+name: Reddit Organic-Growth Listening
+
+on:
+  schedule:
+    - cron: "0 15 * * *" # once daily, ~10am US Eastern — a couple hours after the catalog review
+  workflow_dispatch: {} # allows a manual run from the Actions tab for testing
+
+jobs:
+  listen:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Install dependencies
+        working-directory: kernel-data-service
+        run: npm ci
+
+      # Draft-and-approve only — this never posts to Reddit. It searches
+      # public read-only endpoints (app-only OAuth, no user account acted as)
+      # for films currently in the catalog, drafts a genuine reply grounded
+      # in real Kernel data, and stores the suggestion in kernel-data-service
+      # for a human to review in the admin panel. See
+      # find-reddit-opportunities.js for the full reasoning.
+      - name: Find Reddit opportunities
+        working-directory: kernel-data-service
+        env:
+          REDDIT_CLIENT_ID: ${{ secrets.REDDIT_CLIENT_ID }}
+          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          PIPELINE_REDDIT_TOKEN: ${{ secrets.PIPELINE_REDDIT_TOKEN }}
+        run: node find-reddit-opportunities.js

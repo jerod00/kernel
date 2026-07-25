@@ -32,6 +32,10 @@ const PIPELINE_NOTIFY_TOKEN = process.env.PIPELINE_NOTIFY_TOKEN;
 // read-only PR list — a smaller, differently-scoped blast radius deserves
 // its own token rather than reusing PIPELINE_NOTIFY_TOKEN.
 const PIPELINE_INGEST_TOKEN = process.env.PIPELINE_INGEST_TOKEN;
+// Its own token again: this one only ever reads/writes the mutable, dismissable
+// reddit_opportunities table — never the hash-chained log, never a PR or a
+// push. Smallest blast radius of the four if it ever leaks.
+const PIPELINE_REDDIT_TOKEN = process.env.PIPELINE_REDDIT_TOKEN;
 
 function timingSafeEqual(a, b) {
   const bufA = Buffer.from(String(a));
@@ -69,6 +73,17 @@ function requireIngestToken(req, res, next) {
   const provided = req.get("x-ingest-token");
   if (!provided || !timingSafeEqual(provided, PIPELINE_INGEST_TOKEN)) {
     return res.status(401).json({ error: "Missing or invalid ingest token." });
+  }
+  next();
+}
+
+function requireRedditToken(req, res, next) {
+  if (!PIPELINE_REDDIT_TOKEN) {
+    return res.status(500).json({ error: "PIPELINE_REDDIT_TOKEN not configured on the server." });
+  }
+  const provided = req.get("x-reddit-token");
+  if (!provided || !timingSafeEqual(provided, PIPELINE_REDDIT_TOKEN)) {
+    return res.status(401).json({ error: "Missing or invalid reddit token." });
   }
   next();
 }
@@ -265,6 +280,13 @@ function adminPageHtml(token) {
   .error-msg{ font-size:0.9rem; color:var(--neg); }
   .error-time{ font-family:ui-monospace,Consolas,monospace; font-size:0.72rem; color:var(--muted); white-space:nowrap; }
   .error-stack{ font-family:ui-monospace,Consolas,monospace; font-size:0.75rem; color:var(--muted); white-space:pre-wrap; margin-top:0.5rem; max-height:200px; overflow-y:auto; }
+  .reddit-card{ background:var(--card); border:1px solid var(--rule); padding:1.1rem 1.3rem; margin-bottom:1.1rem; }
+  .reddit-head{ display:flex; justify-content:space-between; gap:1rem; align-items:baseline; flex-wrap:wrap; margin-bottom:0.3rem; }
+  .reddit-head h3{ font-family:Georgia,serif; font-size:1rem; margin:0; }
+  .reddit-meta{ font-family:ui-monospace,Consolas,monospace; font-size:0.75rem; color:var(--muted); white-space:nowrap; }
+  .reddit-meta a{ color:var(--teal); }
+  .reddit-film{ font-size:0.8rem; color:var(--gold); margin-bottom:0.6rem; }
+  .reddit-reply{ font-size:0.9rem; white-space:pre-wrap; background:var(--ink); color:var(--paper); border:1px solid var(--rule); padding:0.8rem 0.95rem; margin:0.6rem 0; }
 </style>
 </head>
 <body>
@@ -273,6 +295,12 @@ function adminPageHtml(token) {
   <p class="sub">Open pull requests from the daily catalog-review pipeline. Merging here pushes to <code>main</code> exactly like the GitHub "Merge" button — nothing skipped.</p>
   <div id="pushBanner" class="push-banner" hidden></div>
   <div id="list" class="loading">Loading open PRs…</div>
+
+  <div class="section-block">
+    <h2>Reddit Opportunities</h2>
+    <p class="sub" style="margin-bottom:0.9rem;">Drafted replies only — nothing here ever posts on its own. Copy, review, and post manually if it's a good fit.</p>
+    <div id="redditList" class="loading">Loading opportunities…</div>
+  </div>
 
   <div class="section-block">
     <h2>Traffic (last 7 days)</h2>
@@ -479,9 +507,74 @@ function adminPageHtml(token) {
     }
   }
 
+  function redditCard(o) {
+    const el = document.createElement("div");
+    el.className = "reddit-card";
+    el.innerHTML = \`
+      <div class="reddit-head">
+        <h3>\${escapeHtml(o.post_title)}</h3>
+        <span class="reddit-meta">r/\${escapeHtml(o.subreddit)} · <a href="\${o.post_url}" target="_blank" rel="noopener noreferrer">view thread</a></span>
+      </div>
+      <div class="reddit-film">Matched film: \${escapeHtml(o.film_name)}</div>
+      <div class="reddit-reply">\${escapeHtml(o.drafted_reply)}</div>
+      <div class="actions">
+        <button class="merge" data-action="copy">Copy reply</button>
+        <button class="merge" data-action="posted">Mark posted</button>
+        <button class="close" data-action="dismiss">Dismiss</button>
+      </div>
+      <div class="status"></div>
+    \`;
+    const statusEl = el.querySelector(".status");
+    el.querySelector('[data-action="copy"]').addEventListener("click", async () => {
+      try {
+        await navigator.clipboard.writeText(o.drafted_reply);
+        statusEl.textContent = "Copied.";
+        statusEl.className = "status ok";
+      } catch (err) {
+        statusEl.textContent = "Copy failed: " + err.message;
+        statusEl.className = "status err";
+      }
+    });
+    el.querySelector('[data-action="posted"]').addEventListener("click", () => redditAct(o.id, "mark-posted", el));
+    el.querySelector('[data-action="dismiss"]').addEventListener("click", () => redditAct(o.id, "dismiss", el));
+    return el;
+  }
+
+  async function redditAct(id, action, el) {
+    const statusEl = el.querySelector(".status");
+    const buttons = el.querySelectorAll("button");
+    buttons.forEach(b => (b.disabled = true));
+    try {
+      await api(\`/admin/api/reddit-opportunities/\${id}/\${action}\`, { method: "POST" });
+      statusEl.textContent = action === "dismiss" ? "Dismissed." : "Marked posted.";
+      statusEl.className = "status ok";
+      setTimeout(() => el.remove(), 700);
+    } catch (err) {
+      statusEl.textContent = "Failed: " + err.message;
+      statusEl.className = "status err";
+      buttons.forEach(b => (b.disabled = false));
+    }
+  }
+
+  async function loadReddit() {
+    const el = document.getElementById("redditList");
+    try {
+      const opportunities = await api("/admin/api/reddit-opportunities?status=new");
+      el.innerHTML = "";
+      if (!opportunities.length) {
+        el.innerHTML = '<p class="empty">No open opportunities right now.</p>';
+        return;
+      }
+      opportunities.forEach(o => el.appendChild(redditCard(o)));
+    } catch (err) {
+      el.innerHTML = '<p class="status err">Failed to load: ' + escapeHtml(err.message) + "</p>";
+    }
+  }
+
   initPush().catch(err => console.error("Push setup failed:", err));
   loadAnalytics();
   loadErrors();
+  loadReddit();
 
   (async () => {
     try {
@@ -505,6 +598,7 @@ module.exports = {
   requireAdminToken,
   requireNotifyToken,
   requireIngestToken,
+  requireRedditToken,
   listOpenPRs,
   mergePR,
   closePR,

@@ -317,6 +317,7 @@ module.exports = {
   readDraftWithRetry,
   saveAiTextToDraft,
   ingestSeedContent,
+  callAnthropic,
   draftInsightText,
   buildFilmsEntryText,
   pickEntryKey,

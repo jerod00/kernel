@@ -66,6 +66,27 @@ db.exec(`
   );
 `);
 
+// Draft-and-approve organic-growth suggestions — a human always reviews and
+// manually posts, nothing here ever posts to Reddit itself. UNIQUE(post_id)
+// is the actual dedup mechanism (INSERT OR IGNORE below), so the daily
+// finder script never needs its own cursor file the way historical-backfill
+// does; the DB itself is the single source of "have I seen this post".
+db.exec(`
+  CREATE TABLE IF NOT EXISTS reddit_opportunities (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    discovered_at TEXT NOT NULL,
+    film_key TEXT NOT NULL,
+    film_name TEXT NOT NULL,
+    subreddit TEXT NOT NULL,
+    post_id TEXT NOT NULL UNIQUE,
+    post_title TEXT NOT NULL,
+    post_url TEXT NOT NULL,
+    post_excerpt TEXT,
+    drafted_reply TEXT NOT NULL,
+    status TEXT NOT NULL DEFAULT 'new'
+  );
+`);
+
 const GENESIS = hmac("GENESIS");
 
 function hmac(input) {
@@ -191,7 +212,40 @@ function getRecentErrors(limit = 50) {
   return db.prepare(`SELECT * FROM error_log ORDER BY id DESC LIMIT ?`).all(limit);
 }
 
+// Returns true if this was a genuinely new row (false if post_id was
+// already known) — lets the caller log accurate found/skipped counts
+// without needing a separate existence check first.
+function saveRedditOpportunity({ filmKey, filmName, subreddit, postId, postTitle, postUrl, postExcerpt, draftedReply }) {
+  const stmt = db.prepare(`
+    INSERT OR IGNORE INTO reddit_opportunities
+      (discovered_at, film_key, film_name, subreddit, post_id, post_title, post_url, post_excerpt, drafted_reply)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+  const result = stmt.run(
+    new Date().toISOString(), filmKey, filmName, subreddit, postId, postTitle, postUrl, postExcerpt || null, draftedReply
+  );
+  return result.changes > 0;
+}
+
+function getKnownRedditPostIds() {
+  return db.prepare(`SELECT post_id FROM reddit_opportunities`).all().map(r => r.post_id);
+}
+
+function getRedditOpportunities(status) {
+  if (status) {
+    return db.prepare(`SELECT * FROM reddit_opportunities WHERE status = ? ORDER BY id DESC`).all(status);
+  }
+  return db.prepare(`SELECT * FROM reddit_opportunities ORDER BY id DESC`).all();
+}
+
+function setRedditOpportunityStatus(id, status) {
+  const stmt = db.prepare(`UPDATE reddit_opportunities SET status = ? WHERE id = ?`);
+  const result = stmt.run(status, id);
+  return result.changes > 0;
+}
+
 module.exports = {
   db, ingest, getLatest, getHistory, listEntities, verifyChain,
   logPageview, getPageviewSummary, logError, getRecentErrors,
+  saveRedditOpportunity, getKnownRedditPostIds, getRedditOpportunities, setRedditOpportunityStatus,
 };
