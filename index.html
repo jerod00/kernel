@@ -304,15 +304,31 @@
 
   .stat-group-title{ font-family:Georgia,serif; font-size:1rem; margin:1.4rem 0 0.8rem; }
   .stat-group-title:first-child{ margin-top:0; }
-  .stat-bar-row{ display:grid; grid-template-columns:120px 1fr auto; gap:0.7rem; align-items:center; margin-bottom:0.6rem; }
-  .stat-bar-label{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.78rem; color:var(--muted); }
+  .stat-bar-row{
+    display:grid; grid-template-columns:120px 1fr auto; gap:0.7rem; align-items:center; margin-bottom:0.6rem;
+    width:100%; background:none; border:none; padding:0.2rem 0; font-family:inherit; cursor:pointer; text-align:left;
+  }
+  .stat-bar-row:hover .stat-bar-label{ color:var(--teal); }
+  .stat-bar-row:hover .stat-bar-fill{ background:var(--gold); }
+  .stat-bar-label{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.78rem; color:var(--muted); transition:color 0.15s ease; }
   .stat-bar-track{ height:10px; background:var(--rule); opacity:0.35; }
-  .stat-bar-fill{ height:100%; background:var(--teal); border-radius:2px; }
+  .stat-bar-fill{ height:100%; background:var(--teal); border-radius:2px; transition:background 0.15s ease; }
   .stat-bar-value{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.82rem; color:var(--ink); text-align:right; white-space:nowrap; }
   .stat-bar-n{ color:var(--muted); }
   .runtime-extremes{ margin-top:1.2rem; display:flex; flex-direction:column; gap:0.5rem; }
-  .creator-leader-row{ display:flex; justify-content:space-between; gap:1rem; padding:0.5rem 0; border-top:1px solid var(--rule); font-size:0.88rem; }
+  .creator-leader-row{
+    display:flex; justify-content:space-between; gap:1rem; padding:0.5rem 0; border-top:1px solid var(--rule);
+    font-size:0.88rem; width:100%; background:none; border-left:none; border-right:none; border-bottom:none;
+    font-family:inherit; cursor:pointer; text-align:left; color:var(--ink);
+  }
+  .creator-leader-row:hover .creator-leader-name{ color:var(--teal); }
+  .creator-leader-name{ transition:color 0.15s ease; }
   .creator-leader-meta{ color:var(--muted); font-size:0.8rem; white-space:nowrap; }
+  .back-to-breakdown{
+    font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.78rem; letter-spacing:0.03em; text-transform:uppercase;
+    color:var(--teal); background:none; border:none; cursor:pointer; padding:0 0 1rem; display:block;
+  }
+  .back-to-breakdown:hover{ text-decoration:underline; }
   .econ-multiple{ margin-top:0.3rem; padding-top:0.9rem; border-top:1px solid var(--rule); display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:0.6rem; }
   .econ-multiple .num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:1.4rem; color:var(--gold); }
   .econ-multiple .cap{ font-size:0.78rem; color:var(--muted); max-width:40ch; }
@@ -6466,6 +6482,39 @@ theSubstance: {
     }
   }
 
+  // Shared drill-down view for the four aggregate breakdowns below (By
+  // Decade, Origins, Runtime, Directors & Actors) — clicking any bar/row in
+  // those shows the actual films behind the number here, with a way back
+  // to the breakdown. Re-rendering via renderTopList(genre) on "back"
+  // (rather than caching the previous view) keeps this in sync with
+  // whatever genre filter is currently active.
+  function renderFilmList(entries, headerText, genre) {
+    const sub = document.getElementById("top100Sub");
+    const list = document.getElementById("rankList");
+    sub.textContent = headerText;
+    if (!entries.length) {
+      list.innerHTML = `
+        <button class="back-to-breakdown" id="backToBreakdown">&larr; Back</button>
+        <p class="top100-empty">No films match.</p>`;
+    } else {
+      list.innerHTML = `
+        <button class="back-to-breakdown" id="backToBreakdown">&larr; Back</button>
+        ${entries.map(([key, f]) => `
+          <button class="rank-row" data-film="${key}">
+            <img class="rank-poster" src="https://image.tmdb.org/t/p/w92${f.poster}" alt="" loading="lazy" referrerpolicy="no-referrer">
+            <span class="rank-meta">
+              <span class="rank-title">${escapeHtml(f.name)}</span>
+              <span class="rank-year">${f.year}</span>
+            </span>
+            <span class="rank-score">${f.score != null ? f.score : "—"}</span>
+          </button>`).join("")}`;
+      list.querySelectorAll(".rank-row").forEach(row => {
+        row.addEventListener("click", () => { location.hash = row.dataset.film; });
+      });
+    }
+    document.getElementById("backToBreakdown").addEventListener("click", () => renderTopList(genre));
+  }
+
   function renderDecadeStats(genre) {
     const sub = document.getElementById("top100Sub");
     const list = document.getElementById("rankList");
@@ -6482,19 +6531,28 @@ theSubstance: {
       return;
     }
     const totalCount = decades.reduce((s, d) => s + buckets[d].length, 0);
-    sub.textContent = `Average Kernel Score by release decade${genre ? ` for ${genre} films` : ""}, across ${totalCount} scored film(s).`;
+    sub.textContent = `Average Kernel Score by release decade${genre ? ` for ${genre} films` : ""}, across ${totalCount} scored film(s). Click a decade to see the films.`;
     const avgOf = arr => arr.reduce((a, b) => a + b, 0) / arr.length;
     const maxAvg = Math.max(...decades.map(d => avgOf(buckets[d])));
     list.innerHTML = decades.map(d => {
       const avg = avgOf(buckets[d]);
       const pct = Math.max((avg / maxAvg) * 100, 4);
       return `
-        <div class="stat-bar-row">
+        <button class="stat-bar-row" data-decade="${d}">
           <span class="stat-bar-label">${d}s</span>
           <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${pct}%"></div></div>
           <span class="stat-bar-value">${avg.toFixed(1)} <span class="stat-bar-n">(n=${buckets[d].length})</span></span>
-        </div>`;
+        </button>`;
     }).join("");
+    list.querySelectorAll(".stat-bar-row").forEach(row => {
+      row.addEventListener("click", () => {
+        const decade = Number(row.dataset.decade);
+        const entries = Object.entries(FILMS)
+          .filter(([, f]) => f.score != null && f.year && Math.floor(Number(f.year) / 10) * 10 === decade && matchesGenre(f))
+          .sort((a, b) => b[1].score - a[1].score);
+        renderFilmList(entries, `${decade}s — ${entries.length} film(s), sorted by Kernel Score.`, genre);
+      });
+    });
   }
 
   // Not exhaustive — just enough to turn the common ISO 639-1 codes actually
@@ -6525,18 +6583,28 @@ theSubstance: {
     const maxLang = Math.max(...langRows.map(r => r[1]), 1);
     const maxCountry = Math.max(...countryRows.map(r => r[1]), 1);
 
-    sub.textContent = `Original language and production country breakdown${genre ? ` for ${genre} films` : ""}, across ${films.length} film(s) with this data.`;
-    const barsHtml = (rows, max, labelFor) => rows.map(([key, n]) => `
-      <div class="stat-bar-row">
+    sub.textContent = `Original language and production country breakdown${genre ? ` for ${genre} films` : ""}, across ${films.length} film(s) with this data. Click a row to see the films.`;
+    const barsHtml = (rows, max, type, labelFor) => rows.map(([key, n]) => `
+      <button class="stat-bar-row" data-origin-type="${type}" data-origin-key="${escapeHtml(key)}">
         <span class="stat-bar-label">${escapeHtml(labelFor(key))}</span>
         <div class="stat-bar-track"><div class="stat-bar-fill" style="width:${Math.max((n / max) * 100, 4)}%"></div></div>
         <span class="stat-bar-value">${n}</span>
-      </div>`).join("");
+      </button>`).join("");
     list.innerHTML = `
       <h3 class="stat-group-title">By original language</h3>
-      ${barsHtml(langRows, maxLang, code => LANGUAGE_NAMES[code] || code)}
+      ${barsHtml(langRows, maxLang, "language", code => LANGUAGE_NAMES[code] || code)}
       <h3 class="stat-group-title">By production country</h3>
-      ${barsHtml(countryRows, maxCountry, name => name)}`;
+      ${barsHtml(countryRows, maxCountry, "country", name => name)}`;
+    list.querySelectorAll(".stat-bar-row").forEach(row => {
+      row.addEventListener("click", () => {
+        const type = row.dataset.originType, key = row.dataset.originKey;
+        const entries = Object.entries(FILMS)
+          .filter(([, f]) => matchesGenre(f) && (type === "language" ? f.originalLanguage === key : (f.productionCountries || []).includes(key)))
+          .sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
+        const label = type === "language" ? (LANGUAGE_NAMES[key] || key) : key;
+        renderFilmList(entries, `${label} — ${entries.length} film(s).`, genre);
+      });
+    });
   }
 
   function renderRuntimeStats(genre) {
@@ -6563,14 +6631,14 @@ theSubstance: {
     const sorted = films.slice().sort((a, b) => a[1].runtimeMinutes - b[1].runtimeMinutes);
     const shortest = sorted[0], longest = sorted[sorted.length - 1];
 
-    sub.textContent = `Average Kernel Score by runtime length${genre ? ` for ${genre} films` : ""}, across ${films.length} film(s) with runtime data.`;
+    sub.textContent = `Average Kernel Score by runtime length${genre ? ` for ${genre} films` : ""}, across ${films.length} film(s) with runtime data. Click a bar to see the films.`;
     list.innerHTML = `
-      ${buckets.map(b => `
-        <div class="stat-bar-row">
+      ${buckets.map((b, i) => `
+        <button class="stat-bar-row" data-bucket-index="${i}">
           <span class="stat-bar-label">${b.label}</span>
           <div class="stat-bar-track">${b.avg != null ? `<div class="stat-bar-fill" style="width:${Math.max((b.avg / maxAvg) * 100, 4)}%"></div>` : ""}</div>
           <span class="stat-bar-value">${b.avg != null ? b.avg.toFixed(1) : "—"} <span class="stat-bar-n">(n=${b.count})</span></span>
-        </div>`).join("")}
+        </button>`).join("")}
       <div class="runtime-extremes">
         <button class="rank-row" data-film="${shortest[0]}">
           <span class="rank-meta"><span class="rank-title">Shortest: ${escapeHtml(shortest[1].name)}</span><span class="rank-year">${shortest[1].runtimeMinutes} min</span></span>
@@ -6579,6 +6647,15 @@ theSubstance: {
           <span class="rank-meta"><span class="rank-title">Longest: ${escapeHtml(longest[1].name)}</span><span class="rank-year">${longest[1].runtimeMinutes} min</span></span>
         </button>
       </div>`;
+    list.querySelectorAll(".stat-bar-row").forEach(row => {
+      row.addEventListener("click", () => {
+        const b = bucketDefs[Number(row.dataset.bucketIndex)];
+        const entries = films
+          .filter(([, f]) => b.test(f.runtimeMinutes))
+          .sort((a, b2) => (b2[1].score || 0) - (a[1].score || 0));
+        renderFilmList(entries, `${b.label} — ${entries.length} film(s).`, genre);
+      });
+    });
     list.querySelectorAll(".rank-row").forEach(row => {
       row.addEventListener("click", () => { location.hash = row.dataset.film; });
     });
@@ -6620,15 +6697,24 @@ theSubstance: {
       return;
     }
 
-    sub.textContent = `Directors and lead actors with 2+ films in Kernel's own catalog${genre ? ` (${genre})` : ""}, ranked by appearance count.`;
-    const groupHtml = (title, rows) => !rows.length ? "" : `
+    sub.textContent = `Directors and lead actors with 2+ films in Kernel's own catalog${genre ? ` (${genre})` : ""}, ranked by appearance count. Click a name to see the films.`;
+    const groupHtml = (title, rows, role) => !rows.length ? "" : `
       <h3 class="stat-group-title">${title}</h3>
       ${rows.slice(0, 10).map(r => `
-        <div class="creator-leader-row">
+        <button class="creator-leader-row" data-role="${role}" data-name="${escapeHtml(r.name)}">
           <span class="creator-leader-name">${escapeHtml(r.name)}</span>
           <span class="creator-leader-meta">${r.count} films in catalog${r.avg != null ? ` · avg ${r.avg.toFixed(1)}` : ""}</span>
-        </div>`).join("")}`;
-    list.innerHTML = groupHtml("Directors", directors) + groupHtml("Lead actors", actors);
+        </button>`).join("")}`;
+    list.innerHTML = groupHtml("Directors", directors, "director") + groupHtml("Lead actors", actors, "actor");
+    list.querySelectorAll(".creator-leader-row").forEach(row => {
+      row.addEventListener("click", () => {
+        const role = row.dataset.role, name = row.dataset.name;
+        const entries = films
+          .filter(([, f]) => f[role] && f[role].displayName === name)
+          .sort((a, b) => (b[1].score || 0) - (a[1].score || 0));
+        renderFilmList(entries, `${name} — ${entries.length} film(s) in Kernel's catalog.`, genre);
+      });
+    });
   }
 
   // Genres shown even before any film carries them yet — kept separate from
