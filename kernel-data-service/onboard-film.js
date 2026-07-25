@@ -171,6 +171,7 @@ async function buildPersonFilmography(personId, isDirector) {
     year: resolvedYear,
     releaseDate: details.release_date || null,
     poster: details.poster_path,
+    overview: details.overview || null,
     genres: (details.genres || []).map(g => g.name),
     critic: {
       score: omdb && omdb.Metascore !== "N/A" ? Number(omdb.Metascore) : null,
@@ -198,6 +199,7 @@ async function buildPersonFilmography(personId, isDirector) {
     trailer: null,
     sources: {
       genres: tmdbUrl,
+      overview: tmdbUrl,
       budget: tmdbUrl,
       boxOfficeWorldwide: tmdbUrl,
       critic: omdbUrl,
@@ -240,6 +242,7 @@ async function buildPersonFilmography(personId, isDirector) {
   console.log("\n--- TIER 1 (auto-fetched, fill nothing here unless flagged) ---");
   console.log(`dataId: ${dataId}`);
   console.log(`genres: ${JSON.stringify(draft.genres)}   [TMDb]`);
+  console.log(`overview: ${draft.overview ? `"${draft.overview.slice(0, 80)}${draft.overview.length > 80 ? "…" : ""}"` : "not available from TMDb"}`);
   console.log(`econ.budget: ${draft.econ.budget != null ? draft.econ.budget + "M" : "not disclosed by TMDb"}`);
   console.log(`econ.boxOfficeWorldwide: ${draft.econ.boxOfficeWorldwide != null ? draft.econ.boxOfficeWorldwide + "M" : "not disclosed by TMDb"}`);
   console.log(`critic.score (Metascore): ${draft.critic.score != null ? draft.critic.score : "not available from OMDb"}`);
