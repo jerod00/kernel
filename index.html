@@ -244,7 +244,7 @@
   .widget-head-main{ display:flex; align-items:center; gap:0.9rem; }
   .widget-head h2{ font-family:Georgia,serif; font-size:1.3rem; margin:0; }
   .widget-head .year{ color:var(--muted); font-weight:normal; font-size:0.95rem; }
-  .poster-thumb{ width:52px; height:78px; object-fit:cover; border:1px solid var(--rule); flex-shrink:0; background:var(--rule); }
+  .poster-thumb{ width:52px; height:78px; object-fit:cover; border:1px solid var(--rule); flex-shrink:0; background:var(--rule); cursor:zoom-in; }
   .trailer-link{ display:inline-flex; align-items:center; gap:0.35em; margin-top:0.3rem; font-size:0.85rem; color:var(--teal); text-decoration:none; }
   .trailer-link:hover{ text-decoration:underline; }
   .trailer-link .play-glyph{ display:inline-flex; align-items:center; justify-content:center; width:1.1em; height:1.1em; border-radius:50%; background:var(--teal); color:var(--card); flex-shrink:0; }
@@ -6361,7 +6361,7 @@ theSubstance: {
     widget.innerHTML = `
       <div class="widget-head">
         <div class="widget-head-main">
-          ${f.poster ? `<img class="poster-thumb" src="https://image.tmdb.org/t/p/w185${f.poster}" alt="${f.name} poster" loading="lazy" referrerpolicy="no-referrer">` : ""}
+          ${f.poster ? `<img class="poster-thumb" data-poster="${f.poster}" data-name="${escapeHtml(f.name)}" src="https://image.tmdb.org/t/p/w185${f.poster}" alt="${f.name} poster" loading="lazy" referrerpolicy="no-referrer">` : ""}
           <div>
             <h2>${f.name} <span class="year">(${f.year})</span></h2>
             ${trailerHTML(f)}
@@ -6432,6 +6432,12 @@ theSubstance: {
     if (f.poster) tryLiveArtwork(f, myToken);
     attachHover(widget, f);
     attachReviewForm(f);
+    const posterThumb = widget.querySelector(".poster-thumb");
+    if (posterThumb) {
+      posterThumb.addEventListener("click", () => {
+        openPosterLightbox(posterThumb.dataset.poster, posterThumb.dataset.name);
+      });
+    }
     widget.querySelectorAll(".collection-row").forEach(row => {
       row.addEventListener("click", () => { location.hash = row.dataset.film; });
     });
