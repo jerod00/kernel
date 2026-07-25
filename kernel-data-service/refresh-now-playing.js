@@ -69,6 +69,23 @@ async function fetchRecentReleases(pageCount) {
   return results;
 }
 
+// TMDb's now_playing/discover lists aren't a stable snapshot across
+// sequential paginated requests — their ordering can shift between page 1
+// and page 2 (popularity/vote counts update live), so the same film can
+// land on two pages and appear twice in the flattened results. This bit a
+// real run: "Motor City" got fetched twice, survived the (per-item, not
+// cross-item) new-candidate filters twice, and was drafted twice under two
+// different FILMS keys sharing one dataId. Dedupe right after pagination,
+// before anything downstream treats these as a candidate list.
+function dedupeByDataId(items) {
+  const seen = new Set();
+  return items.filter(m => {
+    if (seen.has(m.dataId)) return false;
+    seen.add(m.dataId);
+    return true;
+  });
+}
+
 function writeGithubOutput(key, value) {
   const outPath = process.env.GITHUB_OUTPUT;
   if (!outPath) return; // running locally, not in CI — nothing to write to
@@ -81,17 +98,18 @@ function writeGithubOutput(key, value) {
   // still playing anywhere" check, deliberately broader than the alert cap.
   console.log("Fetching TMDb now_playing (region=US)...");
   const nowPlaying = await fetchNowPlaying(3);
-  const nowPlayingWithIds = nowPlaying.map(m => ({
+  const nowPlayingWithIds = dedupeByDataId(nowPlaying.map(m => ({
     ...m,
     dataId: slugify(m.title, (m.release_date || "").slice(0, 4)),
-  }));
+  })));
   const currentDataIds = new Set(nowPlayingWithIds.map(m => m.dataId));
   console.log(`TMDb reports ${currentDataIds.size} films currently playing (across ${Math.ceil(nowPlaying.length / 20)} page(s)).`);
 
   console.log(`Fetching TMDb recent releases (last ${RECENT_WINDOW_DAYS} days, region=US)...`);
   const recentRaw = await fetchRecentReleases(2);
-  const recentWithIds = recentRaw
-    .map(m => ({ ...m, dataId: slugify(m.title, (m.release_date || "").slice(0, 4)) }))
+  const recentWithIds = dedupeByDataId(
+    recentRaw.map(m => ({ ...m, dataId: slugify(m.title, (m.release_date || "").slice(0, 4)) }))
+  )
     // Anything TMDb also lists as now_playing is handled by the theatrical
     // path above — this is specifically for films NOT currently in theaters.
     .filter(m => !currentDataIds.has(m.dataId));
