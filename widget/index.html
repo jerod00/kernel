@@ -308,7 +308,7 @@
   .chart-title{ font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; letter-spacing:0.08em; text-transform:uppercase; color:var(--muted); }
   .chart-legend{ display:flex; gap:1rem; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.72rem; color:var(--muted); flex-wrap:wrap; }
   .chart-legend .sw{ display:inline-block; width:0.8em; height:0.8em; margin-right:0.35em; vertical-align:-0.1em; border-radius:1px; }
-  .chart-svg-wrap{ overflow-x:auto; position:relative; }
+  .chart-svg-wrap{ overflow-x:auto; position:relative; cursor:crosshair; }
   .chart-svg-wrap svg{ display:block; width:100%; height:auto; min-width:420px; }
   .chart-tooltip{
     position:absolute; pointer-events:none; background:var(--ink); border:1px solid var(--rule);
@@ -419,11 +419,14 @@
 
   .collection-list{ margin-top:0.9rem; }
   .collection-row{
-    display:flex; justify-content:space-between; gap:1rem; padding:0.55rem 0;
-    border-top:1px solid var(--rule); cursor:pointer; font-size:0.88rem;
+    display:flex; justify-content:space-between; gap:1rem; padding:0.55rem 0; width:100%;
+    border:none; border-top:1px solid var(--rule); cursor:pointer; font-size:0.88rem;
+    font-family:inherit; color:inherit; background:none; text-align:left;
   }
   .collection-row:hover{ color:var(--teal); }
+  .collection-row:focus-visible{ outline:2px solid var(--teal); outline-offset:-2px; }
   .collection-row.current{ color:var(--gold); cursor:default; }
+  .collection-row:disabled{ cursor:default; }
   .collection-row .year{ color:var(--muted); font-weight:normal; }
   .collection-score{ font-family:ui-monospace,"SF Mono",Consolas,monospace; }
 
@@ -458,11 +461,13 @@
   .review-rating-hint{ font-size:0.78rem; color:var(--muted); margin:-0.4rem 0 0; }
   .review-pledge{ display:flex; align-items:center; gap:0.5em; font-size:0.85rem; color:var(--ink); cursor:pointer; }
   .review-pledge input{ accent-color:var(--teal); }
+  .review-comment-row{ display:flex; flex-direction:column; align-items:flex-end; gap:0.25rem; }
   .review-comment{
     font-family:inherit; font-size:0.88rem; color:var(--ink); background:var(--paper);
-    border:1px solid var(--rule); padding:0.55rem 0.7rem;
+    border:1px solid var(--rule); padding:0.55rem 0.7rem; width:100%;
   }
   .review-comment:focus-visible{ outline:2px solid var(--teal); outline-offset:1px; }
+  .review-comment-count{ font-size:0.75rem; color:var(--muted); font-family:ui-monospace,"SF Mono",Consolas,monospace; }
   .review-submit{
     align-self:flex-start; font-family:ui-monospace,"SF Mono",Consolas,monospace; font-size:0.8rem;
     letter-spacing:0.03em; text-transform:uppercase; color:var(--paper); background:var(--teal);
@@ -5801,10 +5806,10 @@ theSubstance: {
       .slice()
       .sort((a, b) => (a[1].year || 0) - (b[1].year || 0))
       .map(([key, s]) => `
-        <div class="collection-row${key === currentKey ? " current" : ""}" data-film="${key}">
+        <button type="button" class="collection-row${key === currentKey ? " current" : ""}" data-film="${key}"${key === currentKey ? " disabled" : ""}>
           <span class="collection-title">${escapeHtml(s.name)} <span class="year">(${s.year})</span></span>
           <span class="collection-score">${s.score != null ? s.score : "—"}</span>
-        </div>`).join("");
+        </button>`).join("");
     return `
       <div class="chart-block">
         <div class="chart-head">
@@ -5975,7 +5980,7 @@ theSubstance: {
         <div class="chart-head">
           <span class="chart-title">Audience reviews</span>
         </div>
-        <div class="review-synopsis" id="reviewSynopsis"></div>
+        <div class="review-synopsis" id="reviewSynopsis"><p class="review-synopsis-meta">Loading synopsis…</p></div>
         <div class="review-summary" id="reviewSummary">Loading reviews…</div>
         <div id="scoreTrendWrap"></div>
         <div class="seed-block" id="seedBlock"></div>
@@ -5990,7 +5995,10 @@ theSubstance: {
             <input type="checkbox" id="reviewPledge" required>
             I've seen this film
           </label>
-          <input type="text" class="review-comment" id="reviewComment" placeholder="Optional comment" maxlength="140">
+          <div class="review-comment-row">
+            <input type="text" class="review-comment" id="reviewComment" placeholder="Optional comment" maxlength="140">
+            <span class="review-comment-count" id="reviewCommentCount">0/140</span>
+          </div>
           <button type="submit" class="review-submit" id="reviewSubmit" disabled>Submit review</button>
           <div class="review-status" id="reviewStatus"></div>
         </form>
@@ -6031,7 +6039,7 @@ theSubstance: {
         setTimeout(() => { statusEl.textContent = ""; }, 2000);
       }
     } catch (err) {
-      if (statusEl) statusEl.textContent = url;
+      if (statusEl) statusEl.textContent = `Couldn't copy — here's the link: ${url}`;
     }
   }
 
@@ -6047,7 +6055,7 @@ theSubstance: {
         setTimeout(() => { statusEl.textContent = ""; }, 2000);
       }
     } catch (err) {
-      if (statusEl) statusEl.textContent = url;
+      if (statusEl) statusEl.textContent = `Couldn't copy — here's the link: ${url}`;
     }
   }
 
@@ -6166,7 +6174,8 @@ theSubstance: {
   async function loadSeedContent(dataId, el) {
     try {
       const res = await fetch(`${DATA_SERVICE_URL}/api/entity/seed_content/${dataId}`);
-      if (!res.ok) { el.innerHTML = ""; return; }
+      if (res.status === 404) { el.innerHTML = ""; return; } // no seed content for this film — a normal state, not an error
+      if (!res.ok) throw new Error(`Service responded ${res.status}`);
       const data = await res.json();
       const fields = data.fields || {};
       const scoreEntry = fields.score;
@@ -6199,7 +6208,7 @@ theSubstance: {
       });
       el.innerHTML = html;
     } catch (err) {
-      el.innerHTML = "";
+      el.innerHTML = `<p class="seed-eyebrow">Starter content couldn't be loaded right now.</p>`;
     }
   }
 
@@ -6219,10 +6228,10 @@ theSubstance: {
       } else if (data.status === "insufficient") {
         el.innerHTML = `<p class="review-synopsis-meta">Kernel will summarize these once there are at least ${data.needed} reviews (${data.count} so far).</p>`;
       } else {
-        el.innerHTML = "";
+        el.innerHTML = `<p class="review-synopsis-meta">Synopsis couldn't be generated right now.</p>`;
       }
     } catch (err) {
-      el.innerHTML = "";
+      el.innerHTML = `<p class="review-synopsis-meta">Synopsis unavailable right now (service unreachable).</p>`;
     }
   }
 
@@ -6254,6 +6263,8 @@ theSubstance: {
     const hintEl = form.querySelector("#reviewRatingHint");
     const submitBtn = form.querySelector("#reviewSubmit");
     const statusEl = form.querySelector("#reviewStatus");
+    const commentEl = form.querySelector("#reviewComment");
+    const commentCountEl = form.querySelector("#reviewCommentCount");
     let touched = false;
 
     function resetRatingState() {
@@ -6263,6 +6274,7 @@ theSubstance: {
       numEl.classList.add("unset");
       hintEl.hidden = false;
       submitBtn.disabled = true;
+      if (commentCountEl) commentCountEl.textContent = `0/${commentEl.maxLength}`;
     }
 
     slider.addEventListener("input", () => {
@@ -6272,6 +6284,11 @@ theSubstance: {
       hintEl.hidden = true;
       submitBtn.disabled = false;
     });
+    if (commentEl && commentCountEl) {
+      commentEl.addEventListener("input", () => {
+        commentCountEl.textContent = `${commentEl.value.length}/${commentEl.maxLength}`;
+      });
+    }
     form.addEventListener("submit", async e => {
       e.preventDefault();
       if (!touched || !form.querySelector("#reviewPledge").checked) return;
@@ -6454,7 +6471,7 @@ theSubstance: {
         openPosterLightbox(posterThumb.dataset.poster, posterThumb.dataset.name);
       });
     }
-    widget.querySelectorAll(".collection-row").forEach(row => {
+    widget.querySelectorAll(".collection-row:not(.current)").forEach(row => {
       row.addEventListener("click", () => { location.hash = row.dataset.film; });
     });
     const shareBtn = widget.querySelector("#shareFilmBtn");
@@ -6990,7 +7007,7 @@ theSubstance: {
   document.getElementById("shareTopBtn").addEventListener("click", () => {
     // Reads location.href at click time, not page-load time — updateTopHash()
     // keeps it in sync with whichever mode/genre tab is currently active.
-    shareLink(location.href, "Film rankings on The Kernel", document.getElementById("shareTopStatus"));
+    copyLink(location.href, document.getElementById("shareTopStatus"));
   });
   window.addEventListener("hashchange", routeFromHash);
 
