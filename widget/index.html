@@ -22315,7 +22315,24 @@ theSubstance: {
       ${criticExtrasHTML(f)}
       <div class="divider"></div>
       <div class="charts-section">
-        ${f.econ.boxOffice != null ? `
+        ${(() => {
+          // The "Revenue since release" chart plots a fixed 0-60-day window
+          // (DOMAIN_MAX) by interpolating between whatever points exist in
+          // f.revenuePoints. That's meaningful for a film with real
+          // weeklyGross data, where those points actually fall inside that
+          // window. Backfilled classics have no weeklyGross (empty array,
+          // see the TODO on that field) — their only two revenuePoints are
+          // day 0 and "day = years-since-release, value = today's lifetime
+          // total", so interpolating across days 0-60 draws a near-flat
+          // line pinned to ~0 and falsely reports "never broke even," no
+          // matter how big the real return was (this is exactly the bug:
+          // Toy Story's real 32x return rendered as a flat, broken chart).
+          // Below, econHTML already shows the real lifetime budget/box-
+          // office numbers honestly with no day-by-day claim — that's
+          // enough on its own when there's no granular data to chart.
+          if (f.econ.boxOffice == null) return streamingHTML(f);
+          if (!f.weeklyGross || !f.weeklyGross.length) return "";
+          return `
         <div class="chart-block">
           <div class="chart-head">
             <span class="chart-title">Revenue since release</span>
@@ -22327,9 +22344,10 @@ theSubstance: {
           <div class="chart-svg-wrap">${revenueSVG(f)}</div>
         </div>
         <div class="chart-tooltip"></div>
-        ${dataTable(f)}` : streamingHTML(f)}
+        ${dataTable(f)}`;
+        })()}
         ${econHTML(f)}
-        ${f.econ.boxOffice != null ? legsHTML(f) : ""}
+        ${legsHTML(f)}
         ${audienceInterestHTML(f)}
         ${collectionHTML(f, filmKey)}
         ${creatorHTML(f, "director", "Director")}
