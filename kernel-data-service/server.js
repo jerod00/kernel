@@ -6,7 +6,8 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const {
   ingest, getLatest, getHistory, listEntities, verifyChain,
-  logPageview, getPageviewSummary, logError, getRecentErrors, getRecentAudienceReviews,
+  logPageview, getPageviewSummary, logError, getRecentErrors,
+  getRecentAudienceReviews, removeReview, getRemovedReviewFields,
   saveRedditOpportunity, getKnownRedditPostIds, getRedditOpportunities, setRedditOpportunityStatus,
 } = require("./db");
 const { looksLikeSpam } = require("./spam-filter");
@@ -154,8 +155,21 @@ app.post("/api/pageview", pageviewLimiter, (req, res) => {
   }
 });
 
+// audience_review is the one entity type an admin can remove individual
+// entries from (see /admin/api/recent-reviews/:dataId/:field/remove) — the
+// underlying data_log row is never touched (append-only, hash-chained, see
+// db.js), so every reader that cares about "real, currently-counted
+// reviews" filters through this instead of calling getLatest() directly.
+function getActiveAudienceReviewRows(dataId) {
+  const rows = getLatest("audience_review", dataId);
+  const removed = getRemovedReviewFields(dataId);
+  return rows.filter(r => !removed.has(r.field));
+}
+
 app.get("/api/entity/:type/:id", (req, res) => {
-  const rows = getLatest(req.params.type, req.params.id);
+  const rows = req.params.type === "audience_review"
+    ? getActiveAudienceReviewRows(req.params.id)
+    : getLatest(req.params.type, req.params.id);
   if (!rows.length) return res.status(404).json({ error: "No data for this entity" });
   const fields = {};
   for (const r of rows) fields[r.field] = { value: r.value, recordedAt: r.recorded_at, source: r.source };
@@ -182,7 +196,7 @@ app.get("/api/leaderboards/divisive", (req, res) => {
   const entities = listEntities().filter(e => e.entity_type === "audience_review");
   const results = [];
   for (const { entity_id } of entities) {
-    const rows = getLatest("audience_review", entity_id);
+    const rows = getActiveAudienceReviewRows(entity_id);
     const ratings = rows
       .map(r => { try { return JSON.parse(r.value).rating; } catch { return null; } })
       .filter(r => typeof r === "number");
@@ -207,7 +221,7 @@ app.get("/api/leaderboards/audience-scores", (req, res) => {
   const entities = listEntities().filter(e => e.entity_type === "audience_review");
   const results = {};
   for (const { entity_id } of entities) {
-    const rows = getLatest("audience_review", entity_id);
+    const rows = getActiveAudienceReviewRows(entity_id);
     const ratings = rows
       .map(r => { try { return JSON.parse(r.value).rating; } catch { return null; } })
       .filter(r => typeof r === "number");
@@ -360,6 +374,17 @@ app.get("/admin/api/errors", adminLimiter, requireAdminToken, (req, res) => {
 
 app.get("/admin/api/recent-reviews", adminLimiter, requireAdminToken, (req, res) => {
   res.json(getRecentAudienceReviews(50));
+});
+
+// "Delete" here means removeReview() — data_log itself is append-only and
+// hash-chained (see db.js), so this can never actually erase the original
+// row. It records a removal fact instead, which every reader of audience
+// reviews (this list, the two leaderboard endpoints above, and the
+// widget's own /api/entity/audience_review/:dataId) filters through, so
+// the removed review stops counting or showing up anywhere, immediately.
+app.post("/admin/api/recent-reviews/:dataId/:field/remove", adminLimiter, requireAdminToken, (req, res) => {
+  removeReview(req.params.dataId, req.params.field);
+  res.json({ ok: true });
 });
 
 // Called by the daily reddit-listening pipeline before it drafts anything —

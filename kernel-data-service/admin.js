@@ -543,9 +543,32 @@ function adminPageHtml(token) {
         \${r.comment
           ? \`<p class="review-comment">\${escapeHtml(r.comment)}</p>\`
           : '<p class="review-comment none">No comment left</p>'}
+        <div class="actions">
+          <button class="close" data-action="delete">Delete</button>
+        </div>
+        <div class="status"></div>
       </div>
     \`;
+    el.querySelector('[data-action="delete"]').addEventListener("click", () => deleteReview(r, el));
     return el;
+  }
+
+  async function deleteReview(r, el) {
+    const statusEl = el.querySelector(".status");
+    const button = el.querySelector("button");
+    button.disabled = true;
+    statusEl.textContent = "Deleting…";
+    statusEl.className = "status";
+    try {
+      await api(\`/admin/api/recent-reviews/\${encodeURIComponent(r.dataId)}/\${encodeURIComponent(r.field)}/remove\`, { method: "POST" });
+      statusEl.textContent = "Deleted — no longer counted anywhere.";
+      statusEl.className = "status ok";
+      setTimeout(() => el.remove(), 900);
+    } catch (err) {
+      statusEl.textContent = "Failed: " + err.message;
+      statusEl.className = "status err";
+      button.disabled = false;
+    }
   }
 
   async function loadRecentReviews() {

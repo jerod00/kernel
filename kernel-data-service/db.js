@@ -87,6 +87,25 @@ db.exec(`
   );
 `);
 
+// Deliberately NOT a delete from data_log — that table is append-only and
+// hash-chained on purpose (see the UPDATE/DELETE triggers below), so a real
+// review submission can never be silently erased or altered without
+// breaking the chain, which is the whole point of storing it there. This
+// table instead records "an admin removed this specific review from
+// everywhere it counts" as its own fact — the original row stays intact
+// and provably untampered underneath; every reader of audience reviews
+// (score computation, review lists, the divisive leaderboard, this admin
+// panel) just filters out anything with a matching row here.
+db.exec(`
+  CREATE TABLE IF NOT EXISTS review_moderation (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    data_id TEXT NOT NULL,
+    field TEXT NOT NULL,
+    removed_at TEXT NOT NULL,
+    UNIQUE(data_id, field)
+  );
+`);
+
 const GENESIS = hmac("GENESIS");
 
 function hmac(input) {
@@ -221,12 +240,16 @@ function getRecentErrors(limit = 50) {
 // reason build-seo-pages.js re-derives things from FILMS itself instead of
 // asking this service for them) — dataId's own slug-plus-year format
 // (e.g. "the-dark-knight-2008") is already readable on its own.
+// Excludes anything an admin has removed via removeReview() below — the
+// underlying data_log row is never touched, this just skips it here the
+// same way every other reader of audience reviews does.
 function getRecentAudienceReviews(limit = 50) {
   const rows = db.prepare(`
-    SELECT entity_id, value, recorded_at, source
-    FROM data_log
-    WHERE entity_type = 'audience_review'
-    ORDER BY id DESC
+    SELECT d.entity_id, d.field, d.value, d.recorded_at, d.source
+    FROM data_log d
+    LEFT JOIN review_moderation m ON m.data_id = d.entity_id AND m.field = d.field
+    WHERE d.entity_type = 'audience_review' AND m.id IS NULL
+    ORDER BY d.id DESC
     LIMIT ?
   `).all(limit);
   return rows.map(r => {
@@ -239,8 +262,27 @@ function getRecentAudienceReviews(limit = 50) {
       // Leave rating/comment null — a genuinely malformed row shouldn't
       // break the whole list, just show up as an unreadable entry.
     }
-    return { dataId: r.entity_id, rating, comment, recordedAt: r.recorded_at, source: r.source };
+    return { dataId: r.entity_id, field: r.field, rating, comment, recordedAt: r.recorded_at, source: r.source };
   });
+}
+
+// True if this was a new removal (false if it was already removed) —
+// idempotent, same INSERT-OR-IGNORE-then-check-changes shape as
+// saveRedditOpportunity above.
+function removeReview(dataId, field) {
+  const stmt = db.prepare(`
+    INSERT OR IGNORE INTO review_moderation (data_id, field, removed_at) VALUES (?, ?, ?)
+  `);
+  const result = stmt.run(dataId, field, new Date().toISOString());
+  return result.changes > 0;
+}
+
+// A Set of this dataId's removed field names — cheap to build fresh per
+// call given how few reviews exist at this catalog's current scale;
+// revisit with a join-based approach if that ever stops being true.
+function getRemovedReviewFields(dataId) {
+  const rows = db.prepare(`SELECT field FROM review_moderation WHERE data_id = ?`).all(dataId);
+  return new Set(rows.map(r => r.field));
 }
 
 // Returns true if this was a genuinely new row (false if post_id was
@@ -277,6 +319,7 @@ function setRedditOpportunityStatus(id, status) {
 
 module.exports = {
   db, ingest, getLatest, getHistory, listEntities, verifyChain,
-  logPageview, getPageviewSummary, logError, getRecentErrors, getRecentAudienceReviews,
+  logPageview, getPageviewSummary, logError, getRecentErrors,
+  getRecentAudienceReviews, removeReview, getRemovedReviewFields,
   saveRedditOpportunity, getKnownRedditPostIds, getRedditOpportunities, setRedditOpportunityStatus,
 };
