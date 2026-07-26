@@ -5,7 +5,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm ci --omit=dev
 
-COPY server.js db.js synopsis.js admin.js push.js spam-filter.js ./
+COPY server.js db.js synopsis.js admin.js push.js spam-filter.js score-label.js ./
 COPY public ./public
 
 # kernel.db lives on a mounted Fly volume (see fly.toml), not in the image —
