@@ -11,6 +11,7 @@ const {
 } = require("./db");
 const { looksLikeSpam } = require("./spam-filter");
 const { getSynopsis } = require("./synopsis");
+const { scoreLabel } = require("./score-label");
 const {
   requireAdminToken,
   requireNotifyToken,
@@ -192,6 +193,42 @@ app.get("/api/leaderboards/divisive", (req, res) => {
   }
   results.sort((a, b) => b.stddev - a.stddev);
   res.json(results.slice(0, 20));
+});
+
+// Same "enough real reviews to trust" bar as DIVISIVE_MIN_REVIEWS above and
+// the widget's own MIN_REAL_REVIEWS constant — this is the threshold at
+// which "Kernel Score" stops being the critic-sourced number baked into
+// FILMS at draft time and switches to this real, self-reported average.
+// Both the widget (at boot) and build-seo-pages.js (at deploy time) call
+// this to override f.score/f.n/f.spread/f.label for any film that qualifies.
+const AUDIENCE_SCORE_MIN_REVIEWS = 3;
+
+app.get("/api/leaderboards/audience-scores", (req, res) => {
+  const entities = listEntities().filter(e => e.entity_type === "audience_review");
+  const results = {};
+  for (const { entity_id } of entities) {
+    const rows = getLatest("audience_review", entity_id);
+    const ratings = rows
+      .map(r => { try { return JSON.parse(r.value).rating; } catch { return null; } })
+      .filter(r => typeof r === "number");
+    if (ratings.length < AUDIENCE_SCORE_MIN_REVIEWS) continue;
+    const avg = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    const positive = ratings.filter(r => r >= 70).length;
+    const negative = ratings.filter(r => r < 40).length;
+    const mixed = ratings.length - positive - negative;
+    const score = Math.round(avg);
+    results[entity_id] = {
+      score,
+      n: ratings.length,
+      label: scoreLabel(score),
+      spread: [
+        Math.round((positive / ratings.length) * 100),
+        Math.round((mixed / ratings.length) * 100),
+        Math.round((negative / ratings.length) * 100),
+      ],
+    };
+  }
+  res.json(results);
 });
 
 app.get("/api/verify", (req, res) => {
