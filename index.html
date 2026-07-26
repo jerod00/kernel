@@ -6783,13 +6783,21 @@ theSubstance: {
       </a>`;
   }
 
+  const GEMS_WINDOW_MS = 365 * 24 * 60 * 60 * 1000; // 12 months
+
   function buildGemsChart() {
     const container = document.getElementById("gemsChart");
+    const now = Date.now();
     // Films without a real score or box office figure have nothing meaningful
     // to plot here — including one would corrupt the log-scale axis math for
     // every other film too (Math.log10(0) = -Infinity), not just its own dot.
+    // Beyond that, scoped to the last 12 months (plus Sound of Metal as a
+    // standing example of the concept) — the catalog has grown enough that
+    // plotting everything with a score turned this into an unreadable wall
+    // of overlapping dots.
     const films = Object.values(FILMS)
       .filter(f => f.score != null && f.econ.boxOffice != null)
+      .filter(f => f.name === "Sound of Metal" || (f.releaseDate && now - new Date(f.releaseDate).getTime() <= GEMS_WINDOW_MS))
       .map(f => ({ name: f.name, score: f.score, boxOffice: f.econ.boxOffice }));
 
     const SCORE_CUT = 70, VIEW_CUT = 100; // $100M
