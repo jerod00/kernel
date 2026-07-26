@@ -81,13 +81,43 @@ function genreSlug(name) {
   return name.toLowerCase().replace(/\s+/g, "-");
 }
 
+function personSlug(name) {
+  // Strip accents before collapsing to ASCII — without this, "Alfonso
+  // Cuarón" or "Alejandro González Iñárritu" lose the accented letter
+  // entirely instead of falling back to its unaccented form (e.g.
+  // "alfonso-cuar-n" instead of "alfonso-cuaron").
+  const ascii = name.normalize("NFD").replace(/[̀-ͯ]/g, "");
+  return ascii.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+// Assigns a unique slug within one namespace (directors and actors get
+// separate URL prefixes, so a same-slug director and actor never collide
+// with each other — only same-name duplicates within the same role would,
+// and that's rare enough to just fall back to a disambiguated slug).
+function buildPersonSlugMap(names) {
+  const slugs = new Map();
+  const used = new Map();
+  for (const name of names) {
+    let slug = personSlug(name);
+    if (used.has(slug) && used.get(slug) !== name) {
+      console.warn(`Person slug collision for "${name}" -> "${slug}" (already used by "${used.get(slug)}") — disambiguating.`);
+      slug = `${slug}-${[...names].indexOf(name)}`;
+    }
+    used.set(slug, name);
+    slugs.set(name, slug);
+  }
+  return slugs;
+}
+
 // Cross-reference indices — built once from the same FILMS object, so every
-// link below points at a film/genre that actually exists on Kernel today.
-// Director/actor links point straight at sibling film pages (their own
-// filmographies are usually short, so a dedicated hub page would mostly be
-// thin single-entry content); genres get real hub pages since the set is
-// small and bounded and each one aggregates many films — a legitimate
-// keyword-targeted landing page, not a thin one.
+// link below points at a film/genre/person that actually exists on Kernel
+// today. Genres get real hub pages since the set is small/bounded and each
+// one aggregates many films. Directors/actors used to link straight at
+// sibling film pages instead of a dedicated hub, on the theory that most
+// filmographies were too short to be more than a thin, single-entry page —
+// true at ~100 films, no longer true at 300+: dozens of directors/actors
+// now have real multi-film track records worth their own ranked page (see
+// the >= 2 threshold below, same thin-content guard genre hubs already use).
 function buildIndices(films, slugs) {
   const byGenre = new Map();
   const byCollection = new Map();
@@ -95,7 +125,8 @@ function buildIndices(films, slugs) {
   const byActor = new Map();
 
   for (const [key, f] of Object.entries(films)) {
-    const entry = { key, slug: slugs.get(key), name: f.name, year: f.year, score: f.score };
+    const boxOffice = f.econ && f.econ.boxOffice != null ? f.econ.boxOffice : null;
+    const entry = { key, slug: slugs.get(key), name: f.name, year: f.year, score: f.score, boxOffice };
     for (const g of f.genres || []) {
       if (!byGenre.has(g)) byGenre.set(g, []);
       byGenre.get(g).push(entry);
@@ -150,6 +181,17 @@ function fmtMoney(millions) {
   return `$${Number(millions).toLocaleString("en-US", { maximumFractionDigits: 1 })}M`;
 }
 
+// Same $-in-millions input as fmtMoney, but switches to billions above
+// $1,000M — a single film's box office rarely crosses that line, but a
+// combined multi-film total (see personHubHtml) very often does, and
+// "$6,024.1M" reads far worse than "$6.02B".
+function fmtMoneyBig(millions) {
+  if (millions == null || !Number.isFinite(Number(millions))) return null;
+  const n = Number(millions);
+  if (n >= 1000) return `$${(n / 1000).toLocaleString("en-US", { maximumFractionDigits: 2 })}B`;
+  return fmtMoney(n);
+}
+
 function relatedListHtml(entries, currentKey, emptyIfMissing) {
   const others = entries.filter(e => e.key !== currentKey);
   if (!others.length) return emptyIfMissing;
@@ -158,7 +200,7 @@ function relatedListHtml(entries, currentKey, emptyIfMissing) {
     .join("")}</ul>`;
 }
 
-function moviePageHtml(key, f, slug, indices) {
+function moviePageHtml(key, f, slug, indices, personSlugs) {
   const url = `${SITE_URL}/film/${slug}/`;
   const title = `${f.name} (${f.year}) — Review, Score & Box Office | The Kernel`;
   const description = truncate(f.insight || `${f.name} (${f.year}) on The Kernel — audience-submitted score, box office economics, and director/actor track record.`, 158);
@@ -203,15 +245,20 @@ function moviePageHtml(key, f, slug, indices) {
   const collectionEntries = f.collectionName ? (indices.byCollection.get(f.collectionName) || []) : [];
   const directorEntries = f.director && f.director.name ? (indices.byDirector.get(f.director.name) || []) : [];
   const actorEntries = f.actor && f.actor.name ? (indices.byActor.get(f.actor.name) || []) : [];
+  // Whenever this section renders at all, the director/actor has >= 2 films
+  // by definition (this film plus at least one "other") — exactly the
+  // threshold personHubHtml pages are generated at, so the hub always exists.
+  const directorHubUrl = f.director && f.director.name ? `${SITE_URL}/director/${personSlugs.director.get(f.director.name)}/` : null;
+  const actorHubUrl = f.actor && f.actor.name ? `${SITE_URL}/actor/${personSlugs.actor.get(f.actor.name)}/` : null;
   const relatedSections = [
     collectionEntries.filter(e => e.key !== key).length
       ? `<div class="related-group"><h3>Also in ${escapeHtml(f.collectionName)}</h3>${relatedListHtml(collectionEntries, key, "")}</div>`
       : "",
     directorEntries.filter(e => e.key !== key).length
-      ? `<div class="related-group"><h3>Also directed by ${escapeHtml(f.director.name)}</h3>${relatedListHtml(directorEntries, key, "")}</div>`
+      ? `<div class="related-group"><h3>Also directed by <a href="${directorHubUrl}">${escapeHtml(f.director.name)}</a></h3>${relatedListHtml(directorEntries, key, "")}</div>`
       : "",
     actorEntries.filter(e => e.key !== key).length
-      ? `<div class="related-group"><h3>Also starring ${escapeHtml(f.actor.name)}</h3>${relatedListHtml(actorEntries, key, "")}</div>`
+      ? `<div class="related-group"><h3>Also starring <a href="${actorHubUrl}">${escapeHtml(f.actor.name)}</a></h3>${relatedListHtml(actorEntries, key, "")}</div>`
       : "",
   ].filter(Boolean).join("");
 
@@ -262,6 +309,8 @@ ${JSON.stringify(jsonLd, null, 2)}
   .related-group{ margin-bottom:1rem; }
   .related-group:last-child{ margin-bottom:0; }
   .related-group h3{ font-family:Georgia,serif; font-size:0.85rem; color:var(--muted); font-weight:normal; margin:0 0 0.3rem; }
+  .related-group h3 a{ color:var(--muted); text-decoration:none; border-bottom:1px solid var(--rule); }
+  .related-group h3 a:hover{ color:var(--teal); border-color:var(--teal); }
   .related-list{ list-style:none; margin:0; padding:0; display:flex; flex-wrap:wrap; gap:0.4rem 0.8rem; }
   .related-list a{ font-size:0.9rem; color:var(--ink); text-decoration:none; border-bottom:1px solid var(--rule); }
   .related-list a:hover{ border-color:var(--teal); }
@@ -389,11 +438,108 @@ ${JSON.stringify(jsonLd, null, 2)}
 </html>`;
 }
 
-function buildSitemap(filmEntries, genreEntries) {
+function personHubHtml(kind, name, slug, entries) {
+  const url = `${SITE_URL}/${kind}/${slug}/`;
+  const verb = kind === "director" ? "Directed by" : "Starring";
+  const title = `${name} Movies, Ranked | The Kernel`;
+
+  const sorted = [...entries].sort((a, b) => {
+    if (a.score == null && b.score == null) return a.name.localeCompare(b.name);
+    if (a.score == null) return 1;
+    if (b.score == null) return -1;
+    return b.score - a.score;
+  });
+
+  const scored = sorted.filter(e => e.score != null);
+  const avgScore = scored.length ? Math.round(scored.reduce((sum, e) => sum + e.score, 0) / scored.length) : null;
+  const totalBoxOffice = sorted.reduce((sum, e) => sum + (e.boxOffice || 0), 0);
+
+  const statBits = [`${sorted.length} film${sorted.length === 1 ? "" : "s"} on The Kernel`];
+  if (avgScore != null) statBits.push(`avg Kernel Score ${avgScore}`);
+  if (totalBoxOffice > 0) statBits.push(`${fmtMoneyBig(totalBoxOffice)} combined worldwide box office`);
+  const description = `${verb} ${name}: ${statBits.join(", ")} — ranked by audience-submitted Kernel Score.`;
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: title,
+    url,
+    itemListElement: sorted.map((e, i) => ({
+      "@type": "ListItem",
+      position: i + 1,
+      url: `${SITE_URL}/film/${e.slug}/`,
+      name: e.name,
+    })),
+  };
+
+  const rows = sorted
+    .map(
+      e => `<li><a href="${SITE_URL}/film/${e.slug}/"><span class="hub-title">${escapeHtml(e.name)} <span class="year">(${escapeHtml(String(e.year))})</span></span>${e.score != null ? `<span class="hub-score">${e.score}</span>` : ""}</a></li>`
+    )
+    .join("");
+
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${escapeHtml(title)}</title>
+<meta name="description" content="${escapeHtml(description)}">
+<link rel="canonical" href="${url}">
+<meta name="robots" content="index, follow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="The Kernel">
+<meta property="og:title" content="${escapeHtml(title)}">
+<meta property="og:description" content="${escapeHtml(description)}">
+<meta property="og:url" content="${url}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="${escapeHtml(title)}">
+<meta name="twitter:description" content="${escapeHtml(description)}">
+<script type="application/ld+json">
+${JSON.stringify(jsonLd, null, 2)}
+</script>
+<style>
+  :root{ --ink:#201E1B; --paper:#EFEBE1; --gold:#B8863A; --teal:#2F6B64; --rule:#C9C2B0; --muted:#6E6859; --card:#F7F4EC; }
+  @media (prefers-color-scheme: dark){ :root{ --ink:#17181A; --paper:#EAE6DC; --gold:#D4A64C; --teal:#4FA69C; --rule:#34322D; --muted:#9C9686; --card:#1D1E20; } }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--paper); color:var(--ink); font-family:-apple-system,"Segoe UI",Arial,sans-serif; line-height:1.55; }
+  .doc{ max-width:720px; margin:0 auto; padding:2.5rem 1.25rem 4rem; }
+  .back{ font-size:0.85rem; color:var(--teal); text-decoration:none; }
+  h1{ font-family:Georgia,"Iowan Old Style",serif; font-size:1.6rem; margin:1.25rem 0 0.3rem; }
+  .dek{ color:var(--muted); font-size:0.9rem; margin:0 0 1.5rem; max-width:64ch; }
+  .hub-list{ list-style:none; margin:0; padding:0; border-top:1px solid var(--rule); }
+  .hub-list li{ border-bottom:1px solid var(--rule); }
+  .hub-list a{ display:flex; align-items:baseline; justify-content:space-between; gap:1rem; padding:0.75rem 0.1rem; text-decoration:none; color:var(--ink); }
+  .hub-list a:hover .hub-title{ color:var(--teal); }
+  .hub-title{ font-size:0.98rem; }
+  .hub-title .year{ color:var(--muted); font-size:0.85rem; }
+  .hub-score{ font-family:Georgia,serif; color:var(--gold); font-size:1.05rem; flex-shrink:0; }
+  footer{ margin-top:2.5rem; font-size:0.75rem; color:var(--muted); border-top:1px solid var(--rule); padding-top:1rem; }
+  footer a{ color:var(--teal); }
+</style>
+</head>
+<body>
+<div class="doc">
+  <a class="back" href="${SITE_URL}/">&larr; The Kernel</a>
+  <h1>${escapeHtml(name)} Movies</h1>
+  <p class="dek">${escapeHtml(description)}</p>
+  <ul class="hub-list">${rows}</ul>
+  <footer>
+    Ranked by Kernel Score — audience-submitted, not critic scores.
+    <br><a href="${SITE_URL}/">Back to The Kernel</a> · <a href="${SITE_URL}/privacy.html">Privacy</a> · <a href="${SITE_URL}/terms.html">Terms</a>
+  </footer>
+</div>
+</body>
+</html>`;
+}
+
+function buildSitemap(filmEntries, genreEntries, directorEntries, actorEntries) {
   const lastmod = new Date().toISOString().slice(0, 10);
   const urls = [
     { loc: `${SITE_URL}/`, changefreq: "daily", priority: "1.0" },
     ...genreEntries.map(({ slug }) => ({ loc: `${SITE_URL}/genre/${slug}/`, changefreq: "daily", priority: "0.7" })),
+    ...directorEntries.map(({ slug }) => ({ loc: `${SITE_URL}/director/${slug}/`, changefreq: "weekly", priority: "0.6" })),
+    ...actorEntries.map(({ slug }) => ({ loc: `${SITE_URL}/actor/${slug}/`, changefreq: "weekly", priority: "0.6" })),
     ...filmEntries.map(({ slug }) => ({ loc: `${SITE_URL}/film/${slug}/`, changefreq: "weekly", priority: "0.8" })),
   ];
   const body = urls
@@ -411,6 +557,10 @@ function main() {
   const films = loadFilms(html);
   const slugs = buildSlugMap(films);
   const indices = buildIndices(films, slugs);
+  const personSlugs = {
+    director: buildPersonSlugMap([...indices.byDirector.keys()]),
+    actor: buildPersonSlugMap([...indices.byActor.keys()]),
+  };
 
   fs.rmSync(outDir, { recursive: true, force: true });
   fs.mkdirSync(outDir, { recursive: true });
@@ -420,12 +570,13 @@ function main() {
     const slug = slugs.get(key);
     const pageDir = path.join(outDir, "film", slug);
     fs.mkdirSync(pageDir, { recursive: true });
-    fs.writeFileSync(path.join(pageDir, "index.html"), moviePageHtml(key, f, slug, indices), "utf8");
+    fs.writeFileSync(path.join(pageDir, "index.html"), moviePageHtml(key, f, slug, indices, personSlugs), "utf8");
     entries.push({ key, slug });
   }
 
-  // Thin-content guard: a genre with just one film is a dead-end landing
-  // page, not a real keyword-targeted hub — better to skip it than index it.
+  // Thin-content guard: a genre/director/actor with just one film is a
+  // dead-end landing page, not a real keyword-targeted hub — better to skip
+  // it than index it.
   const genreEntries = [];
   for (const [genre, list] of indices.byGenre) {
     if (list.length < 2) continue;
@@ -436,10 +587,30 @@ function main() {
     genreEntries.push({ genre, slug });
   }
 
-  fs.writeFileSync(path.join(outDir, "sitemap.xml"), buildSitemap(entries, genreEntries), "utf8");
+  const directorEntries = [];
+  for (const [name, list] of indices.byDirector) {
+    if (list.length < 2) continue;
+    const slug = personSlugs.director.get(name);
+    const pageDir = path.join(outDir, "director", slug);
+    fs.mkdirSync(pageDir, { recursive: true });
+    fs.writeFileSync(path.join(pageDir, "index.html"), personHubHtml("director", name, slug, list), "utf8");
+    directorEntries.push({ name, slug });
+  }
+
+  const actorEntries = [];
+  for (const [name, list] of indices.byActor) {
+    if (list.length < 2) continue;
+    const slug = personSlugs.actor.get(name);
+    const pageDir = path.join(outDir, "actor", slug);
+    fs.mkdirSync(pageDir, { recursive: true });
+    fs.writeFileSync(path.join(pageDir, "index.html"), personHubHtml("actor", name, slug, list), "utf8");
+    actorEntries.push({ name, slug });
+  }
+
+  fs.writeFileSync(path.join(outDir, "sitemap.xml"), buildSitemap(entries, genreEntries, directorEntries, actorEntries), "utf8");
   fs.writeFileSync(path.join(outDir, "robots.txt"), buildRobots(), "utf8");
 
-  console.log(`Generated ${entries.length} film pages + ${genreEntries.length} genre hub pages + sitemap.xml + robots.txt in ${outDir}`);
+  console.log(`Generated ${entries.length} film pages + ${genreEntries.length} genre hubs + ${directorEntries.length} director hubs + ${actorEntries.length} actor hubs + sitemap.xml + robots.txt in ${outDir}`);
 }
 
 main();

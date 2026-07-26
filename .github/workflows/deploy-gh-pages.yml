@@ -54,15 +54,17 @@ jobs:
           cp main-checkout/widget/index.html gh-pages-checkout/index.html
           cp main-checkout/widget/privacy.html gh-pages-checkout/privacy.html
           cp main-checkout/widget/terms.html gh-pages-checkout/terms.html
-          rm -rf gh-pages-checkout/film gh-pages-checkout/genre
+          rm -rf gh-pages-checkout/film gh-pages-checkout/genre gh-pages-checkout/director gh-pages-checkout/actor
           cp -r main-checkout/seo-build/film gh-pages-checkout/film
           cp -r main-checkout/seo-build/genre gh-pages-checkout/genre
+          cp -r main-checkout/seo-build/director gh-pages-checkout/director
+          cp -r main-checkout/seo-build/actor gh-pages-checkout/actor
           cp main-checkout/seo-build/sitemap.xml gh-pages-checkout/sitemap.xml
           cp main-checkout/seo-build/robots.txt gh-pages-checkout/robots.txt
           cd gh-pages-checkout
           git config user.name "kernel-bot"
           git config user.email "actions@github.com"
-          git add index.html privacy.html terms.html film genre sitemap.xml robots.txt
+          git add index.html privacy.html terms.html film genre director actor sitemap.xml robots.txt
           if git diff --cached --quiet; then
             echo "No changes to deploy."
             exit 0
