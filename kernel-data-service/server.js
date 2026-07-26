@@ -15,6 +15,7 @@ const { getSynopsis } = require("./synopsis");
 const { scoreLabel } = require("./score-label");
 const {
   requireAdminToken,
+  isValidAdminToken,
   requireNotifyToken,
   requireIngestToken,
   requireRedditToken,
@@ -22,6 +23,7 @@ const {
   mergePR,
   closePR,
   adminPageHtml,
+  adminTokenPromptHtml,
   adminManifestJson,
   SERVICE_WORKER_JS,
 } = require("./admin");
@@ -267,8 +269,20 @@ app.get("/api/synopsis/:dataId", async (req, res) => {
 // is a real merge via GitHub's own API — nothing bypassed, and it pushes to
 // main exactly like clicking "Merge" on github.com, which the existing
 // gh-pages deploy workflow already picks up automatically.
-app.get("/admin", adminLimiter, requireAdminToken, (req, res) => {
+//
+// Checks the token inline rather than via requireAdminToken: a missing/
+// invalid token here specifically means a friendly recovery page
+// (adminTokenPromptHtml), not a bare JSON 401 — this is the one route an
+// iOS Home Screen icon actually launches, and its start_url is frozen with
+// whatever token was current at "Add to Home Screen" time, so a token
+// rotation always lands here with a stale one. Every other /admin/api/*
+// route still uses requireAdminToken/JSON as normal, since those are only
+// ever called by this page's own fetch() calls, never launched directly.
+app.get("/admin", adminLimiter, (req, res) => {
   const token = req.query.token || req.get("x-admin-token") || "";
+  if (!isValidAdminToken(token)) {
+    return res.type("html").send(adminTokenPromptHtml());
+  }
   res.type("html").send(adminPageHtml(token));
 });
 

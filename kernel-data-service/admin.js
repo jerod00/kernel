@@ -55,6 +55,13 @@ function requireAdminToken(req, res, next) {
   next();
 }
 
+// Same check as requireAdminToken, exposed as a plain predicate rather than
+// middleware — the GET /admin route needs to branch to a friendly HTML page
+// on failure instead of a bare JSON 401 (see adminTokenPromptHtml above).
+function isValidAdminToken(token) {
+  return !!ADMIN_TOKEN && !!token && timingSafeEqual(token, ADMIN_TOKEN);
+}
+
 function requireNotifyToken(req, res, next) {
   if (!PIPELINE_NOTIFY_TOKEN) {
     return res.status(500).json({ error: "PIPELINE_NOTIFY_TOKEN not configured on the server." });
@@ -149,6 +156,65 @@ async function closePR(number) {
     method: "PATCH",
     body: JSON.stringify({ state: "closed" }),
   });
+}
+
+// Shown instead of a bare JSON 401 when GET /admin is hit with a missing or
+// stale token — the one case that mattered enough to special-case: an iOS
+// home-screen icon's start_url is captured once, at "Add to Home Screen"
+// time, and never updates itself afterward. Rotate ADMIN_TOKEN and every
+// already-installed icon keeps launching the OLD token forever — there's no
+// server-side fix for that (a platform limitation, not a bug here), but a
+// blank JSON error is a strictly worse landing spot than a page that
+// explains what happened and gets you back in.
+function adminTokenPromptHtml() {
+  return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kernel — Admin</title>
+<style>
+  :root{ --ink:#201E1B; --paper:#EFEBE1; --gold:#B8863A; --teal:#2F6B64; --rule:#C9C2B0; --muted:#6E6859; --card:#F7F4EC; --neg:#9C4A3C; }
+  @media (prefers-color-scheme: dark){ :root{ --ink:#17181A; --paper:#EAE6DC; --gold:#D4A64C; --teal:#4FA69C; --rule:#34322D; --muted:#9C9686; --card:#1D1E20; --neg:#C2695A; } }
+  *{ box-sizing:border-box; }
+  body{ margin:0; background:var(--ink); color:var(--paper); font-family:-apple-system,"Segoe UI",Arial,sans-serif; line-height:1.5; }
+  .doc{ max-width:480px; margin:0 auto; padding:4rem 1.5rem; }
+  h1{ font-family:Georgia,"Iowan Old Style",serif; font-size:1.6rem; margin:0 0 0.8rem; }
+  p{ color:var(--muted); font-size:0.92rem; }
+  form{ margin-top:1.5rem; display:flex; flex-direction:column; gap:0.7rem; }
+  input{
+    font-family:ui-monospace,Consolas,monospace; font-size:0.9rem; padding:0.7rem 0.85rem;
+    background:var(--card); border:1px solid var(--rule); color:var(--paper);
+  }
+  input:focus{ outline:2px solid var(--gold); outline-offset:1px; }
+  button{
+    font-family:ui-monospace,Consolas,monospace; font-size:0.8rem; letter-spacing:0.03em; text-transform:uppercase;
+    padding:0.75rem 1rem; border:1px solid var(--teal); color:var(--teal); background:transparent; cursor:pointer;
+  }
+  button:hover{ background:var(--teal); color:var(--ink); }
+  .hint{ margin-top:2rem; font-size:0.82rem; background:var(--card); border:1px solid var(--rule); padding:0.9rem 1rem; }
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1>Sign back in</h1>
+  <p>This link's admin token is missing or no longer valid — most likely because the token was rotated after this Home Screen icon was added (an iOS limitation: the icon's launch link is fixed at the moment you add it, and never updates itself). Paste the current token below to continue.</p>
+  <form id="tokenForm">
+    <input id="tokenInput" type="text" placeholder="Admin token" autocapitalize="off" autocorrect="off" spellcheck="false" required>
+    <button type="submit">Continue</button>
+  </form>
+  <p class="hint">Once you're back in: remove this Home Screen icon and use Share → Add to Home Screen again, so it captures the current token. Otherwise the next rotation will break it the same way.</p>
+</div>
+<script>
+  document.getElementById("tokenForm").addEventListener("submit", (e) => {
+    e.preventDefault();
+    const token = document.getElementById("tokenInput").value.trim();
+    if (!token) return;
+    location.href = "/admin?token=" + encodeURIComponent(token);
+  });
+</script>
+</body>
+</html>`;
 }
 
 function adminManifestJson(token) {
@@ -676,6 +742,7 @@ function adminPageHtml(token) {
 
 module.exports = {
   requireAdminToken,
+  isValidAdminToken,
   requireNotifyToken,
   requireIngestToken,
   requireRedditToken,
@@ -683,6 +750,7 @@ module.exports = {
   mergePR,
   closePR,
   adminPageHtml,
+  adminTokenPromptHtml,
   adminManifestJson,
   SERVICE_WORKER_JS,
 };
