@@ -255,6 +255,14 @@ function moviePageHtml(key, f, slug, indices, personSlugs) {
     ...(f.genres && f.genres.length ? { genre: f.genres } : {}),
     ...(f.director && f.director.name ? { director: { "@type": "Person", name: f.director.name } } : {}),
     ...(f.actor && f.actor.name ? { actor: [{ "@type": "Person", name: f.actor.name }] } : {}),
+    // ratingCount is omitted rather than defaulted to 1 when f.n is unknown
+    // (true for most backfilled classics) — Google's rich-result guidelines
+    // require ratingCount to reflect a real review count; a fabricated "1"
+    // published in public, crawled structured data isn't just cosmetic here,
+    // it's the exact kind of synthetic-data-presented-as-real bug the
+    // revenue chart had, just in SEO output instead of the widget UI. A
+    // film with no known count simply doesn't get the star-rating rich
+    // snippet, which is the honest outcome.
     ...(hasScore
       ? {
           aggregateRating: {
@@ -262,7 +270,7 @@ function moviePageHtml(key, f, slug, indices, personSlugs) {
             ratingValue: f.score,
             bestRating: 100,
             worstRating: 0,
-            ratingCount: f.n || 1,
+            ...(f.n != null ? { ratingCount: f.n } : {}),
           },
         }
       : {}),
@@ -314,7 +322,14 @@ function moviePageHtml(key, f, slug, indices, personSlugs) {
 <meta property="og:title" content="${escapeHtml(title)}">
 <meta property="og:description" content="${escapeHtml(description)}">
 <meta property="og:url" content="${url}">
-${posterUrl ? `<meta property="og:image" content="${posterUrl}">\n` : ""}${f.year ? `<meta property="video:release_date" content="${escapeHtml(String(f.year))}-01-01">\n` : ""}${f.director && f.director.name ? `<meta property="video:director" content="${escapeHtml(f.director.name)}">\n` : ""}${f.actor && f.actor.name ? `<meta property="video:actor" content="${escapeHtml(f.actor.name)}">\n` : ""}<meta name="twitter:card" content="${posterUrl ? "summary_large_image" : "summary"}">
+${posterUrl ? `<meta property="og:image" content="${posterUrl}">\n` : ""}${
+  // f.releaseDate is a real ISO date when known; falling back to
+  // f.year-01-01 for the ~85% of films without one fabricates a precise
+  // January 1st release that almost never actually happened — same
+  // synthetic-data-as-real pattern as the ratingCount fix above, just
+  // smaller blast radius (an OG tag, not a search rich-result field).
+  f.releaseDate ? `<meta property="video:release_date" content="${escapeHtml(f.releaseDate)}">\n` : f.year ? `<meta property="video:release_date" content="${escapeHtml(String(f.year))}-01-01">\n` : ""
+}${f.director && f.director.name ? `<meta property="video:director" content="${escapeHtml(f.director.name)}">\n` : ""}${f.actor && f.actor.name ? `<meta property="video:actor" content="${escapeHtml(f.actor.name)}">\n` : ""}<meta name="twitter:card" content="${posterUrl ? "summary_large_image" : "summary"}">
 <meta name="twitter:title" content="${escapeHtml(title)}">
 <meta name="twitter:description" content="${escapeHtml(description)}">
 ${posterUrl ? `<meta name="twitter:image" content="${posterUrl}">\n` : ""}<script type="application/ld+json">
