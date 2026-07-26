@@ -97,6 +97,12 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://themoviekernel.com/genre/war/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://themoviekernel.com/genre/western/</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>daily</changefreq>
@@ -614,6 +620,42 @@
   </url>
   <url>
     <loc>https://themoviekernel.com/film/one-hundred-and-one-dalmatians/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/pinocchio-unstrung/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/young-washington/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/leviticus/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/black-box/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/the-sheep-detectives/</loc>
+    <lastmod>2026-07-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/swapped/</loc>
     <lastmod>2026-07-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
