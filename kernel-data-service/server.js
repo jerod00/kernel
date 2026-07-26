@@ -6,7 +6,7 @@ const cors = require("cors");
 const rateLimit = require("express-rate-limit");
 const {
   ingest, getLatest, getHistory, listEntities, verifyChain,
-  logPageview, getPageviewSummary, logError, getRecentErrors,
+  logPageview, getPageviewSummary, logError, getRecentErrors, getRecentAudienceReviews,
   saveRedditOpportunity, getKnownRedditPostIds, getRedditOpportunities, setRedditOpportunityStatus,
 } = require("./db");
 const { looksLikeSpam } = require("./spam-filter");
@@ -356,6 +356,10 @@ app.get("/admin/api/analytics/summary", adminLimiter, requireAdminToken, (req, r
 
 app.get("/admin/api/errors", adminLimiter, requireAdminToken, (req, res) => {
   res.json(getRecentErrors(50));
+});
+
+app.get("/admin/api/recent-reviews", adminLimiter, requireAdminToken, (req, res) => {
+  res.json(getRecentAudienceReviews(50));
 });
 
 // Called by the daily reddit-listening pipeline before it drafts anything —

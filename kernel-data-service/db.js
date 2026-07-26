@@ -212,6 +212,37 @@ function getRecentErrors(limit = 50) {
   return db.prepare(`SELECT * FROM error_log ORDER BY id DESC LIMIT ?`).all(limit);
 }
 
+// Straight off data_log rather than per-film getLatest() calls — this is
+// "what came in recently" across every film at once, the same shape of
+// query as getPageviewSummary's top-paths breakdown above, not "give me
+// entity X's current fields." dataId (entity_id) is shown as-is rather
+// than resolved to a film name/title: this service has no access to the
+// widget's FILMS object (different repo location, no shared module, same
+// reason build-seo-pages.js re-derives things from FILMS itself instead of
+// asking this service for them) — dataId's own slug-plus-year format
+// (e.g. "the-dark-knight-2008") is already readable on its own.
+function getRecentAudienceReviews(limit = 50) {
+  const rows = db.prepare(`
+    SELECT entity_id, value, recorded_at, source
+    FROM data_log
+    WHERE entity_type = 'audience_review'
+    ORDER BY id DESC
+    LIMIT ?
+  `).all(limit);
+  return rows.map(r => {
+    let rating = null, comment = null;
+    try {
+      const parsed = JSON.parse(r.value);
+      rating = parsed.rating;
+      comment = parsed.comment || null;
+    } catch {
+      // Leave rating/comment null — a genuinely malformed row shouldn't
+      // break the whole list, just show up as an unreadable entry.
+    }
+    return { dataId: r.entity_id, rating, comment, recordedAt: r.recorded_at, source: r.source };
+  });
+}
+
 // Returns true if this was a genuinely new row (false if post_id was
 // already known) — lets the caller log accurate found/skipped counts
 // without needing a separate existence check first.
@@ -246,6 +277,6 @@ function setRedditOpportunityStatus(id, status) {
 
 module.exports = {
   db, ingest, getLatest, getHistory, listEntities, verifyChain,
-  logPageview, getPageviewSummary, logError, getRecentErrors,
+  logPageview, getPageviewSummary, logError, getRecentErrors, getRecentAudienceReviews,
   saveRedditOpportunity, getKnownRedditPostIds, getRedditOpportunities, setRedditOpportunityStatus,
 };

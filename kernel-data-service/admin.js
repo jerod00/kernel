@@ -287,6 +287,14 @@ function adminPageHtml(token) {
   .reddit-meta a{ color:var(--teal); }
   .reddit-film{ font-size:0.8rem; color:var(--gold); margin-bottom:0.6rem; }
   .reddit-reply{ font-size:0.9rem; white-space:pre-wrap; background:var(--ink); color:var(--paper); border:1px solid var(--rule); padding:0.8rem 0.95rem; margin:0.6rem 0; }
+  .review-card{ display:flex; gap:1rem; align-items:flex-start; background:var(--card); border:1px solid var(--rule); padding:1rem 1.2rem; margin-bottom:0.9rem; }
+  .review-rating{ font-family:Georgia,serif; font-size:1.6rem; color:var(--gold); flex-shrink:0; min-width:2.4rem; text-align:center; }
+  .review-body{ flex:1; min-width:0; }
+  .review-head{ display:flex; justify-content:space-between; gap:1rem; align-items:baseline; flex-wrap:wrap; }
+  .review-film a{ color:var(--teal); font-family:ui-monospace,Consolas,monospace; font-size:0.85rem; }
+  .review-time{ font-family:ui-monospace,Consolas,monospace; font-size:0.72rem; color:var(--muted); white-space:nowrap; }
+  .review-comment{ font-size:0.9rem; margin:0.4rem 0 0; }
+  .review-comment.none{ color:var(--muted); font-style:italic; }
 </style>
 </head>
 <body>
@@ -310,6 +318,12 @@ function adminPageHtml(token) {
   <div class="section-block">
     <h2>Recent Errors</h2>
     <div id="errorList" class="loading">Loading errors…</div>
+  </div>
+
+  <div class="section-block">
+    <h2>Recent Reviews</h2>
+    <p class="sub" style="margin-bottom:0.9rem;">Real self-reported audience reviews as they come in, newest first — this is the data "Kernel Score" promotes to once a film has enough of it.</p>
+    <div id="reviewList" class="loading">Loading reviews…</div>
   </div>
 </div>
 <script>
@@ -507,6 +521,48 @@ function adminPageHtml(token) {
     }
   }
 
+  // dataId (e.g. "the-dark-knight-2008") doubles as a best-effort site slug
+  // once the trailing "-YYYY" is stripped — matches the exact same
+  // transform draft-lib.js's pickEntryKey() and build-seo-pages.js's
+  // filmSlug() round-trip to, so this lines up with the real static page
+  // URL without this service needing any access to the widget's FILMS data.
+  function reviewFilmUrl(dataId) {
+    return "https://themoviekernel.com/film/" + dataId.replace(/-\\d{4}$/, "") + "/";
+  }
+
+  function reviewCard(r) {
+    const el = document.createElement("div");
+    el.className = "review-card";
+    el.innerHTML = \`
+      <span class="review-rating">\${r.rating != null ? r.rating : "—"}</span>
+      <div class="review-body">
+        <div class="review-head">
+          <span class="review-film"><a href="\${reviewFilmUrl(r.dataId)}" target="_blank" rel="noopener noreferrer">\${escapeHtml(r.dataId)}</a></span>
+          <span class="review-time">\${escapeHtml(r.recordedAt)}</span>
+        </div>
+        \${r.comment
+          ? \`<p class="review-comment">\${escapeHtml(r.comment)}</p>\`
+          : '<p class="review-comment none">No comment left</p>'}
+      </div>
+    \`;
+    return el;
+  }
+
+  async function loadRecentReviews() {
+    const el = document.getElementById("reviewList");
+    try {
+      const reviews = await api("/admin/api/recent-reviews");
+      el.innerHTML = "";
+      if (!reviews.length) {
+        el.innerHTML = '<p class="empty">No reviews submitted yet.</p>';
+        return;
+      }
+      reviews.forEach(r => el.appendChild(reviewCard(r)));
+    } catch (err) {
+      el.innerHTML = '<p class="status err">Failed to load: ' + escapeHtml(err.message) + "</p>";
+    }
+  }
+
   function redditCard(o) {
     const el = document.createElement("div");
     el.className = "reddit-card";
@@ -575,6 +631,7 @@ function adminPageHtml(token) {
   loadAnalytics();
   loadErrors();
   loadReddit();
+  loadRecentReviews();
 
   (async () => {
     try {
