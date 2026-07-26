@@ -21794,6 +21794,44 @@ theSubstance: {
   // shouldn't depend on the AI-synopsis feature or its API key being healthy.
   const MIN_REAL_REVIEWS = 3;
 
+  // "Kernel Score" starts as the critic-sourced number baked into FILMS at
+  // draft time (see score-label.js server-side), but the site's whole point
+  // is to be audience-driven — so once a film crosses MIN_REAL_REVIEWS real
+  // reviews, this overrides f.score/f.n/f.spread/f.label in place with the
+  // real self-reported average from kernel-data-service, and flags
+  // f._audienceScored so the badge text and review section can say so.
+  // Every leaderboard/tile/chart below reads these same f.* fields, so
+  // mutating FILMS once here — before any of them render — is enough to
+  // make the promotion show up everywhere, not just on one film's page.
+  // Bounded timeout + silent catch, same resilience pattern as
+  // tryLiveArtwork: if kernel-data-service is slow or unreachable, the site
+  // just falls back to the critic baseline it already has, not a broken page.
+  async function applyAudienceScoreOverrides() {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 2000);
+    try {
+      const res = await fetch(`${DATA_SERVICE_URL}/api/leaderboards/audience-scores`, { signal: controller.signal });
+      if (!res.ok) return;
+      const overrides = await res.json();
+      const byDataId = {};
+      Object.entries(FILMS).forEach(([key, f]) => { if (f.dataId) byDataId[f.dataId] = key; });
+      for (const [dataId, o] of Object.entries(overrides)) {
+        const key = byDataId[dataId];
+        if (!key) continue;
+        const f = FILMS[key];
+        f.score = o.score;
+        f.n = o.n;
+        f.spread = o.spread;
+        f.label = o.label;
+        f._audienceScored = true;
+      }
+    } catch (err) {
+      // Unreachable/slow/aborted — silently keep the critic baseline already in FILMS.
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
   // Fire-and-forget — a pageview ping failing (offline, ad blocker, backend
   // hiccup) should never affect browsing, so this never throws or awaits.
   function logPageview(pagePath) {
@@ -21975,7 +22013,14 @@ theSubstance: {
         return;
       }
       const avg = reviews.reduce((a, r) => a + Number(r.rating), 0) / reviews.length;
-      summaryEl.innerHTML = `<span class="num">${avg.toFixed(1)}</span>Demo Audience Score — self-reported, n=${reviews.length}`;
+      // Once promoted (see applyAudienceScoreOverrides), this average is
+      // already the number shown in the "Kernel Score" badge above — restating
+      // it here would just be the same figure twice. Below the threshold, it
+      // hasn't taken over yet, so it's worth showing on its own with how close
+      // it is to promotion.
+      summaryEl.innerHTML = reviews.length >= MIN_REAL_REVIEWS
+        ? `These ${reviews.length} self-reported reviews are what the Kernel Score above is built from.`
+        : `<span class="num">${avg.toFixed(1)}</span>Self-reported average so far, n=${reviews.length} — becomes the Kernel Score at ${MIN_REAL_REVIEWS}.`;
       const trendEl = widget.querySelector("#scoreTrendWrap");
       if (trendEl) {
         const ascending = [...reviews].sort((a, b) => new Date(a.recordedAt) - new Date(b.recordedAt));
@@ -22253,7 +22298,7 @@ theSubstance: {
           <circle cx="30" cy="34" r="14" fill="var(--gold)"/>
           <circle cx="30" cy="48" r="7" fill="var(--gold)"/>
         </svg>
-        Kernel Score — weighted critic average
+        Kernel Score — ${f._audienceScored ? "self-reported audience average" : "weighted critic average"}
       </div>
       ${Array.isArray(f.spread) ? `
       <div class="spread-bar">
@@ -22822,16 +22867,6 @@ theSubstance: {
   document.getElementById("tmdbAttribution").innerHTML =
     TMDB_LOGO_SVG + `<span>This website uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB.</span>`;
 
-  buildGallery();
-  buildRecentReleases();
-  buildVaultSearch();
-  buildGemsChart();
-  tabs = document.querySelectorAll(".tab");
-  tabs.forEach(tab => {
-    tab.addEventListener("click", () => {
-      location.hash = tab.dataset.film;
-    });
-  });
   function goToLanding() { location.hash = ""; }
   backLink.addEventListener("click", goToLanding);
   backLinkTop.addEventListener("click", goToLanding);
@@ -22842,5 +22877,24 @@ theSubstance: {
   });
   window.addEventListener("hashchange", routeFromHash);
 
-  routeFromHash();
+  // Awaited before the first real render (bounded to 2s inside the function
+  // itself, so a slow/unreachable kernel-data-service costs a couple seconds
+  // of first-paint delay at worst, never a hang) — buildGallery/
+  // buildRecentReleases/buildGemsChart/routeFromHash all read f.score
+  // straight off FILMS, so the override needs to land before any of them run,
+  // not after.
+  (async () => {
+    await applyAudienceScoreOverrides();
+    buildGallery();
+    buildRecentReleases();
+    buildVaultSearch();
+    buildGemsChart();
+    tabs = document.querySelectorAll(".tab");
+    tabs.forEach(tab => {
+      tab.addEventListener("click", () => {
+        location.hash = tab.dataset.film;
+      });
+    });
+    routeFromHash();
+  })();
 </script>

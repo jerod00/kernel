@@ -12,8 +12,46 @@ const fs = require("fs");
 const path = require("path");
 
 const SITE_URL = "https://themoviekernel.com";
+const DATA_SERVICE_URL = "https://kernel-data-service-themoviekernel.fly.dev";
 const widgetPath = process.argv[2] || path.join(__dirname, "..", "widget", "index.html");
 const outDir = process.argv[3] || path.join(__dirname, "..", "seo-build");
+
+// Same promotion the live widget applies at boot (see applyAudienceScoreOverrides
+// in widget/index.html) — without this, a film that's already crossed the
+// real-review threshold on the live site would still get built here with its
+// stale critic-sourced score, since this script's only other source of truth
+// is the FILMS literal baked into widget/index.html at draft time. Network
+// failure here (service down, GH Actions egress hiccup) should never fail the
+// whole deploy over a same nice-to-have — falls back to the critic baseline
+// already in FILMS, exactly like the widget's own fallback.
+async function fetchAudienceScoreOverrides() {
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+    const res = await fetch(`${DATA_SERVICE_URL}/api/leaderboards/audience-scores`, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) throw new Error(`Data service responded ${res.status}`);
+    return await res.json();
+  } catch (err) {
+    console.warn(`Could not fetch audience-score overrides (${err.message}) — building with critic-baseline scores only.`);
+    return {};
+  }
+}
+
+function applyAudienceScoreOverrides(films, overrides) {
+  const byDataId = new Map();
+  for (const [key, f] of Object.entries(films)) {
+    if (f.dataId) byDataId.set(f.dataId, key);
+  }
+  let promoted = 0;
+  for (const [dataId, o] of Object.entries(overrides)) {
+    const key = byDataId.get(dataId);
+    if (!key) continue;
+    Object.assign(films[key], { score: o.score, n: o.n, spread: o.spread, label: o.label, _audienceScored: true });
+    promoted++;
+  }
+  return promoted;
+}
 
 // Extracts the object/array literal starting at `startIdx` (which must point
 // at the opening brace/bracket), respecting string/template-literal/comment
@@ -552,9 +590,17 @@ function buildRobots() {
   return `User-agent: *\nAllow: /\n\nSitemap: ${SITE_URL}/sitemap.xml\n`;
 }
 
-function main() {
+async function main() {
   const html = fs.readFileSync(widgetPath, "utf8");
   const films = loadFilms(html);
+
+  // Must happen before buildIndices — its per-film entries snapshot score/
+  // boxOffice at build time, so a promotion applied any later would never
+  // reach genre/director/actor hub pages, only the film's own page.
+  const overrides = await fetchAudienceScoreOverrides();
+  const promotedCount = applyAudienceScoreOverrides(films, overrides);
+  if (promotedCount) console.log(`Promoted ${promotedCount} film(s) to their real self-reported audience score.`);
+
   const slugs = buildSlugMap(films);
   const indices = buildIndices(films, slugs);
   const personSlugs = {
@@ -613,4 +659,7 @@ function main() {
   console.log(`Generated ${entries.length} film pages + ${genreEntries.length} genre hubs + ${directorEntries.length} director hubs + ${actorEntries.length} actor hubs + sitemap.xml + robots.txt in ${outDir}`);
 }
 
-main();
+main().catch(err => {
+  console.error(err);
+  process.exit(1);
+});
