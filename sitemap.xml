@@ -493,6 +493,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://themoviekernel.com/actor/olivia-wilde/</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://themoviekernel.com/actor/russell-crowe/</loc>
     <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
@@ -2654,6 +2660,18 @@
   </url>
   <url>
     <loc>https://themoviekernel.com/film/the-truthers/</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/i-want-your-sex/</loc>
+    <lastmod>2026-07-29</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/willy-wonka-the-chocolate-factory/</loc>
     <lastmod>2026-07-29</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
