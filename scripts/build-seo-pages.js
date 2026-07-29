@@ -207,6 +207,20 @@ function escapeHtml(str) {
   return String(str).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 }
 
+// Same signal the widget uses (widget/index.html's isMockbuster) — a real,
+// TMDb-tracked film that deliberately mimics a bigger release's title (e.g.
+// "Master of the Universe" vs. "Masters of the Universe"), tagged by TMDb
+// itself with a "mockbuster" keyword. Flagged here too so a search result
+// or shared static page doesn't read as the film it's imitating.
+function isMockbuster(f) {
+  return !!(f.keywords && f.keywords.includes("mockbuster"));
+}
+function mockbusterFlagHTML(f) {
+  return isMockbuster(f)
+    ? `<span class="mockbuster-flag" title="An unrelated, similarly-titled low-budget film — not the film you may be thinking of">Unofficial</span>`
+    : "";
+}
+
 function truncate(text, maxLen) {
   const clean = String(text).replace(/\s+/g, " ").trim();
   if (clean.length <= maxLen) return clean;
@@ -346,6 +360,11 @@ ${JSON.stringify(jsonLd, null, 2)}
   .poster{ width:150px; height:auto; border-radius:2px; flex-shrink:0; }
   h1{ font-family:Georgia,"Iowan Old Style",serif; font-size:1.7rem; margin:0 0 0.2rem; }
   .year{ color:var(--muted); font-weight:normal; }
+  .mockbuster-flag{
+    display:inline-block; font-size:0.62rem; font-weight:bold; letter-spacing:0.03em; text-transform:uppercase;
+    color:var(--neg); border:1px solid var(--neg); border-radius:2px; padding:0.05rem 0.3rem; margin-left:0.35rem;
+    vertical-align:middle; white-space:nowrap;
+  }
   .genres{ color:var(--muted); font-size:0.85rem; margin:0.3rem 0 0.8rem; }
   .score-badge{ display:inline-flex; align-items:baseline; gap:0.4rem; background:var(--card); border:1px solid var(--rule); padding:0.5rem 0.9rem; margin-top:0.3rem; }
   .score-num{ font-family:Georgia,serif; font-size:1.5rem; color:var(--gold); }
@@ -378,7 +397,7 @@ ${JSON.stringify(jsonLd, null, 2)}
   <div class="head">
     ${posterUrl ? `<img class="poster" src="${posterUrl}" alt="${escapeHtml(f.name)} poster" width="150">` : ""}
     <div>
-      <h1>${escapeHtml(f.name)} <span class="year">(${escapeHtml(String(f.year))})</span></h1>
+      <h1>${escapeHtml(f.name)} <span class="year">(${escapeHtml(String(f.year))})</span>${mockbusterFlagHTML(f)}</h1>
       ${genresLine ? `<p class="genres">${escapeHtml(genresLine)}</p>` : ""}
       ${hasScore
         ? `<div class="score-badge"><span class="score-num">${f.score}</span><span class="score-label">Kernel Score${f.ci ? ` (${escapeHtml(f.ci)})` : ""} — ${escapeHtml(f.label || "")}, ${f.n || 0} review${f.n === 1 ? "" : "s"}</span></div>`

@@ -94,6 +94,11 @@
   .recent-tile-year{ color:var(--muted); font-size:0.74rem; }
   .recent-tile-score{ font-size:0.76rem; color:var(--muted); display:block; margin-top:0.25rem; }
   .recent-tile-score-num{ font-family:ui-monospace,"SF Mono",Consolas,monospace; color:var(--gold); font-size:0.9rem; }
+  .mockbuster-flag{
+    display:inline-block; font-size:0.62rem; font-weight:bold; letter-spacing:0.03em; text-transform:uppercase;
+    color:var(--neg); border:1px solid var(--neg); border-radius:2px; padding:0.05rem 0.3rem; margin-left:0.35rem;
+    vertical-align:middle; white-space:nowrap;
+  }
   .recent-empty{ color:var(--muted); font-size:0.85rem; padding:0.4rem 0 0; }
 
   .gems-section{ margin-bottom:2.6rem; padding-bottom:2rem; border-bottom:1px solid var(--rule); }
@@ -21734,6 +21739,21 @@ theSubstance: {
   const widget = document.getElementById("widget");
   let tabs = [];
 
+  // Real, TMDb-tracked films that deliberately mimic a bigger release's
+  // title to ride on the confusion (e.g. "Master of the Universe" vs.
+  // "Masters of the Universe") — a known low-budget industry tactic, not a
+  // duplicate-draft bug (each has its own dataId/poster/TMDb entry). TMDb
+  // itself tags these with a "mockbuster" keyword, which onboard-film.js
+  // already captures into f.keywords — reused here rather than a new field.
+  function isMockbuster(f) {
+    return !!(f.keywords && f.keywords.includes("mockbuster"));
+  }
+  function mockbusterFlagHTML(f) {
+    return isMockbuster(f)
+      ? `<span class="mockbuster-flag" title="An unrelated, similarly-titled low-budget film — not the film you may be thinking of">Unofficial</span>`
+      : "";
+  }
+
   function buildGallery() {
     const gallery = document.getElementById("gallery");
     const nowPlaying = Object.entries(FILMS).filter(([key, f]) => f.nowPlaying);
@@ -21744,7 +21764,7 @@ theSubstance: {
           <span class="tile-badge">${f.label || "Not yet reviewed"}</span>
         </div>
         <div class="tile-meta">
-          <span class="tile-title">${f.name} <span class="tile-year">${f.year}</span></span>
+          <span class="tile-title">${f.name} <span class="tile-year">${f.year}</span>${mockbusterFlagHTML(f)}</span>
           <span class="tile-score"><span class="tile-score-num">${f.score != null ? f.score : "—"}</span> Kernel Score</span>
         </div>
       </button>`).join("");
@@ -21781,7 +21801,7 @@ theSubstance: {
           <span class="recent-tile-badge">${f.label || "Not yet reviewed"}</span>
         </div>
         <span class="recent-tile-meta">
-          <span class="recent-tile-title">${f.name}</span> <span class="recent-tile-year">${f.year}</span>
+          <span class="recent-tile-title">${f.name}</span> <span class="recent-tile-year">${f.year}</span>${mockbusterFlagHTML(f)}
           <span class="recent-tile-score"><span class="recent-tile-score-num">${f.score != null ? f.score : "—"}</span> Kernel Score</span>
         </span>
       </button>`).join("");
@@ -22837,7 +22857,7 @@ theSubstance: {
         <div class="widget-head-main">
           ${f.poster ? `<img class="poster-thumb" data-poster="${f.poster}" data-name="${escapeHtml(f.name)}" src="https://image.tmdb.org/t/p/w185${f.poster}" alt="${f.name} poster" loading="lazy" referrerpolicy="no-referrer">` : ""}
           <div>
-            <h2>${f.name} <span class="year">(${f.year})</span></h2>
+            <h2>${f.name} <span class="year">(${f.year})</span>${mockbusterFlagHTML(f)}</h2>
             ${trailerHTML(f)}
           </div>
         </div>
