@@ -161,11 +161,30 @@ function writeGithubOutput(key, value) {
     return true;
   };
 
+  // TMDb's now_playing list means "currently showing somewhere right now,"
+  // which legitimately includes anniversary/revival screenings of real
+  // classics — not just brand-new releases. This happened for real:
+  // Willy Wonka & the Chocolate Factory (1971) showed up in now_playing
+  // (evidently a real theatrical re-release) and got auto-drafted under
+  // "theatrical" with nowPlaying:true and its true 1971 release date,
+  // producing a 55-year-old film shown as "currently in theaters." Unlike
+  // the Evangelion case above, this isn't a duplicate of an existing entry
+  // (first time onboarding it) — isLikelyDuplicate can't catch it. A film
+  // whose real release is this old is never actually "new," so it's
+  // categorized as historical instead — still worth onboarding as a real
+  // classic, just without nowPlaying/releaseDate implying it's a current release.
+  const CLASSIC_REVIVAL_THRESHOLD_DAYS = 730; // ~2 years — beyond any real slow theatrical rollout
+  const categoryForNowPlaying = m => {
+    if (!m.release_date) return "theatrical";
+    const ageDays = (Date.now() - new Date(m.release_date).getTime()) / 86400000;
+    return ageDays > CLASSIC_REVIVAL_THRESHOLD_DAYS ? "historical" : "theatrical";
+  };
+
   const newTheatrical = nowPlayingWithIds
     .filter(notYetOnboarded)
     .filter(notDuplicate)
     .slice(0, NEW_FILM_ALERT_CAP)
-    .map(m => ({ ...m, category: "theatrical" }));
+    .map(m => ({ ...m, category: categoryForNowPlaying(m) }));
   const newRecent = recentWithIds
     .filter(notYetOnboarded)
     .filter(notDuplicate)
