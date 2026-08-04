@@ -89,6 +89,36 @@ jobs:
             git pull --rebase --autostash origin main
           done
 
+      # Refreshes the landing page's "Coming Soon" trailer strip — replaces
+      # the whole UPCOMING_TRAILERS list each run rather than accumulating,
+      # so a film drops off on its own once TMDb's upcoming feed no longer
+      # surfaces it (already released, or fell out of the popularity-sorted
+      # top N) without any separate retirement step, same "re-derive from
+      # source each run" reasoning as the now-playing refresh above. Purely
+      # mechanical — no editorial judgment — so it commits straight to main.
+      - name: Refresh Coming Soon trailers
+        working-directory: kernel-data-service
+        env:
+          TMDB_ACCESS_TOKEN: ${{ secrets.TMDB_ACCESS_TOKEN }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: node fetch-upcoming-trailers.js
+
+      - name: Commit Coming Soon trailers
+        run: |
+          git config user.name "kernel-bot"
+          git config user.email "actions@github.com"
+          git add widget/index.html
+          if git diff --cached --quiet; then
+            echo "No change to Coming Soon trailers."
+          else
+            git commit -m "Auto-update: refresh Coming Soon trailers [skip ci]"
+            for i in 1 2 3; do
+              git push && break
+              echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
+              git pull --rebase --autostash origin main
+            done
+          fi
+
       # Auto-drafts a small number of new releases (capped in
       # refresh-now-playing.js, separately for theatrical vs. recent) using
       # the same Tier 1 fetch as manual onboarding, plus AI-drafted insight
