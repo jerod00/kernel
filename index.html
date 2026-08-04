@@ -99,6 +99,69 @@
     color:var(--neg); border:1px solid var(--neg); border-radius:2px; padding:0.05rem 0.3rem; margin-left:0.35rem;
     vertical-align:middle; white-space:nowrap;
   }
+
+  /* Coming Soon — deliberately the one section that breaks from the paper
+     page background: a dark "cinema screen" block makes widescreen trailer
+     art actually read as trailer art, and gives this the visual weight to
+     stop a first-time visitor's scroll instead of blending into the rest
+     of the page. */
+  .coming-soon-section{
+    background:var(--ink); color:var(--paper); margin:0 -1.25rem 2.4rem; padding:1.8rem 1.25rem 1.6rem;
+  }
+  @media (min-width:640px){ .coming-soon-section{ margin:0 0 2.4rem; padding:1.8rem 1.6rem 1.6rem; } }
+  .coming-soon-head{ margin-bottom:1.1rem; }
+  .coming-soon-kicker{
+    display:flex; align-items:center; gap:0.6rem; font-family:ui-monospace,"SF Mono",Consolas,monospace;
+    font-size:0.72rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--gold); margin-bottom:0.35rem;
+  }
+  .coming-soon-kicker::after{ content:""; flex:1; height:1px; background:currentColor; opacity:0.35; }
+  .coming-soon-title{ font-family:Georgia,"Iowan Old Style",serif; font-size:1.35rem; margin:0; color:var(--paper); }
+  .coming-soon-strip{
+    display:flex; gap:1rem; overflow-x:auto; scroll-snap-type:x proximity; padding-bottom:0.4rem; -webkit-overflow-scrolling:touch;
+  }
+  .coming-soon-strip:empty{ display:none; }
+  .coming-soon-card{
+    flex:0 0 auto; width:260px; scroll-snap-align:start; cursor:pointer; background:none; border:none; padding:0;
+    text-align:left; font:inherit; color:inherit; text-decoration:none; display:block;
+    animation:coming-soon-pop 0.5s cubic-bezier(.34,1.56,.64,1) both;
+  }
+  .coming-soon-card:nth-child(1){ animation-delay:0.02s; }
+  .coming-soon-card:nth-child(2){ animation-delay:0.08s; }
+  .coming-soon-card:nth-child(3){ animation-delay:0.14s; }
+  .coming-soon-card:nth-child(4){ animation-delay:0.2s; }
+  .coming-soon-card:nth-child(n+5){ animation-delay:0.24s; }
+  @keyframes coming-soon-pop{ from{ opacity:0; transform:translateY(10px) scale(0.97); } to{ opacity:1; transform:none; } }
+  @media (prefers-reduced-motion: reduce){ .coming-soon-card{ animation:none; } }
+  .coming-soon-media{
+    position:relative; width:100%; aspect-ratio:16/9; border-radius:3px; overflow:hidden; background:#000;
+    box-shadow:0 1px 3px rgba(0,0,0,0.4); transition:transform 0.18s ease, box-shadow 0.18s ease;
+  }
+  .coming-soon-card:hover .coming-soon-media, .coming-soon-card:focus-visible .coming-soon-media{
+    transform:scale(1.035); box-shadow:0 6px 18px rgba(0,0,0,0.5);
+  }
+  .coming-soon-backdrop{ width:100%; height:100%; object-fit:cover; display:block; opacity:0.88; transition:opacity 0.18s ease; }
+  .coming-soon-card:hover .coming-soon-backdrop, .coming-soon-card:focus-visible .coming-soon-backdrop{ opacity:1; }
+  .coming-soon-scrim{
+    position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.05) 55%, transparent 100%);
+  }
+  .coming-soon-play{
+    position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+    width:2.6rem; height:2.6rem; border-radius:50%; background:rgba(239,235,225,0.94);
+    display:flex; align-items:center; justify-content:center; transition:transform 0.18s ease, background 0.18s ease;
+  }
+  .coming-soon-play svg{ width:0.9rem; height:0.9rem; margin-left:0.1rem; fill:var(--ink); }
+  .coming-soon-card:hover .coming-soon-play, .coming-soon-card:focus-visible .coming-soon-play{
+    transform:translate(-50%,-50%) scale(1.12); background:var(--gold);
+  }
+  .coming-soon-card:hover .coming-soon-play svg, .coming-soon-card:focus-visible .coming-soon-play svg{ fill:var(--ink); }
+  .coming-soon-date{
+    position:absolute; top:0.5rem; left:0.5rem; font-family:ui-monospace,"SF Mono",Consolas,monospace;
+    font-size:0.66rem; letter-spacing:0.04em; text-transform:uppercase; color:var(--ink); background:var(--gold);
+    padding:0.15rem 0.4rem;
+  }
+  .coming-soon-meta{ padding:0.55rem 0.1rem 0; }
+  .coming-soon-name{ display:block; font-size:0.92rem; color:var(--paper); line-height:1.3; }
+  .coming-soon-views{ display:block; font-size:0.74rem; color:var(--muted); margin-top:0.2rem; }
   .recent-empty{ color:var(--muted); font-size:0.85rem; padding:0.4rem 0 0; }
 
   .gems-section{ margin-bottom:2.6rem; padding-bottom:2rem; border-bottom:1px solid var(--rule); }
@@ -590,6 +653,14 @@
     </svg>
   </div>
 
+  <div class="coming-soon-section">
+    <div class="coming-soon-head">
+      <div class="coming-soon-kicker">Coming Soon</div>
+      <h2 class="coming-soon-title">Trailers worth getting excited about</h2>
+    </div>
+    <div class="coming-soon-strip" id="comingSoonStrip"></div>
+  </div>
+
   <div class="film-gallery" role="tablist" aria-label="Select a film" id="gallery"></div>
 
   <div class="recent-section">
@@ -690,6 +761,95 @@
 
   const DOMAIN_MAX = 60; // days since release
   const BREAKEVEN_MULTIPLE = 2; // industry rule of thumb: WW gross needs to be ~2x (budget + marketing) to break even, once the exhibitor's cut and P&A are counted
+
+  // Deliberately separate from FILMS — a not-yet-released title has no
+  // score, no econ, no reviews, nothing the rest of the site's machinery
+  // (leaderboards, Hidden Gems, the audience-review form) has any use
+  // for. Populated by kernel-data-service/fetch-upcoming-trailers.js,
+  // which replaces this whole list each run rather than accumulating —
+  // it's "what's coming soon right now," not an archive.
+  const UPCOMING_TRAILERS = [
+  {
+    title: "The End of Oak Street",
+    releaseDate: "2026-08-14",
+    poster: "/3SifFCwwFzXdU1Ew0nA4Z92Bs15.jpg",
+    backdrop: "/b9q9VmbXDvJmTziRqkwdEmFdwhr.jpg",
+    trailerKey: "s9GKXTbChjE",
+    trailerName: "Official Teaser Trailer",
+    viewCount: 41183,
+    likeCount: 817,
+  },
+  {
+    title: "All Wishes Come True!",
+    releaseDate: "2026-08-14",
+    poster: "/wJ9FLxq3Q6D4ve8TUepYsr0PL3p.jpg",
+    backdrop: "/lMK3FnMfQ9O3DiC7hi4J2XBzNf.jpg",
+    trailerKey: "238buK9Iu_o",
+    trailerName: "All Wishes Come True! (Movie) - Official Trailer",
+    viewCount: 64433,
+    likeCount: 2283,
+  },
+  {
+    title: "PAW Patrol: The Dino Movie",
+    releaseDate: "2026-08-14",
+    poster: "/cxXSF4aY5N2cOGwaga5OnpPFHzk.jpg",
+    backdrop: "/upNeU9FNGAvdhnoThvv64Z0MWKn.jpg",
+    trailerKey: "xgI5iYmOf5Q",
+    trailerName: "Official Trailer",
+    viewCount: 3931472,
+    likeCount: 8361,
+  },
+  {
+    title: "Ice Cream Man",
+    releaseDate: "2026-08-07",
+    poster: "/c987gxFjXqYOxZEZKcTkS1ONTWH.jpg",
+    backdrop: "/giekwhdwa8SFtfPi0mOn5uvkXJ0.jpg",
+    trailerKey: "SHxqHdBNm-w",
+    trailerName: "Official Red Band Trailer",
+    viewCount: 29115,
+    likeCount: 616,
+  },
+  {
+    title: "One Night Only",
+    releaseDate: "2026-08-07",
+    poster: "/9LGEqZvzI7Tsosf8srwEY48rZsD.jpg",
+    backdrop: "/ccoEJ4Rxk9rb5cIrrkpPQDn39MP.jpg",
+    trailerKey: "JRG244IfrRE",
+    trailerName: "Official Trailer",
+    viewCount: 39177036,
+    likeCount: 71063,
+  },
+  {
+    title: "Mutiny",
+    releaseDate: "2026-08-21",
+    poster: "/aAnTt6KpmbbHbd6xH3FQFlppZjc.jpg",
+    backdrop: "/jUdV706J4d3nUEbfimqVnGZqTbW.jpg",
+    trailerKey: "FKSdXH89jbo",
+    trailerName: "Official Trailer",
+    viewCount: 14190257,
+    likeCount: 80842,
+  },
+  {
+    title: "Teenage Sex and Death at Camp Miasma",
+    releaseDate: "2026-08-07",
+    poster: "/nLsFnXifieSTqSeWxjXSS8RvaUZ.jpg",
+    backdrop: "/d1n2ySWSanU34eEsluRjfrjRq52.jpg",
+    trailerKey: "dimCiC_hdoA",
+    trailerName: "Official Trailer",
+    viewCount: 2725598,
+    likeCount: 10337,
+  },
+  {
+    title: "Insidious: Out of the Further",
+    releaseDate: "2026-08-21",
+    poster: "/4tTrW9dXCByS5wt2pXVWb58zNjz.jpg",
+    backdrop: "/hD8y787ciNWQ2bn396YrSsOIzdN.jpg",
+    trailerKey: "jxU8FU3o75A",
+    trailerName: "Official Trailer",
+    viewCount: 34398723,
+    likeCount: 115617,
+  },
+];
 
   const FILMS = {
     joker: {
@@ -22240,6 +22400,28 @@ theSubstance: {
     });
   }
 
+  function buildUpcomingTrailers() {
+    const strip = document.getElementById("comingSoonStrip");
+    if (!strip) return;
+    if (!UPCOMING_TRAILERS.length) { strip.innerHTML = ""; return; }
+    strip.innerHTML = UPCOMING_TRAILERS.map(t => {
+      const dateLabel = new Date(t.releaseDate).toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      return `
+      <a class="coming-soon-card" href="https://www.youtube.com/watch?v=${t.trailerKey}" target="_blank" rel="noopener noreferrer">
+        <span class="coming-soon-media">
+          <img class="coming-soon-backdrop" src="https://image.tmdb.org/t/p/w780${t.backdrop || t.poster}" alt="${t.title} trailer" loading="lazy" referrerpolicy="no-referrer">
+          <span class="coming-soon-scrim"></span>
+          <span class="coming-soon-date">${dateLabel}</span>
+          <span class="coming-soon-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></span>
+        </span>
+        <span class="coming-soon-meta">
+          <span class="coming-soon-name">${t.title}</span>
+          ${t.viewCount != null ? `<span class="coming-soon-views">${formatCount(t.viewCount)} trailer views</span>` : ""}
+        </span>
+      </a>`;
+    }).join("");
+  }
+
   function renderVaultResults(query) {
     const resultsEl = document.getElementById("vaultResults");
     const q = query.trim().toLowerCase();
@@ -23918,6 +24100,7 @@ theSubstance: {
   // not after.
   (async () => {
     await applyAudienceScoreOverrides();
+    buildUpcomingTrailers();
     buildGallery();
     buildRecentReleases();
     buildVaultSearch();
