@@ -156,13 +156,21 @@ function writeGithubOutput(key, value) {
   // a historical-category film (no nowPlaying key at all, per the
   // Willy Wonka fix) never matches, so a classic's revival screening can't
   // undo that fix and get re-flagged as a current release here.
+  //
+  // Restricted to draft-lib.js's own auto-draft comment specifically —
+  // NOT any nowPlaying:false, since some entries carry a hand-written
+  // comment overriding what TMDb's now_playing feed says (e.g. an awards-
+  // qualifying 2-city run that isn't a real wide release, or a limited
+  // run confirmed already wrapped). now_playing is a live, order-shifting
+  // feed — a qualifying run can flicker in and out of it — so a plain
+  // "does TMDb list it right now" check would silently overwrite that
+  // deliberate judgment call (and its explanation) the next time it
+  // flickers back in. Only the routine, still-auto-drafted case is safe
+  // to promote automatically.
+  const AUTO_DRAFT_RECENT_COMMENT = "// recent release, not currently in theaters — auto-drafted";
   const promotedTitles = [];
   for (const { 1: dataId } of dataIdMatches) {
-    // Matches the whole nowPlaying line (including draft-lib.js's
-    // "// recent release, not currently in theaters — auto-drafted"
-    // comment, if present) so promoting doesn't leave that comment
-    // sitting next to nowPlaying: true, directly contradicting it.
-    const flagPattern = new RegExp(`(dataId:\\s*"${dataId}",\\s*\\n\\s*)nowPlaying:\\s*false(?:,[^\\n]*)?`);
+    const flagPattern = new RegExp(`(dataId:\\s*"${dataId}",\\s*\\n\\s*)nowPlaying:\\s*false,\\s*${AUTO_DRAFT_RECENT_COMMENT.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`);
     if (flagPattern.test(updatedHtml) && currentDataIds.has(dataId)) {
       updatedHtml = updatedHtml.replace(flagPattern, "$1nowPlaying: true,");
       promotedTitles.push(dataId);
