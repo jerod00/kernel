@@ -22509,10 +22509,17 @@ theSubstance: {
         <line x1="${PADL}" y1="${yAt(v)}" x2="${W - PADR}" y2="${yAt(v)}" stroke="var(--rule)" stroke-width="1" opacity="0.5"/>
         <text x="${PADL - 6}" y="${yAt(v) + 3}" text-anchor="end" class="axis-label">${formatMoney(v)}</text>`).join("");
 
+    // Never extrapolate past the last real data point — a still-playing
+    // film with only a day or two of reported revenue used to get its line
+    // held flat all the way out to Day 60, which reads as "two months of
+    // dead earnings" for a movie that's been out less than a week. Stopping
+    // the drawn line/area at lastKnownDay leaves the rest of the axis
+    // honestly blank instead.
+    const lastKnownDay = Math.min(DOMAIN_MAX, f.revenuePoints[f.revenuePoints.length - 1].day);
     const pathPts = [];
-    for (let d = 0; d <= DOMAIN_MAX; d += 1) pathPts.push([xAt(d), yAt(revenueValueAt(f, d))]);
+    for (let d = 0; d <= lastKnownDay; d += 1) pathPts.push([xAt(d), yAt(revenueValueAt(f, d))]);
     const linePath = "M" + pathPts.map(p => p.join(",")).join(" L");
-    const areaPath = linePath + ` L${xAt(DOMAIN_MAX)},${yAt(0)} L${xAt(0)},${yAt(0)} Z`;
+    const areaPath = linePath + ` L${xAt(lastKnownDay)},${yAt(0)} L${xAt(0)},${yAt(0)} Z`;
 
     const beY = yAt(threshold);
     const beLine = `<line x1="${PADL}" y1="${beY}" x2="${W - PADR}" y2="${beY}" stroke="var(--gold)" stroke-width="1.5" stroke-dasharray="5,4"/>`;
@@ -22525,11 +22532,18 @@ theSubstance: {
       markerSVG = `
         <circle cx="${cx}" cy="${cy}" r="4" fill="var(--teal)" stroke="var(--card)" stroke-width="1.5"/>
         <text x="${cx}" y="${cy + 16}" text-anchor="${crossDay > DOMAIN_MAX - 10 ? "end" : "middle"}" class="axis-label teal-label">Broke even ~Day ${Math.round(crossDay)}</text>`;
-    } else {
+    } else if (lastKnownDay >= DOMAIN_MAX) {
       const ex = xAt(DOMAIN_MAX), ey = yAt(finalValue);
       markerSVG = `
         <circle cx="${ex}" cy="${ey}" r="4" fill="var(--neg)" stroke="var(--card)" stroke-width="1.5"/>
         <text x="${ex}" y="${ey - 10}" text-anchor="end" class="axis-label neg-label">Never broke even</text>`;
+    } else {
+      // Data just hasn't caught up to Day 60 yet — a different claim than
+      // "never," which would misrepresent a film that's still playing.
+      const ex = xAt(lastKnownDay), ey = yAt(finalValue);
+      markerSVG = `
+        <circle cx="${ex}" cy="${ey}" r="4" fill="var(--muted)" stroke="var(--card)" stroke-width="1.5"/>
+        <text x="${ex}" y="${ey - 10}" text-anchor="${lastKnownDay > DOMAIN_MAX - 10 ? "end" : "middle"}" class="axis-label">Not yet broken even (Day ${Math.round(lastKnownDay)})</text>`;
     }
 
     const anchorMarkers = f.revenuePoints.filter(p => p.day > 0).map(p => `
@@ -23408,13 +23422,17 @@ theSubstance: {
     const tooltip = container.querySelector(".chart-tooltip");
     const svgs = container.querySelectorAll("svg");
     const { threshold } = breakevenOf(f);
+    // Same reasoning as revenueSVG's lastKnownDay cutoff — past the last
+    // real data point there's nothing to report yet, so the tooltip
+    // shouldn't claim a flat extrapolated figure just because interp()
+    // has to return something.
+    const lastKnownDay = Math.min(DOMAIN_MAX, f.revenuePoints[f.revenuePoints.length - 1].day);
     container.querySelectorAll(".chart-svg-wrap").forEach(wrap => {
       wrap.addEventListener("mousemove", (e) => {
         const svg = wrap.querySelector("svg");
         const rect = svg.getBoundingClientRect();
         const px = ((e.clientX - rect.left) / rect.width) * W;
         const day = Math.round(dayAt(px));
-        const revenue = revenueValueAt(f, day);
         svgs.forEach(s => {
           const cx = xAt(day);
           const ch = s.querySelector(".crosshair");
@@ -23424,6 +23442,13 @@ theSubstance: {
         tooltip.style.opacity = "1";
         tooltip.style.left = Math.min(e.clientX - containerRect.left + 14, container.clientWidth - 200) + "px";
         tooltip.style.top = Math.max(e.clientY - containerRect.top - 10, 0) + "px";
+        if (day > lastKnownDay) {
+          tooltip.innerHTML = `
+            <div class="tt-day">Day ${day}</div>
+            <div class="tt-row"><span>Cumulative revenue</span><span>Not yet reported</span></div>`;
+          return;
+        }
+        const revenue = revenueValueAt(f, day);
         tooltip.innerHTML = `
           <div class="tt-day">Day ${day}</div>
           <div class="tt-row"><span>Cumulative revenue</span><span>${formatMoney(revenue)}</span></div>
