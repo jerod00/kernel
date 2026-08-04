@@ -103,6 +103,12 @@ jobs:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
         run: node fetch-upcoming-trailers.js
 
+      # Deliberately NOT [skip ci] — GitHub Actions treats that marker as
+      # skipping every workflow triggered by the push, not just this one,
+      # which would silently stop deploy-gh-pages.yml (path-filtered on
+      # widget/index.html) from ever redeploying the refreshed trailers.
+      # Caught this live: the first version of this step used [skip ci] and
+      # the commit landed on main with no matching deploy run at all.
       - name: Commit Coming Soon trailers
         run: |
           git config user.name "kernel-bot"
@@ -111,7 +117,7 @@ jobs:
           if git diff --cached --quiet; then
             echo "No change to Coming Soon trailers."
           else
-            git commit -m "Auto-update: refresh Coming Soon trailers [skip ci]"
+            git commit -m "Auto-update: refresh Coming Soon trailers"
             for i in 1 2 3; do
               git push && break
               echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
