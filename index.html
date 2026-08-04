@@ -101,10 +101,11 @@
   }
 
   /* Coming Soon — deliberately the one section that breaks from the paper
-     page background: a dark "cinema screen" block makes widescreen trailer
-     art actually read as trailer art, and gives this the visual weight to
-     stop a first-time visitor's scroll instead of blending into the rest
-     of the page. */
+     page background: a dark "cinema screen" block makes the poster art pop,
+     and gives this the visual weight to stop a first-time visitor's scroll
+     instead of blending into the rest of the page. Poster art over a
+     backdrop still here on purpose — it's the actual marketing key art
+     designed to be exciting, where a backdrop is just a scene still. */
   .coming-soon-section{
     background:var(--ink); color:var(--paper); margin:0 -1.25rem 2.4rem; padding:1.8rem 1.25rem 1.6rem;
   }
@@ -121,7 +122,7 @@
   }
   .coming-soon-strip:empty{ display:none; }
   .coming-soon-card{
-    flex:0 0 auto; width:260px; scroll-snap-align:start; cursor:pointer; background:none; border:none; padding:0;
+    flex:0 0 auto; width:168px; scroll-snap-align:start; cursor:pointer; background:none; border:none; padding:0;
     text-align:left; font:inherit; color:inherit; text-decoration:none; display:block;
     animation:coming-soon-pop 0.5s cubic-bezier(.34,1.56,.64,1) both;
   }
@@ -133,23 +134,23 @@
   @keyframes coming-soon-pop{ from{ opacity:0; transform:translateY(10px) scale(0.97); } to{ opacity:1; transform:none; } }
   @media (prefers-reduced-motion: reduce){ .coming-soon-card{ animation:none; } }
   .coming-soon-media{
-    position:relative; width:100%; aspect-ratio:16/9; border-radius:3px; overflow:hidden; background:#000;
+    position:relative; width:100%; aspect-ratio:2/3; border-radius:3px; overflow:hidden; background:#000;
     box-shadow:0 1px 3px rgba(0,0,0,0.4); transition:transform 0.18s ease, box-shadow 0.18s ease;
   }
   .coming-soon-card:hover .coming-soon-media, .coming-soon-card:focus-visible .coming-soon-media{
     transform:scale(1.035); box-shadow:0 6px 18px rgba(0,0,0,0.5);
   }
-  .coming-soon-backdrop{ width:100%; height:100%; object-fit:cover; display:block; opacity:0.88; transition:opacity 0.18s ease; }
-  .coming-soon-card:hover .coming-soon-backdrop, .coming-soon-card:focus-visible .coming-soon-backdrop{ opacity:1; }
+  .coming-soon-poster{ width:100%; height:100%; object-fit:cover; display:block; opacity:0.92; transition:opacity 0.18s ease; }
+  .coming-soon-card:hover .coming-soon-poster, .coming-soon-card:focus-visible .coming-soon-poster{ opacity:1; }
   .coming-soon-scrim{
-    position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.05) 55%, transparent 100%);
+    position:absolute; inset:0; background:linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.05) 40%, transparent 65%);
   }
   .coming-soon-play{
     position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-    width:2.6rem; height:2.6rem; border-radius:50%; background:rgba(239,235,225,0.94);
+    width:2.3rem; height:2.3rem; border-radius:50%; background:rgba(239,235,225,0.94);
     display:flex; align-items:center; justify-content:center; transition:transform 0.18s ease, background 0.18s ease;
   }
-  .coming-soon-play svg{ width:0.9rem; height:0.9rem; margin-left:0.1rem; fill:var(--ink); }
+  .coming-soon-play svg{ width:0.8rem; height:0.8rem; margin-left:0.1rem; fill:var(--ink); }
   .coming-soon-card:hover .coming-soon-play, .coming-soon-card:focus-visible .coming-soon-play{
     transform:translate(-50%,-50%) scale(1.12); background:var(--gold);
   }
@@ -22409,7 +22410,7 @@ theSubstance: {
       return `
       <a class="coming-soon-card" href="https://www.youtube.com/watch?v=${t.trailerKey}" target="_blank" rel="noopener noreferrer">
         <span class="coming-soon-media">
-          <img class="coming-soon-backdrop" src="https://image.tmdb.org/t/p/w780${t.backdrop || t.poster}" alt="${t.title} trailer" loading="lazy" referrerpolicy="no-referrer">
+          <img class="coming-soon-poster" src="https://image.tmdb.org/t/p/w342${t.poster || t.backdrop}" alt="${t.title} poster" loading="lazy" referrerpolicy="no-referrer">
           <span class="coming-soon-scrim"></span>
           <span class="coming-soon-date">${dateLabel}</span>
           <span class="coming-soon-play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"></path></svg></span>
