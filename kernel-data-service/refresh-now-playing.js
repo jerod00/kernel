@@ -143,11 +143,38 @@ function writeGithubOutput(key, value) {
     }
   }
 
-  if (removedTitles.length) {
+  // --- Step 1b: promote existing "recent" films now confirmed playing ---
+  // A film onboarded under category "recent" gets nowPlaying:false hardcoded
+  // at draft time (see draft-lib.js), since it wasn't in now_playing at the
+  // moment it was drafted. Nothing before this ever re-checked that — if it
+  // later shows up in now_playing (the normal case for a real wide release
+  // the pipeline just onboarded a day or two early), it stayed stuck as
+  // "not in theaters" for its entire actual theatrical run. Caught for
+  // real: Spider-Man: Brand New Day, released 2026-07-28, confirmed in
+  // TMDb's now_playing by 2026-08-03, still sitting at nowPlaying:false.
+  // The regex only ever matches an existing literal "nowPlaying: false" —
+  // a historical-category film (no nowPlaying key at all, per the
+  // Willy Wonka fix) never matches, so a classic's revival screening can't
+  // undo that fix and get re-flagged as a current release here.
+  const promotedTitles = [];
+  for (const { 1: dataId } of dataIdMatches) {
+    // Matches the whole nowPlaying line (including draft-lib.js's
+    // "// recent release, not currently in theaters — auto-drafted"
+    // comment, if present) so promoting doesn't leave that comment
+    // sitting next to nowPlaying: true, directly contradicting it.
+    const flagPattern = new RegExp(`(dataId:\\s*"${dataId}",\\s*\\n\\s*)nowPlaying:\\s*false(?:,[^\\n]*)?`);
+    if (flagPattern.test(updatedHtml) && currentDataIds.has(dataId)) {
+      updatedHtml = updatedHtml.replace(flagPattern, "$1nowPlaying: true,");
+      promotedTitles.push(dataId);
+    }
+  }
+
+  if (removedTitles.length || promotedTitles.length) {
     fs.writeFileSync(WIDGET_PATH, updatedHtml);
-    console.log(`Flipped nowPlaying: false for ${removedTitles.length} film(s) no longer in theaters: ${removedTitles.join(", ")}`);
+    if (removedTitles.length) console.log(`Flipped nowPlaying: false for ${removedTitles.length} film(s) no longer in theaters: ${removedTitles.join(", ")}`);
+    if (promotedTitles.length) console.log(`Flipped nowPlaying: true for ${promotedTitles.length} film(s) now confirmed playing: ${promotedTitles.join(", ")}`);
   } else {
-    console.log("No films to remove from Now Playing.");
+    console.log("No Now Playing changes.");
   }
 
   // --- Step 2: flag prominent new releases not onboarded at all yet ---
