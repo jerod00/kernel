@@ -148,20 +148,37 @@ async function omdbLookup({ imdbId, title, year }) {
   }
 }
 
-async function buildPersonFilmography(personId, isDirector) {
+async function buildPersonFilmography(personId, personName, isDirector) {
   const credits = await tmdb(`/person/${personId}/movie_credits`);
   const list = isDirector ? credits.crew.filter(c => c.job === "Director") : credits.cast;
   // Array of {title, year, score} rather than a {slug: score} map — the
   // widget's own director/actor track-record chart needs the real title and
   // year to render, not just the slug used as the DB's field key.
   const films = [];
+  let skippedMismatches = 0;
   for (const c of list.slice(0, PERSON_CREDIT_CAP)) {
     const y = (c.release_date || "").slice(0, 4);
     if (!y) continue;
     const omdb = await omdbLookup({ title: c.title, year: y });
-    if (omdb && omdb.Metascore && omdb.Metascore !== "N/A") {
-      films.push({ title: c.title, year: Number(y), score: Number(omdb.Metascore) });
+    if (!omdb || !omdb.Metascore || omdb.Metascore === "N/A") continue;
+    // OMDb's t=/y= lookup is a title+year match, which is ambiguous
+    // whenever two different films share a title in the same year — this
+    // happened for real: researching Alia Bhatt/Shiv Rawail's "Alpha"
+    // (2026) silently returned a French film also titled "Alpha" (2026),
+    // attributing its Metascore/critics to the wrong person's track
+    // record. Cross-checking that the person we're actually researching is
+    // named in whichever OMDb field credits them catches this — skipping
+    // a real match on an unusual name-formatting difference is a far
+    // safer failure mode than silently trusting the wrong film's score.
+    const creditField = (isDirector ? omdb.Director : omdb.Actors) || "";
+    if (!creditField.toLowerCase().includes(personName.toLowerCase())) {
+      skippedMismatches++;
+      continue;
     }
+    films.push({ title: c.title, year: Number(y), score: Number(omdb.Metascore) });
+  }
+  if (skippedMismatches) {
+    console.log(`  Skipped ${skippedMismatches} title+year match(es) whose OMDb credits didn't include ${personName} — likely a same-titled different film, not trusted.`);
   }
   return films;
 }
@@ -378,13 +395,13 @@ async function buildPersonFilmography(personId, isDirector) {
   let filmographyFromOmdb = false;
   if (director) {
     console.log(`\nFetching director filmography for ${director.name}...`);
-    draft.director.films = await buildPersonFilmography(director.id, true);
+    draft.director.films = await buildPersonFilmography(director.id, director.name, true);
     console.log(`  ${draft.director.films.length} scored titles found via OMDb`);
     if (draft.director.films.length) filmographyFromOmdb = true;
   }
   if (leadActor) {
     console.log(`\nFetching lead actor filmography for ${leadActor.name}...`);
-    draft.actor.films = await buildPersonFilmography(leadActor.id, false);
+    draft.actor.films = await buildPersonFilmography(leadActor.id, leadActor.name, false);
     console.log(`  ${draft.actor.films.length} scored titles found via OMDb`);
     if (draft.actor.films.length) filmographyFromOmdb = true;
   }
