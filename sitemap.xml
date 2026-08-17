@@ -529,6 +529,12 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://themoviekernel.com/actor/zoey-deutch/</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://themoviekernel.com/actor/olivia-wilde/</loc>
     <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -2948,6 +2954,24 @@
   </url>
   <url>
     <loc>https://themoviekernel.com/film/the-samurai-and-the-prisoner/</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/awarapan2/</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/gail-daughtry-and-the-celebrity-sex-pass/</loc>
+    <lastmod>2026-08-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://themoviekernel.com/film/don-tsay-good-luck/</loc>
     <lastmod>2026-08-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
