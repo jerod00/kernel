@@ -54,6 +54,19 @@ function sliceEntry(html, startIndex, allDataIdPositions) {
   return html.slice(startIndex, next != null ? next : html.length);
 }
 
+// Re-locates one entry's [start, end) bounds by its own dataId, fresh
+// against whatever `html` currently is (not the original scan positions,
+// which go stale the moment an earlier edit in this same run changes the
+// string length). dataId is unique per film, so this is always exact.
+function findEntryBounds(html, dataId) {
+  const marker = `dataId: "${dataId}"`;
+  const start = html.indexOf(marker);
+  if (start === -1) return null;
+  const nextDataId = html.slice(start + marker.length).match(/dataId:\s*"/);
+  const end = nextDataId ? start + marker.length + nextDataId.index : html.length;
+  return [start, end];
+}
+
 (async () => {
   let html = fs.readFileSync(WIDGET_PATH, "utf8");
 
@@ -104,11 +117,25 @@ function sliceEntry(html, startIndex, allDataIdPositions) {
       }
 
       const newEconBlock = `econ: { budget: ${newBudget != null ? newBudget : "null"}, marketing: ${c.marketing}, boxOffice: ${newBoxOffice != null ? newBoxOffice : "null"}, domesticTotal: ${c.domesticTotal} }`;
-      if (!html.includes(c.oldEconBlock)) {
+      // Scoped to this film's own entry (re-found by its unique dataId,
+      // fresh against the current html) rather than a bare html.replace —
+      // dozens of films share byte-identical placeholder econ blocks (e.g.
+      // every still-all-null one), so an unscoped string replace silently
+      // edits whichever film happens to appear first in the file instead
+      // of the one actually being processed. Caught live: this is exactly
+      // what was corrupting unrelated films' budget/boxOffice numbers.
+      const bounds = findEntryBounds(html, c.dataId);
+      if (!bounds) {
+        console.log(`  ${c.name}: entry not found — skipping to be safe.`);
+        continue;
+      }
+      const [entryStart, entryEnd] = bounds;
+      const entrySlice = html.slice(entryStart, entryEnd);
+      if (!entrySlice.includes(c.oldEconBlock)) {
         console.log(`  ${c.name}: entry text changed since scan started — skipping to be safe.`);
         continue;
       }
-      html = html.replace(c.oldEconBlock, newEconBlock);
+      html = html.slice(0, entryStart) + entrySlice.replace(c.oldEconBlock, newEconBlock) + html.slice(entryEnd);
       updated.push(`${c.name} (budget ${c.oldBudget ?? "null"}→${newBudget ?? "null"}, box office ${c.oldBoxOffice ?? "null"}→${newBoxOffice ?? "null"})`);
       console.log(`  ${c.name}: updated — budget ${c.oldBudget ?? "null"}→${newBudget ?? "null"}, box office ${c.oldBoxOffice ?? "null"}→${newBoxOffice ?? "null"}.`);
     } catch (err) {

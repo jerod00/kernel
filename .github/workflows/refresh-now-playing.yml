@@ -52,12 +52,16 @@ jobs:
           git config user.name "kernel-bot"
           git config user.email "actions@github.com"
           git add widget/index.html
-          git commit -m "Auto-update: remove $REMOVED from Now Playing [skip ci]"
-          for i in 1 2 3; do
-            git push && break
-            echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
-            git pull --rebase --autostash origin main
-          done
+          if git diff --cached --quiet; then
+            echo "No actual change to commit despite non-empty 'removed' output — skipping."
+          else
+            git commit -m "Auto-update: remove $REMOVED from Now Playing [skip ci]"
+            for i in 1 2 3; do
+              git push && break
+              echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
+              git pull --rebase --autostash origin main
+            done
+          fi
 
       # Refreshes Tier-1 (TMDb) budget/box-office numbers for films still
       # playing whose Tier 2 research hasn't happened yet — never touches a
@@ -80,14 +84,18 @@ jobs:
           git config user.name "kernel-bot"
           git config user.email "actions@github.com"
           git add widget/index.html
-          git commit -m "Auto-update: refresh Tier-1 box office numbers [skip ci]
+          if git diff --cached --quiet; then
+            echo "No actual change to commit despite non-empty 'econ-updated' output — skipping."
+          else
+            git commit -m "Auto-update: refresh Tier-1 box office numbers [skip ci]
 
           $ECON_UPDATED"
-          for i in 1 2 3; do
-            git push && break
-            echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
-            git pull --rebase --autostash origin main
-          done
+            for i in 1 2 3; do
+              git push && break
+              echo "Push rejected — rebasing onto latest main and retrying (attempt $i)..."
+              git pull --rebase --autostash origin main
+            done
+          fi
 
       # Refreshes the landing page's "Coming Soon" trailer strip — replaces
       # the whole UPCOMING_TRAILERS list each run rather than accumulating,
